@@ -1,0 +1,10 @@
+{
+  "name": "3d-game",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "俯视 3D 小队生存射击 — 创意阶段数值验证",
+  "scripts": {
+    "sim": "node src/sim/balance-check.ts"
+  }
+}
