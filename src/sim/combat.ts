@@ -4,7 +4,7 @@
  */
 
 import { derive, type Derived } from '../data/attributes.ts';
-import { ARMOR_MATRIX, expectedDamage, type ArmorType, type DamageType } from '../data/damage.ts';
+import { ARMOR_MATRIX, armorRetention, expectedDamage, type ArmorType, type DamageType } from '../data/damage.ts';
 import { tierBonus, WEAPONS, type WeaponId } from '../data/weapons.ts';
 import { skillAvgMul, type Hero } from '../data/characters.ts';
 import type { Zombie } from '../data/zombies.ts';
@@ -110,10 +110,14 @@ export function zombieEhp(z: Zombie, stage: number): number {
   return z.hp * stageMods(stage).hp;
 }
 
-/** 穿透折算后的护甲减伤保留比例 0-1 */
+/**
+ * 穿透折算后的护甲减伤保留比例 0-1。
+ * 直接复用 `damage.ts` 的实现——这里曾经复制了一份，把 `PIERCE_K` 写成字面量 60，
+ * 于是改 `PIERCE_K` 时两边会静默分叉，而对账测试（1e-6 容差）正是用来抓这种分叉的。
+ * 不要在 sim 里重算公式，只允许调用。
+ */
 export function retention(rawArmor: number, pierce: number): number {
-  const eff = Math.max(0, rawArmor * (1 - pierce / (pierce + 60)));
-  return 1 - eff / (eff + 100);
+  return armorRetention(rawArmor, pierce);
 }
 
 /**

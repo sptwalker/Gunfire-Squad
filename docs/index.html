@@ -307,25 +307,29 @@ footer{
   <h1>Gunfire Squad</h1>
   <p class="lede">
     俯视 3D 小队生存射击。玩家只控制队长，另外 4 名队员自动跟随、索敌、开火、放技能。
-    在 256×256 格的关卡里抗住三波僵尸，每 5 分钟打一次 BOSS，15 分钟关底结束。
+    结构是 <b>世界地图 → 6 个场景 → 82 个子关卡</b>，每个子关卡是一次 15 分钟的 run。
+    关与关之间变难靠的不是数值，是<b>构成</b>——每关提出一种新的挑战维度，卡住时该换阵容。
     <b>本仓库当前只有文档与数值模拟器，不含游戏代码。</b>
   </p>
 
   <div class="rail">
     <span class="step done"><i class="dot"></i>创意阶段规划</span>
     <span class="step done"><i class="dot"></i>数值核心与模拟器</span>
+    <span class="step done"><i class="dot"></i>场景层 6 × 82</span>
     <span class="step now"><i class="dot"></i>M0 资产可行性验证</span>
     <span class="step"><i class="dot"></i>M1 逻辑骨架</span>
     <span class="step"><i class="dot"></i>M2 可玩原型</span>
-    <span class="step"><i class="dot"></i>M3–M5</span>
+    <span class="step"><i class="dot"></i>M3–M6</span>
   </div>
 </header>
 
 <dl class="figs">
   <div><dt>角色</dt><dd>12</dd></div>
   <div><dt>武器</dt><dd>13</dd></div>
-  <div><dt>僵尸</dt><dd>7</dd></div>
-  <div><dt>地图</dt><dd>6</dd></div>
+  <div><dt>僵尸</dt><dd>9</dd></div>
+  <div><dt>场景</dt><dd>6</dd></div>
+  <div><dt>子关卡</dt><dd>82</dd></div>
+  <div><dt>挑战维度</dt><dd>12</dd></div>
   <div><dt>单局</dt><dd>15<small> 分</small></dd></div>
   <div><dt>BOSS</dt><dd>3</dd></div>
 </dl>
@@ -334,17 +338,17 @@ footer{
 <div class="docs">
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/00-决策清单.md">
     <span class="n">00</span>
-    <span class="t">决策清单<small>已定项 A1–A18 · 核心机制 B1–B7 · 待拍板 C1–C5 · 已知边界 D · 原型阶段待答问题 E</small></span>
+    <span class="t">决策清单<small>已定项 A1–A18 · 核心机制 B1–B7 · 已裁决 C1–C5 · 已知边界 D · 原型阶段待答问题 E</small></span>
     <span class="fmt">MD</span>
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/01-系统策划案.md">
     <span class="n">01</span>
-    <span class="t">系统策划案<small>核心玩法循环、战斗规则、队员 AI 与自动战斗、经济与成长、任务、关卡结构</small></span>
+    <span class="t">系统策划案<small>核心玩法循环、战斗规则、队员 AI 与自动战斗、经济与成长、任务、6 个场景与地形</small></span>
     <span class="fmt">MD</span>
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/02-数值表.md">
     <span class="n">02</span>
-    <span class="t">数值表<small>属性公式、13 武器、7 僵尸、12 角色、BOSS 反向校准，以及模拟器能力边界（§10）</small></span>
+    <span class="t">数值表<small>属性公式、13 武器、9 僵尸、12 角色、82 子关卡推导、三档难度、BOSS 反向校准，以及模拟器能力边界（§10）</small></span>
     <span class="fmt">MD</span>
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/03-计算演示.md">
@@ -354,17 +358,17 @@ footer{
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/04-技术框架.md">
     <span class="n">04</span>
-    <span class="t">技术框架<small>逻辑与渲染解耦、流场寻路、分块剔除、core 与 sim 的对账测试、单帧性能预算</small></span>
+    <span class="t">技术框架<small>逻辑与渲染解耦、元层与存档 schema、流场寻路、分块剔除、core 与 sim 的对账测试、单帧性能预算</small></span>
     <span class="fmt">MD</span>
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/05-资产清单.md">
     <span class="n">05</span>
-    <span class="t">资产清单<small>角色 / 僵尸 / 武器 / 地图 / 特效清单，Rodin 生成提示词模板，动画方案风险</small></span>
+    <span class="t">资产清单<small>角色 / 僵尸 / 地形 / 特效清单，Rodin 生成提示词模板，6 场景的材质着色契约，动画方案风险</small></span>
     <span class="fmt">MD</span>
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/06-开发路线图.md">
     <span class="n">06</span>
-    <span class="t">开发路线图<small>M0–M5 里程碑，每个都有可执行的验收标准；含「现在处在哪一步」</small></span>
+    <span class="t">开发路线图<small>M0–M6 里程碑，每个都有可执行的验收标准；含「现在处在哪一步」</small></span>
     <span class="fmt">MD</span>
   </a>
   <a class="live" href="07-界面原型.html">
@@ -372,26 +376,41 @@ footer{
     <span class="t">界面原型<small>五个界面的实机原型：战斗 HUD、小队面板、武器升级、角色选择、结算，附元件数据源对照表</small></span>
     <span class="fmt">交互</span>
   </a>
+  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/08-关卡方案.md">
+    <span class="n">08</span>
+    <span class="t">关卡方案<small>12 个挑战维度的定义与判据、6 个场景的阶梯、三档难度、原始丛林 15 关的完整推导表</small></span>
+    <span class="fmt">MD</span>
+  </a>
+  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/09-角色与成长.md">
+    <span class="n">09</span>
+    <span class="t">角色与成长<small>12 角色技能重做、15 个答案标签的覆盖矩阵、专精树与 SpecEffect 约束、成长线、每关可行阵容数</small></span>
+    <span class="fmt">MD</span>
+  </a>
 </div>
 
 <h2>跑数值哨兵</h2>
 <div class="run">
-  <p>所有数值表的真源是 <code>src/data/*.ts</code>，输出由模拟器生成。文档里的数字全部从模拟器导出，不手填。</p>
+  <p>所有数值表的真源是 <code>src/data/*.ts</code>，输出由模拟器生成。文档里的数字全部从模拟器导出，不手填。82 个子关卡的刷怪表同理，由 <code>scenes.ts</code> 的 <code>expandScene()</code> 推导，没有手写的关卡配置。</p>
 <pre>npm run sim          <span class="c"># = node src/sim/balance-check.ts</span></pre>
-  <p>Node 24 原生支持 TypeScript 类型剥离，不需要 tsx / ts-node。输出八节实测表：角色属性预算 / 单角色基准 / BOSS DPS 锚点 / BOSS 血量反向校准 / 生存压力 / 15 分钟全程模拟 / 承伤现实检查 / 多阵容鲁棒性。</p>
+  <p>Node 24 原生支持 TypeScript 类型剥离，不需要 tsx / ts-node。输出十节实测表：角色属性预算 / 单角色基准 / BOSS DPS 锚点 / BOSS 血量反向校准 / 生存压力 / 15 分钟全程模拟 / 承伤现实检查 / 多阵容鲁棒性 / 挑战维度覆盖矩阵 / 阵容多样性枚举。</p>
   <p>改数字去 <code>src/data/</code>；改图表去 <code>src/sim/balance-check.ts</code>，重跑，再把输出同步进 <code>02-数值表.md</code>。</p>
 </div>
 
 <div class="note">
   <h3>这套模拟器能证明什么，不能证明什么</h3>
   <p>
-    <span class="yes">能</span>：清怪速率够不够、BOSS 血量锚点对不对、阵容之间有没有区分度、各乘区有没有写错。
-    结论是配平自洽。
+    <span class="yes">能</span>：清怪速率够不够、BOSS 血量锚点对不对、阵容之间有没有区分度、各乘区有没有写错，
+    以及每个挑战维度有没有死胡同。结论是配平自洽。
   </p>
   <p>
     <span class="no">不能</span>：会不会死人、难度手感对不对、走位有没有意义。
     三个简化叠起来抹掉了整个生存维度——地图抽象成一维距离、索敌是单点最近目标、队员完全不走位。
     实测常规阶段僵尸贴身占比 <b>0%</b>，140 次运行 <b>0 阵亡</b>。
+  </p>
+  <p>
+    还有一条被证伪过的期待：它能证明「每个维度都有多种解」，但<b>不能</b>证明「很多种组合真的可行」——
+    12 个维度实际只收敛出 1 条真约束。这条边界如实记在
+    <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/00-决策清单.md">00-决策清单</a> D0。
   </p>
   <p>
     难度必须靠真人原型试玩验证。详见 <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/02-数值表.md">02-数值表</a> §10。
