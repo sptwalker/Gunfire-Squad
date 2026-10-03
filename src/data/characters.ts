@@ -313,7 +313,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'jet', name: '弹幕·杰特', role: 'rangedDps', weapon: 'smg',
-    weaponClasses: ['handgun', 'rifle'],
+    weaponClasses: ['smg', 'rifle'],
     primary: { str: 30, agi: 38, tgh: 16, int: 14, luk: 36, con: 16 },
     skill: {
       tier: 'basic',
@@ -361,7 +361,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'bom', name: '震地·博姆', role: 'control', weapon: 'grenade',
-    weaponClasses: ['explosive'],
+    weaponClasses: ['heavy'],
     primary: { str: 22, agi: 20, tgh: 26, int: 34, luk: 20, con: 28 },
     skill: {
       tier: 'basic',
@@ -387,7 +387,7 @@ export const HEROES: Hero[] = [
   {
     id: 'lian', name: '圣手·莉安', role: 'support', weapon: 'pistol',
     // ponytail: 弓箭对她是 ×2.00（跨类别也会击穿 BOSS 锚点），步枪 ×1.53，所以只留短枪
-    weaponClasses: ['handgun'],
+    weaponClasses: ['pistol'],
     primary: { str: 14, agi: 20, tgh: 20, int: 52, luk: 22, con: 22 },
     skill: {
       tier: 'basic',
@@ -459,7 +459,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'sif', name: '蜂群·西芙', role: 'summoner', weapon: 'laser',
-    weaponClasses: ['energy', 'handgun'],
+    weaponClasses: ['beam', 'pistol'],
     primary: { str: 18, agi: 22, tgh: 20, int: 44, luk: 24, con: 22 },
     skill: {
       tier: 'basic',

@@ -13,8 +13,9 @@
 import type { DamageType } from './damage.ts';
 
 /**
- * 武器类别。长柄 = 冷兵器长枪（spear）；步枪是热武器，单列一类（用户裁决：新增步枪类）。
- * 投掷 / 能量是现有回旋镖与激光枪各自的类，用户列表里没有，按"同类输出模式相近"补的。
+ * 武器类别（第三轮，C7-9）。**职业**定义自己能用哪些类别，类别跨职业共用。
+ * 用户给的初始清单 + 第二轮的步枪类（C6 裁决，保留）= 15 类；名称与划分随后四棵树再调。
+ * 刀盾 / 重锤 / 魔法 / 药水 暂无具体武器——军械库在 P2 末尾按职业树重建。
  *
  * **同类武器的持续 DPS 跨度 ≤ 1.3 倍**（用户裁决，`SAME_CLASS_DPS_CAP`，哨兵 §13a 守线）。
  * 同类武器之间换的是手感与附加效果（冻结 / 灼烧 / 击退 / 射程），不是数字。
@@ -22,11 +23,12 @@ import type { DamageType } from './damage.ts';
 export const SAME_CLASS_DPS_CAP = 1.3;
 
 export type WeaponClass =
-  | 'blade' | 'polearm' | 'bow' | 'handgun' | 'rifle' | 'sniper' | 'explosive' | 'sprayer' | 'thrown' | 'energy';
+  | 'blade' | 'shield' | 'polearm' | 'hammer' | 'bow' | 'pistol' | 'smg' | 'rifle' | 'sniper'
+  | 'heavy' | 'thrown' | 'sprayer' | 'magic' | 'potion' | 'beam';
 
 export const WEAPON_CLASS_NAME: Record<WeaponClass, string> = {
-  blade: '刀剑', polearm: '长柄', bow: '弓箭', handgun: '短枪', rifle: '步枪', sniper: '狙击',
-  explosive: '爆炸', sprayer: '喷射', thrown: '投掷', energy: '能量',
+  blade: '刀剑', shield: '刀盾', polearm: '长枪', hammer: '重锤', bow: '弓箭', pistol: '手枪', smg: '冲锋枪',
+  rifle: '步枪', sniper: '狙击枪', heavy: '重武器', thrown: '投掷', sprayer: '喷射', magic: '魔法', potion: '药水', beam: '光线',
 };
 
 export type WeaponId =
@@ -123,7 +125,7 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     base: 88, rate: 2.0, range: 22, pierce: 20, hitsPerAttack: 1,
     magazine: 12, reload: 1.8, aoe: 0, critBonus: 0,
     knockback: 12,
-    class: 'handgun',
+    class: 'pistol',
     note: '高攻速，低后坐',
   },
   smg: {
@@ -131,7 +133,7 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     base: 52, rate: 5.0, range: 20, pierce: 10, hitsPerAttack: 1,
     magazine: 30, reload: 2.2, aoe: 0, critBonus: 0,
     knockback: 6,
-    class: 'handgun',
+    class: 'smg',
     note: '高射速持续输出，但穿透低、对重甲乏力',
   },
   rifle: {
@@ -155,7 +157,7 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     base: 420, rate: 0.5, range: 25, pierce: 30, hitsPerAttack: 6,
     magazine: 3, reload: 3.0, aoe: 4, critBonus: 0,
     knockback: 40,
-    class: 'explosive',
+    class: 'heavy',
     note: '抛物线投掷，范围 4 格',
   },
   flamer: {
@@ -187,7 +189,7 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     base: 680, rate: 0.35, range: 35, pierce: 65, hitsPerAttack: 5,
     magazine: 2, reload: 3.5, aoe: 5, critBonus: 0,
     knockback: 70,
-    class: 'explosive',
+    class: 'heavy',
     note: '慢速高伤，击退',
   },
   laser: {
@@ -195,7 +197,7 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     base: 140, rate: 1.2, range: 40, pierce: 70, hitsPerAttack: 3,
     magazine: 8, reload: 2.4, aoe: 0, critBonus: 0.05,
     knockback: 12,
-    class: 'energy',
+    class: 'beam',
     note: '瞬时命中，链式跳 3 目标',
   },
 };

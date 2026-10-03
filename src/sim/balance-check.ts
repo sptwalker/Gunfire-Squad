@@ -15,6 +15,7 @@ import {
 import { derive, pointBudget, POINT_TOTAL, PRIMARY_KEYS, PRIMARY_LABEL } from '../data/attributes.ts';
 import { SAME_CLASS_DPS_CAP, TEMP_WEAPON_DROPS, WEAPONS, WEAPON_CLASS_NAME, tempWeaponSeconds, type WeaponId } from '../data/weapons.ts';
 import { ZOMBIES, ZOMBIE_LIST, stageMods } from '../data/zombies.ts';
+import { CLASS_BY_ID, CLASS_TREES, SKILL_SLOTS, expandTree } from '../data/classes.ts';
 import { BOSSES, BOSS_TIMEOUT, RUN_DURATION } from '../data/run.ts';
 import {
   ADVANCE_RANKS,
@@ -1003,7 +1004,7 @@ hr();
     [`转职点 ${ADVANCE_RANKS.length} 个（6 可选 + 五星）`, ADVANCE_RANKS.length === 7 && advancePointsAt(MAX_RANK) === 7],
     ['E-3 不能转、E-4 能转第 1 次', !canAdvance(3, 0) && canAdvance(4, 0)],
     ['点数可累积：O-1 未转过的人可连转 4 次', [0, 1, 2, 3].every((d) => canAdvance(15, d)) && !canAdvance(15, 4)],
-    ['五星要先补完前 6 转：点数按顺序消耗，转过 5 次的人下一转是第 6 转，不是终极', canAdvance(25, 5) && canAdvance(25, 6) && !canAdvance(25, 7)],
+    ['五星要先补完前 6 转：点数按顺序消耗，转过 5 次的人下一转是第 6 转，不是五星', canAdvance(25, 5) && canAdvance(25, 6) && !canAdvance(25, 7)],
     ['出战：超人数 / 有人超军衔上限都不能出', canDeploy([3, 3], 5, 2) && !canDeploy([3, 3, 3], 5, 2) && !canDeploy([3, 6], 5, 2)],
     ['敌人加成只看军衔上限（上限 1 = ×1）', enemyRankMul(1) === 1],
     ['重打已三星的关不再给星级荣誉', runHonor({ victory: true, tasksDone: 0, prevStars: 3, stars: 3 }) === HONOR_CLEAR_BONUS],
@@ -1085,4 +1086,71 @@ hr();
 for (const t of Object.values(TACTICS)) line(`${t.name.padEnd(6)} CD ${String(t.cooldown).padStart(3)}s  ${t.trigger}`);
 line();
 hr('═');
+hr('═');
+
+// ────────────────────────────────────────────────────────────
+// 14. 职业树（第三轮 P2，C7-1/2/3/25）
+// ────────────────────────────────────────────────────────────
+
+line('  14. 职业树（组合生成）');
+hr();
+for (const t of Object.values(CLASS_TREES)) {
+  const cs = expandTree(t!);
+  const T = (k: number) => cs.filter((c) => c.tier === k);
+  line(`${t!.name}树：${cs.length} 个职业，基础武器 [${t!.weapons.map((w) => WEAPON_CLASS_NAME[w]).join('/')}]`);
+  line('共用轴：' + t!.axes.map((a) => `${a.name}=${a.sides.map((s) => s.name).join('/')}`).join(' · '));
+  line('特色职业分线（第 3 转，按基础职业方向分）：' + t!.styles.map((p, i) => `${t!.names.core[i]}→` + p.map((a) => `${a.name}(${a.family})`).join('/')).join('  '));
+  line('技能槽（替换制）：' + SKILL_SLOTS.map((s) => `${s.id}${s.scope} 第${s.opens}转开${s.upgrades.length ? '、第' + s.upgrades.join('/') + '转升' : ''}`).join(' · '));
+  line();
+  for (let k = 0; k <= 4; k++) line(`  第${k}转 ` + T(k).map((c) => c.name).join(' '));
+  line('  第5转 ' + T(5).slice(0, 16).map((c) => c.name).join(' '));
+  line('        ' + T(5).slice(16).map((c) => c.name).join(' '));
+  line('  第6转 英雄角色 → 五星（64 名英雄，按第 1-2 转分四组）');
+  for (let g = 0; g < 4; g++) {
+    const six = T(6).slice(g * 16, g * 16 + 16);
+    for (let r = 0; r < 4; r++) line('    ' + six.slice(r * 4, r * 4 + 4).map((c) => `${c.name}→${CLASS_BY_ID[c.id + '+'].name.split('·')[0]}`).join('  '));
+  }
+  line();
+  const ex = CLASS_BY_ID[t!.key + '-110100+'] ?? T(7)[0];
+  line(`样例：${ex.name}（${ex.id}）  武器 [${ex.weaponClasses.map((w) => WEAPON_CLASS_NAME[w]).join('/')}]  成长 ${(ex.growth * 100).toFixed(0)}%`);
+  line('  路径 ' + ex.path.map((b, i) => CLASS_BY_ID[t!.key + '-' + ex.path.slice(0, i + 1).join('')].name).join(' → ') + ' → ' + ex.name);
+  line('  属性 ' + PRIMARY_KEYS.map((k) => `${PRIMARY_LABEL[k]}${ex.primary[k]}`).join(' '));
+  line('  技能 ' + ex.slots.map((s) => `${s.slot}${s.level} ${s.name}[${s.skill}](${s.tags.join('+')})`).join('  '));
+  line();
+
+  // 每个答案标签在这棵树里最早出现的军衔
+  const first = new Map<string, number>();
+  for (const c of cs) for (const tag of c.tags) first.set(tag, Math.min(first.get(tag) ?? 99, c.rank));
+  line('标签最早可得：' + [...first].sort((a, b) => a[1] - b[1]).map(([tag, r]) => `${tag}@${RANKS[r - 1].code}`).join(' '));
+  line('本树没有：' + Object.keys(ANSWER_DIMS).filter((tag) => !first.has(tag)).join(' ') + '（由其他树补，C7-19 只要求全游戏有解）');
+  line();
+
+  const names = cs.map((c) => c.name);
+  const heroNames = T(6).map((c) => c.name.split('·')[1]);
+  const SLOTS_BY_TIER = [0, 1, 1, 2, 2, 3, 4, 4];
+  const checks: [string, boolean][] = [
+    ['191 个职业：1+2+4+8+16+32+64+64', cs.length === 191 && [1, 2, 4, 8, 16, 32, 64, 64].every((n, k) => T(k).length === n)],
+    ['职业名全树不重复', new Set(names).size === names.length],
+    ['64 名英雄的名字不重复（称号除外）', new Set(heroNames).size === 64],
+    ['每个职业属性合计 = ' + POINT_TOTAL + '，单项 ≥ 1', cs.every((c) => pointBudget(c.primary) === POINT_TOTAL && PRIMARY_KEYS.every((k) => c.primary[k] >= 1))],
+    [`成长率在 ${HERO_GROWTH_BAND.join('–')} 内`, cs.every((c) => c.growth >= HERO_GROWTH_BAND[0] && c.growth <= HERO_GROWTH_BAND[1])],
+    ['技能数按阶：基础职业 1 · 基础职业方向 1 · 特色职业分线 2 · 职业流派 2 · 职业专精 3 · 英雄角色 4 · 五星 4', cs.every((c) => c.slots.length === SLOTS_BY_TIER[c.tier])],
+    ['同层两个兄弟职业的技能不完全相同', cs.filter((c) => c.tier >= 1 && c.tier <= 6).every((c) => {
+      const sib = CLASS_BY_ID[t!.key + '-' + c.path.slice(0, -1).join('') + (1 - c.path.at(-1)!)];
+      return c.slots.some((s, i) => s.skill !== sib.slots[i].skill);
+    })],
+    ['8 条特色职业分线的机制家族各不相同', new Set(t!.styles.flat().map((a) => a.family)).size === 8],
+    ['同名技能只对应一个 key', (() => {
+      const m = new Map<string, string>();
+      return cs.every((c) => c.slots.every((s) => (m.get(s.name) ?? s.skill) === s.skill && m.set(s.name, s.skill)));
+    })()],
+    ['每个技能都带答案标签', cs.every((c) => c.slots.every((s) => s.tags.length > 0))],
+    ['64 个五星特性各不相同（名字与描述）', new Set(T(7).map((u) => u.slots[3].name)).size === 64 && new Set(T(7).map((u) => u.slots[3].text)).size === 64],
+    ['五星 = 英雄角色一对一升级（同路径、同武器）', T(7).every((u) => CLASS_BY_ID[u.id.slice(0, -1)].weaponClasses.join() === u.weaponClasses.join())],
+  ];
+  for (const [n, ok] of checks) line(`${ok ? '✓' : '✗'} ${n}`);
+  const skills = new Set(cs.flatMap((c) => c.slots.map((s) => s.skill)));
+  line(`技能 key 数（P4 要写的技能条目）：${skills.size}`);
+}
+line();
 hr('═');
