@@ -17,29 +17,30 @@ import { SAME_CLASS_DPS_CAP, TEMP_WEAPON_DROPS, WEAPONS, WEAPON_CLASS_NAME, temp
 import { ZOMBIES, ZOMBIE_LIST, stageMods } from '../data/zombies.ts';
 import { BOSSES, BOSS_TIMEOUT, RUN_DURATION } from '../data/run.ts';
 import {
-  HONOR_PER_TASK,
+  ADVANCE_RANKS,
+  HERO_GROWTH_BAND,
+  HONOR_BASE,
   HONOR_CLEAR_BONUS,
+  HONOR_GROWTH,
+  HONOR_PER_NEW_STAR,
+  HONOR_PER_TASK,
+  ITEM_SHOP,
   MAX_RANK,
+  MONEY_PER_CLEAR,
   RANKS,
-  RANK_FORBIDDEN_EFFECTS,
   SHOP,
   TACTICS,
   WEAPON_SHOP,
-  ITEM_SHOP,
+  advancePointsAt,
+  canAdvance,
+  canDeploy,
   canEquip,
   difficultyUnlocked,
-  starsFor,
-  skillPointSupply,
-  tacticsFor,
-  MONEY_PER_CLEAR,
-  advancedSkillUnlocked,
-  ADVANCED_SKILL_RANK,
-  ADVANCED_SKILL_COST,
-  clearsToUnlockAll,
+  enemyRankMul,
+  heroRankMul,
   honorPerHero,
-  rankAt,
-  rankEffects,
-  skillPointsFor,
+  runHonor,
+  starsFor,
   totalUnlockCost,
 } from '../data/progression.ts';
 import {
@@ -891,193 +892,126 @@ for (const id of OBSTACLE_KINDS) {
 line();
 
 // ────────────────────────────────────────────────────────────
-// 12. 军衔与技能点的时间成本（第二轮新增）
+// 12. 军衔与成长（第三轮重写：25 级美军军衔，C7）
 // ────────────────────────────────────────────────────────────
 
 hr('═');
-line('  12. 军衔与技能点的时间成本');
+line('  12. 军衔与成长（25 级）');
 hr();
-line('两条局外成长线。技能点来自【新星级】，荣誉值来自【局内随机任务】。');
-line('产出条件不同，所以不会出现"刷一个最优关卡同时喂满两条线"。');
+line('局外数值线只剩军衔：荣誉 → 军衔 → 属性成长（最终生命 / 伤害）+ 转职点。');
+line('防刷：敌人按关卡军衔上限加成；全队超上限 = 这关毕业。');
 line();
 
-// ── 12a 技能点产出：星级 ──
-line('12a 技能点：每颗【新】星 1 点，每关每档难度三星封顶');
+// ── 12a 星级与荣誉 ──
+line('12a 荣誉：任务与通关每次都发，星级只发【新】星');
 hr();
 line('  ★ 通关   ★★ 最终全员存活   ★★★ 全员存活 + 完成全部局内任务');
 {
-  // 参考阵容实测：这一局能拿几星？
   const r = simulate(CAL_SQUAD);
   const alive = CAL_SQUAD.length - r.deaths.length;
   // 模拟器不跑任务（run-sim.ts 头注释），这里只能给出"任务全做完"时的上限
   const st = starsFor({ victory: r.result === 'victory', deaths: r.deaths.length, tasksDone: 3, tasksTotal: 3 });
-  line(`参考阵容实测：${r.result}，存活 ${alive}/${CAL_SQUAD.length} → ${'★'.repeat(st) || '0 星'}（假设任务全做完；模拟器不跑任务）`);
-  const supply = skillPointSupply(TOTAL_LEVELS, DIFFICULTIES.length);
-  const demand = ADVANCED_SKILL_COST * HEROES.length +
-    HEROES.reduce((s, h) => s + h.specialization.reduce((t, n) => t + n.cost, 0), 0);
-  line(`供给上限：${TOTAL_LEVELS} 关 × 3 星 × ${DIFFICULTIES.length} 档 = ${supply} 点`);
-  line(`全部需求：12 棵专精树 + 12 个高级技能 = ${demand} 点`);
-  line(
-    (supply >= demand ? '✓' : '✗') +
-      ` 供给/需求 = ${(supply / demand).toFixed(2)}` +
-      (supply >= demand ? '——不刷也点得满，缺口只能靠补星（打得更好）来填' : '——**点不满**，要么降节点价，要么加星'),
-  );
+  line(`参考阵容实测：${r.result}，存活 ${alive}/${CAL_SQUAD.length} → ${'★'.repeat(st) || '0 星'}（假设任务全做完）`);
+  line(`任务 ${HONOR_PER_TASK}/个 · 通关 ${HONOR_CLEAR_BONUS} · 新星 ${HONOR_PER_NEW_STAR}/颗`);
+  const cases = [
+    ['首通三星', { victory: true, tasksDone: 3, prevStars: 0, stars: 3 }],
+    ['首通一星', { victory: true, tasksDone: 1, prevStars: 0, stars: 1 }],
+    ['重打补到三星', { victory: true, tasksDone: 3, prevStars: 1, stars: 3 }],
+    ['重打（已三星）', { victory: true, tasksDone: 3, prevStars: 3, stars: 3 }],
+    ['失败，做了 2 个任务', { victory: false, tasksDone: 2, prevStars: 0, stars: 0 }],
+  ] as const;
+  for (const [name, c] of cases) {
+    const t = runHonor(c);
+    line(`  ${name.padEnd(14)} ${String(t).padStart(4)} 荣誉 → 5 人各 ${honorPerHero(t, 5).toFixed(1)} · 3 人各 ${honorPerHero(t, 3).toFixed(1)}`);
+  }
 }
-line('重打一关唯一的收益是补星，三星后该关恒为 0——技能点线上没有"刷"。');
 line();
 
-// ── 12b 军衔阶梯 ──
-line(`12b 军衔阶梯（${MAX_RANK} 级，效果【只含 skill / ai / tactic】——编译器禁止 attr 变体）`);
+// ── 12b 军衔表 ──
+const GROWTHS = [HERO_GROWTH_BAND[0], (HERO_GROWTH_BAND[0] + HERO_GROWTH_BAND[1]) / 2, HERO_GROWTH_BAND[1]];
+line(`12b 军衔表（升级荣誉 = ${HONOR_BASE} × ${HONOR_GROWTH}^(级-2)；◆ = 发转职点）`);
 hr();
-line('级'.padEnd(5) + '军衔'.padEnd(10) + '累计荣誉'.padEnd(11) + '本级效果'.padEnd(34) + '说明');
+line(
+  '级'.padEnd(4) + '代码'.padEnd(6) + '军衔'.padEnd(8) + '本级'.padStart(6) + '累计'.padStart(8) + '  转职 ' +
+    GROWTHS.map((g) => `英雄×${(g * 100).toFixed(1)}%`.padStart(11)).join('') + '敌人×5%'.padStart(9),
+);
 hr();
 for (const r of RANKS) {
-  const fx = r.effects
-    .map((e) =>
-      e.kind === 'skill'
-        ? `${e.field}${e.mode === 'mul' ? '×' : '+'}${e.amount}`
-        : e.kind === 'tactic'
-          ? `【${TACTICS[e.id].name}】`
-          : e.kind === 'ai'
-            ? `ai.${e.field}${e.amount > 0 ? '+' : ''}${e.amount}`
-            : '?',
-    )
-    .join(' ');
+  const step = r.level === 1 ? 0 : r.req - RANKS[r.level - 2].req;
+  const adv = r.advance ? `◆${advancePointsAt(r.level)}` : '';
   line(
-    String(r.level).padEnd(5) +
-      r.name.padEnd(10) +
-      r.req.toLocaleString('en-US').padEnd(11) +
-      (fx || '—').padEnd(34) +
-      r.note,
+    String(r.level).padEnd(4) + r.code.padEnd(6) + r.name.padEnd(8) +
+      String(step).padStart(6) + r.req.toLocaleString('en-US').padStart(8) + '  ' + adv.padEnd(5) +
+      GROWTHS.map((g) => heroRankMul(r.level, g).toFixed(2).padStart(11)).join('') +
+      enemyRankMul(r.level).toFixed(2).padStart(9),
   );
 }
 line();
-line(`高级技能解锁门槛：军衔 ${ADVANCED_SKILL_RANK} 级（${RANKS[ADVANCED_SKILL_RANK - 1].name}）`);
-line(`高级技能技能点售价：${ADVANCED_SKILL_COST} 点 —— 两把钥匙都要，见 12d`);
+// 读数，不判：英雄乘区同时作用于生命和伤害，所以对等军衔的"强度比"是平方。
+line('同级对位强度比 = (英雄乘区 / 敌人乘区)²（英雄乘区同时乘生命与伤害，敌人同理）：');
+for (const g of GROWTHS) {
+  const at = (lv: number) => (heroRankMul(lv, g) / enemyRankMul(lv)) ** 2;
+  line(`  成长 ${(g * 100).toFixed(1)}%：E-4 ×${at(4).toFixed(2)} · W-1 ×${at(10).toFixed(2)} · O-4 ×${at(18).toFixed(2)} · 五星 ×${at(25).toFixed(2)}`);
+}
+line('  ⚠ 成长 >5% 的职业在高军衔会显著碾压同级关卡——C7-4c 约定先试玩再修，这里只记读数。');
 line();
 
-// ── 12c 一局能拿到多少 ──
-line('12c 一局 15 分钟能拿到多少');
+// ── 12c 时间成本 ──
+line('12c 时间成本（一局按 15 分钟计）');
 hr();
 {
-  const tasksPerRun = 3;                 // 局内随机任务数，对齐 docs/01 §11
-  const honorPerRun = tasksPerRun * HONOR_PER_TASK + HONOR_CLEAR_BONUS;
+  // 稳态按"重打已三星的关"算：只有任务 + 通关，星级荣誉是一次性的加成，不计入速率
+  const tasksPerRun = 3;
+  const honorPerRun = runHonor({ victory: true, tasksDone: tasksPerRun, prevStars: 3, stars: 3 });
   const perHero = honorPerHero(honorPerRun, 5);
-  // 金钱产出【直接跑一遍模拟器】，不读 MONEY_PER_CLEAR。
-  // 常量只配拿来给文档引用，真源必须在这里——上一版的 620 就是这么腐坏的。
-  const moneyLive = simulate(CAL_SQUAD).totalMoney;
-  line(`荣誉值：${tasksPerRun} 个任务 × ${HONOR_PER_TASK} + 通关奖励 ${HONOR_CLEAR_BONUS} = ${honorPerRun}/局`);
-  line(`         平均分给 5 名参战队员 = 每人 +${perHero.toFixed(1)}/局`);
-  line(`技能点：新关首通 1-3 点，重打只补差星`);
-  line(`金钱：  ${moneyLive.toLocaleString('en-US')}/局（本节实时调 simulate() 取，不是抄常量）`);
-  line();
-  const runsToMax = Math.ceil(RANKS[MAX_RANK - 1].req / perHero);
-  const runsToGate = Math.ceil(RANKS[ADVANCED_SKILL_RANK - 1].req / perHero);
-  const skillRuns = Math.ceil((ADVANCED_SKILL_COST * 12) / 2); // 按新关首通平均 2 星计
-  const shopRuns = Math.ceil(totalUnlockCost() / moneyLive);
-  // 一局按 RUN_DURATION 计。把局数翻成小时——"358 局"读不出体感，"90 小时"能。
   const HOURS = (n: number) => (n * RUN_DURATION) / 3600;
-  line(`按此速率（一局按 ${RUN_DURATION}s = 15 分钟计）：`);
-  line(
-    `  满军衔（${RANKS[MAX_RANK - 1].name}，累计 ${RANKS[MAX_RANK - 1].req.toLocaleString('en-US')}）` +
-      `= ${runsToMax} 局 ≈ ${HOURS(runsToMax).toFixed(0)} 小时`,
-  );
-  line(
-    `    └ 其中到 ${RANKS[ADVANCED_SKILL_RANK - 1].name}（高级技能门槛）` +
-      `= ${runsToGate} 局 ≈ ${HOURS(runsToGate).toFixed(0)} 小时`,
-  );
-  line(`  解锁全部商品（合计 ${totalUnlockCost().toLocaleString('en-US')} 金钱）= ${shopRuns} 局 ≈ ${HOURS(shopRuns).toFixed(0)} 小时`);
-  line(`  全部 12 个高级技能（${ADVANCED_SKILL_COST} 点 × 12）= 72 点 = ${skillRuns} 局 ≈ ${HOURS(skillRuns).toFixed(0)} 小时`);
-  line();
-  // 三条线**自己排序**再写进句子里。上一版手写"军衔 > 高级技能 > 商店"，
-  // 实际是 90h > 14h > 6h，句子和数字当场打架。
-  const lines3 = [
-    { name: '军衔', h: HOURS(runsToMax) },
-    { name: '商店', h: HOURS(shopRuns) },
-    { name: '高级技能', h: HOURS(skillRuns) },
-  ].sort((a, b) => b.h - a.h);
-  line(
-    '三条线的长度是【刻意错开】的：' +
-      lines3.map((l) => `${l.name} ${l.h.toFixed(0)}h`).join(' > ') + '。',
-  );
-  line(
-    `最短的那条是${lines3[lines3.length - 1].name}，` +
-      '所以玩家最先到手的是【选项与技能】，长期投入的是军衔。',
-  );
-  line('顺序反过来的话，玩家会在没有选项的情况下被迫做长期投入。');
-  line();
-  // 判据用【绝对小时数区间】，不用"相对商店的倍数"。
-  // 之前写的是倍数（>8 倍报警），那条判据从根上就不成立：
-  // 商店线是【故意压短】的（它卖选项，选项必须来得早），
-  // 拿一条长期线去比一条被刻意压缩的线，它永远超标。
-  // 真正该问的是：满军衔能不能在一款单局 15 分钟的游戏里被玩到。
+  const moneyLive = simulate(CAL_SQUAD).totalMoney;
+  line(`稳态速率：${honorPerRun} 荣誉/局 ÷ 5 人 = 每人 ${perHero.toFixed(1)}/局（不含一次性的新星荣誉，偏保守）`);
+  line('一支 5 人队到各转职军衔：');
+  for (const lv of ADVANCE_RANKS) {
+    const n = Math.ceil(RANKS[lv - 1].req / perHero);
+    line(`  ${RANKS[lv - 1].code.padEnd(5)}${RANKS[lv - 1].name.padEnd(8)}第 ${advancePointsAt(lv)} 转  ${String(n).padStart(4)} 局 ≈ ${HOURS(n).toFixed(1).padStart(5)} 小时`);
+  }
+  const runsToMax = Math.ceil(RANKS[MAX_RANK - 1].req / perHero);
   const RANK_HOURS_BAND = [40, 100] as const;
   const maxH = HOURS(runsToMax);
   const inBand = maxH >= RANK_HOURS_BAND[0] && maxH <= RANK_HOURS_BAND[1];
   line(
-    `${inBand ? '✓' : '⚠'} 满军衔 ${maxH.toFixed(0)} 小时，目标区间 ` +
-      `${RANK_HOURS_BAND[0]}-${RANK_HOURS_BAND[1]} 小时` +
-      (inBand
-        ? '——军衔是刻意做成最长的一条线的，它给的是长期目标，不是门槛。'
-        : '——**落在区间外**，改 `RANKS` 后段的 `req` 或 `HONOR_PER_TASK` 把它拉回来。'),
-  );
-  line(
-    `  作为参照：军衔线是商店线的 ${(runsToMax / shopRuns).toFixed(1)} 倍长，` +
-      '这个比值本身大是预期的（分母是故意压短的），所以它只描述，不作为判据。',
-  );
-  line(
-    `  参照：高级技能门槛在第 ${runsToGate} 局，商店买齐在第 ${shopRuns} 局，` +
-      (runsToGate < shopRuns
-        ? '所以高级技能会【先于】买齐商店开放——顺序是对的（先有资格，后有选项充实它）。'
-        : '所以资格晚于选项到位，前期不会有"解锁了但没东西可解"的空窗。'),
+    `${inBand ? '✓' : '⚠'} 第一支队满五星 ${maxH.toFixed(0)} 小时，目标 ${RANK_HOURS_BAND[0]}-${RANK_HOURS_BAND[1]} 小时` +
+      '（全游戏约 100 小时，毕业机制会逼玩家练第二、第三支队；P6 关卡线定了再回调）',
   );
   line();
-  // 文档里引用的 MONEY_PER_CLEAR 必须和实测对得上，否则文档就在说一个不存在的数。
+  const shopRuns = Math.ceil(totalUnlockCost() / moneyLive);
+  line(`金钱 ${moneyLive.toLocaleString('en-US')}/局（实时 simulate()）；买齐军械库 ${totalUnlockCost().toLocaleString('en-US')} = ${shopRuns} 局 ≈ ${HOURS(shopRuns).toFixed(0)} 小时`);
+  line('  ⚠ 军械库仍是第二轮的 14 把武器，P2 武器类别定稿后重做；招募刷新的花费也在那时加入金钱线。');
   const moneyDrift = Math.abs(moneyLive - MONEY_PER_CLEAR) / MONEY_PER_CLEAR;
   line(
     moneyDrift < 0.02
       ? `✓ 常量 MONEY_PER_CLEAR = ${MONEY_PER_CLEAR.toLocaleString('en-US')} 与实测一致（偏离 ${(moneyDrift * 100).toFixed(1)}%）`
-      : `✗ 常量 MONEY_PER_CLEAR = ${MONEY_PER_CLEAR.toLocaleString('en-US')} 与实测 ` +
-        `${moneyLive.toLocaleString('en-US')} 偏离 ${(moneyDrift * 100).toFixed(0)}%——` +
-        'docs 里所有经济数字都建立在这个常量上，必须同步',
-  );
-  line(
-    `  商店线 ${shopRuns} 局是刻意压短的：它卖的是【选项】，选项必须来得早，` +
-      '否则玩家在没得选的时候就先被拖去做长期投入。',
+      : `✗ 常量 MONEY_PER_CLEAR = ${MONEY_PER_CLEAR.toLocaleString('en-US')} 与实测 ${moneyLive.toLocaleString('en-US')} 偏离 ${(moneyDrift * 100).toFixed(0)}%`,
   );
 }
 line();
 
-// ── 12d 双钥匙与架构不变量自查 ──
-line('12d 架构不变量自查');
+// ── 12d 不变量自查 ──
+line('12d 不变量自查');
 hr();
 {
-  const combos = [
-    [1, false], [1, true], [ADVANCED_SKILL_RANK - 1, true],
-    [ADVANCED_SKILL_RANK, false], [ADVANCED_SKILL_RANK, true],
-  ] as const;
-  line('军衔'.padEnd(7) + '已购买'.padEnd(9) + '高级技能');
-  hr();
-  for (const [rk, bought] of combos) {
-    line(String(rk).padEnd(7) + (bought ? '✓' : '—').padEnd(9) + (advancedSkillUnlocked(rk, bought) ? '解锁' : '未解锁'));
-  }
-  line();
-  line('两把钥匙缺一不可。这是让"技能点解锁高级技能"与"军衔解锁高级技能"');
-  line('两句需求同时成立的唯一读法——只要一把钥匙，另一句话就会落空。');
-  line();
-  const allSkill = RANKS.flatMap((r) => r.effects).every(
-    (e) => e.kind === 'skill' || e.kind === 'ai' || e.kind === 'tactic',
-  );
-  line(
-    allSkill
-      ? `✓ ${RANKS.length} 级军衔的 ${RANKS.flatMap((r) => r.effects).length} 条效果全部是 skill / ai / tactic，无一例外`
-      : '✗ 军衔里混进了非 skill/ai/tactic 的效果',
-  );
-  line(`  （类型层由 RankEffect = Exclude<SpecEffect, {kind:'attr'}> 强制，这里是运行时的第二道保险）`);
-  line(`  军衔明确【不能】给：${RANK_FORBIDDEN_EFFECTS.join(' / ')}`);
+  const checks: [string, boolean][] = [
+    [`军衔 ${MAX_RANK} 级，五星上将在顶`, MAX_RANK === 25 && RANKS[24].name === '五星上将'],
+    ['累计荣誉严格递增', RANKS.every((r, i) => i === 0 || r.req > RANKS[i - 1].req)],
+    [`转职点 ${ADVANCE_RANKS.length} 个（6 可选 + 五星）`, ADVANCE_RANKS.length === 7 && advancePointsAt(MAX_RANK) === 7],
+    ['E-3 不能转、E-4 能转第 1 次', !canAdvance(3, 0) && canAdvance(4, 0)],
+    ['点数可累积：O-1 未转过的人可连转 4 次', [0, 1, 2, 3].every((d) => canAdvance(15, d)) && !canAdvance(15, 4)],
+    ['五星要先补完前 6 转：点数按顺序消耗，转过 5 次的人下一转是第 6 转，不是终极', canAdvance(25, 5) && canAdvance(25, 6) && !canAdvance(25, 7)],
+    ['出战：超人数 / 有人超军衔上限都不能出', canDeploy([3, 3], 5, 2) && !canDeploy([3, 3, 3], 5, 2) && !canDeploy([3, 6], 5, 2)],
+    ['敌人加成只看军衔上限（上限 1 = ×1）', enemyRankMul(1) === 1],
+    ['重打已三星的关不再给星级荣誉', runHonor({ victory: true, tasksDone: 0, prevStars: 3, stars: 3 }) === HONOR_CLEAR_BONUS],
+  ];
+  for (const [name, ok] of checks) line(`${ok ? '✓' : '✗'} ${name}`);
   line();
   line('军械库共 ' + SHOP.length + ' 件：武器 ' + Object.keys(WEAPON_SHOP).length +
-    ' 把 + 道具 ' + Object.keys(ITEM_SHOP).length + ' 种。买断、全队共享；阶/等级/属性不卖。');
+    ' 把 + 道具 ' + Object.keys(ITEM_SHOP).length + ' 种。买断、全队共享。');
   const d = (x: boolean) => (x ? '开' : '锁');
   line(
     `难度逐档解锁：困难(普通终关未过) ${d(difficultyUnlocked('hard', {}))} · ` +
@@ -1146,17 +1080,9 @@ for (const d of TEMP_WEAPON_DROPS) {
 line();
 
 // ── 13c 战术动作 ──
-line('13c 战术动作（军衔后段解锁，不给维度答案）：每个定位满军衔能用几个');
+line('13c 战术动作（素材表：军衔不再给行为，P4 并入技能表由职业持有）');
 hr();
-{
-  const roles = [...new Set(HEROES.map((h) => h.role))];
-  for (const r of roles) {
-    const ts = tacticsFor(r, MAX_RANK);
-    line(r.padEnd(11) + (ts.map((t) => t.name).join(' · ') || '—'));
-  }
-  const bare = roles.filter((r) => tacticsFor(r, MAX_RANK).length === 0);
-  line(bare.length ? `✗ 满军衔仍无战术动作的定位：${bare.join(', ')}` : '✓ 6 种定位满军衔都至少有一个战术动作');
-}
+for (const t of Object.values(TACTICS)) line(`${t.name.padEnd(6)} CD ${String(t.cooldown).padStart(3)}s  ${t.trigger}`);
 line();
 hr('═');
 hr('═');

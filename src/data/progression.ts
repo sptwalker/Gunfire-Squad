@@ -1,53 +1,34 @@
 /**
- * 局外成长。两份货币，两条线，互不重叠。
+ * 局外成长（第三轮，`00` §C7）。
  *
- * ── 为什么必须分成两条 ──
- *   技能点：**新关卡的新星级**给（每颗星 1 点，三星封顶），管"我要不要这支角色变得更强"
- *   荣誉值：**局内随机任务**给，管"这支角色在队里够不够老练"
- * 两者的产出条件完全不同，所以不会出现"刷一个最优关卡同时喂满两条线"。
+ * ── 数值线只剩一条：军衔 ──
+ * 25 级美军军衔 = 局外等级。荣誉值 → 军衔 → 两样东西：
+ *   1. **属性成长**：每级 5–10%（按职业，具体值在 P2 职业表里），复利，
+ *      加在**最终生命与最终伤害**上——全游戏唯一允许的额外乘区（C7-5）
+ *   2. **转职点**：到 `ADVANCE_RANKS` 发 1 点，并解锁那一层职业
+ * 技能点与专精树已删除（C7-3）；技能随转职替换升级，见技能表（P4）。
  *
- * ── 与 `characters.ts` 的 `SpecEffect` 的关系 ──
- * 两条线共用同一个效果联合类型，但**军衔被编译器禁止给 `attr`**：
+ * ── 防刷靠两件事 ──
+ *   - 敌人按**关卡的军衔上限**同步加成（`enemyRankMul`），不按关卡序号——加关卡不推高敌人
+ *   - 出战队员**都不能超过**关卡上限（`canDeploy`）——超了这关就毕业，刷不了
  *
- *     type RankEffect = Exclude<SpecEffect, { kind: 'attr' }>
- *
- * 这是本轮的架构不变量，与"别给 SpecEffect 加 damageMul"同一手法——
- * 军衔**不直接加战斗属性**。它给的是三样东西：
- *   1. `skill` — 增强已有的低级技能（数值变好，但没解锁新东西）
- *   2. `ai`    — 更聪明的自动战斗（优先打威胁更大的、更及时地躲范围伤害）
- *   2b. `tactic` — 后段的战术动作（地雷 / 陷阱 / 工事 / 堡垒 / 炮火），见 `TACTICS`
- *   3. 高级技能的**解锁资格**（见 `advancedSkillUnlocked`）
- *
- * ── 高级技能要两把钥匙 ──
- * 玩家口径里"技能点解锁高级技能"（P5）与"军衔解锁高级技能"（P6）都得成立。
- * 那就两把都要：**军衔到级给资格，技能点购买给到手**。
- * 只有一把钥匙时，另一句需求就会落空——这是唯一能让两句话同时为真的读法。
+ * ponytail: 5% / 5–10% / 荣誉曲线都是起点，不是配平结论（C7-4c：先试玩再修）。
  */
 
-import type { Primary } from './attributes.ts';
-import type { AnswerTag, Hero, HeroRole, SpecEffect, SpecNode } from './characters.ts';
+import type { Hero } from './characters.ts';
 import { WEAPONS, type WeaponId } from './weapons.ts';
 import type { BuffId } from './run.ts';
 import type { DifficultyId } from './scenes.ts';
 
 // ─────────────────────────────────────────────
-// 一、技能点
+// 一、星级与荣誉
 // ─────────────────────────────────────────────
 
 /**
- * 技能点 = **星级**（用户裁决 #4）。每个关卡的每档难度各自最多 3 颗星，
- * **第一次拿到某颗星给 1 点**；三星之后这一关不再产出技能点。
- *
- * 这条规则把"刷"从技能点线上整条拆掉：重打一关唯一的收益是**补星**，
- * 而补星要求打得更好，不是打得更久。
- *
- * 星级（用户裁决，第三轮）：
+ * 星级（C6-#8，不变）：
  *   ★ 通关
- *   ★★ 通关且**最终全员存活**（没有人阵亡；莉安的战地复活拉回来的算活着）
+ *   ★★ 通关且**最终全员存活**（被复活技能拉回来的算活着）
  *   ★★★ ★★ 且**完成本局全部随机任务**
- *
- * 三颗星各是一道看得见的门槛，不是分数线：玩家读得懂"差哪一颗、要怎么补"。
- * 二星逼的是"阵容能不能扛住"，三星逼的是"扛住的同时还能分心做任务"——两条都指向换阵容。
  */
 export function starsFor(r: { victory: boolean; deaths: number; tasksDone: number; tasksTotal: number }): 0 | 1 | 2 | 3 {
   if (!r.victory) return 0;
@@ -55,85 +36,134 @@ export function starsFor(r: { victory: boolean; deaths: number; tasksDone: numbe
   return r.tasksDone >= r.tasksTotal ? 3 : 2;
 }
 
-/** 本局给多少技能点 = 新拿到的星数。已有 3 星 → 恒为 0，这就是"三星后不再产出"。 */
-export function skillPointsFor(prevStars: number, stars: number): number {
-  return Math.max(0, stars - prevStars);
-}
-
-/** 全游戏技能点供给上限 = 关卡数 × 3 星 × 难度档数。哨兵 §12a 拿它对需求。 */
-export function skillPointSupply(totalLevels: number, difficulties: number): number {
-  return totalLevels * 3 * difficulties;
-}
-
-// ─────────────────────────────────────────────
-// 二、荣誉值与军衔
-// ─────────────────────────────────────────────
-
-/** 一次局内任务给多少荣誉值。数值定得比技能点大，因为军衔需要累积。 */
+/** 一次局内任务的荣誉值（每次都发） */
 export const HONOR_PER_TASK = 12;
-/** 关底额外给的荣誉值（通关奖励，不是任务） */
+/** 通关奖励（每次都发） */
 export const HONOR_CLEAR_BONUS = 20;
+/** 每颗**新**星的荣誉值，只在首次拿到时发（C7-7）——接替原来的技能点 */
+export const HONOR_PER_NEW_STAR = 30;
+
+/** 一局的荣誉总额。星级部分只算新星，重打只补差星。 */
+export function runHonor(r: { victory: boolean; tasksDone: number; prevStars: number; stars: number }): number {
+  return r.tasksDone * HONOR_PER_TASK + (r.victory ? HONOR_CLEAR_BONUS : 0) +
+    Math.max(0, r.stars - r.prevStars) * HONOR_PER_NEW_STAR;
+}
 
 /**
- * 荣誉值会**平均分给所有参战队员**——不是只给 MVP，也不是全给队长。
- *
- * 这一条是本设计的题眼：军衔衡量的是"这支小队打了多少仗"，
- * 不是"谁抢到了人头"。所以换阵容不会让某个角色落后，
- * 12 个角色一起长，玩家每换一套阵容都是拿一支成型的队伍去打，
- * 而不是在重新养一个白板。
+ * 荣誉**平均分给出战队员**（C7-7）。少带人 = 每人分得多——
+ * 这就是"可以少带"（C7-15）的回报，不是漏洞。
+ * 已在本关毕业的队员不能出战（`canDeploy`），所以"直到毕业"不需要单独判定。
  */
 export function honorPerHero(totalHonor: number, squadSize: number): number {
   return totalHonor / squadSize;
 }
 
+// ─────────────────────────────────────────────
+// 二、军衔（25 级）
+// ─────────────────────────────────────────────
+
 /**
- * 军衔阶梯。12 级。
- *
- * `req` 是**累计**荣誉值，不是本级差值——累计值让"我离下一级还有多远"
- * 可以直接读，不用做减法。
- *
- * 曲线形状：前 6 级陡（每级 +60~90），后 6 级缓（每级 +150~400）。
- * 前段让玩家在一两局内就看见第一个军衔变化（正反馈要早），
- * 后段拉长到十几局，让满军衔是一件长期的事。
+ * 美军军衔标准中文译名。E-1 / E-2 英文同为 Private，中文错开为新兵 / 二等兵；
+ * E-4 取 Corporal（下士）。W 系、O 系接在 E 系之后，是游戏里的线性排序，
+ * 不代表现实晋升路径。
  */
+const RANK_TABLE: [code: string, name: string][] = [
+  ['E-1', '新兵'], ['E-2', '二等兵'], ['E-3', '一等兵'], ['E-4', '下士'], ['E-5', '中士'],
+  ['E-6', '上士'], ['E-7', '一级军士长'], ['E-8', '军士长'], ['E-9', '总军士长'],
+  ['W-1', '准尉'], ['W-2', '二级准尉'], ['W-3', '三级准尉'], ['W-4', '四级准尉'], ['W-5', '五级准尉'],
+  ['O-1', '少尉'], ['O-2', '中尉'], ['O-3', '上尉'], ['O-4', '少校'], ['O-5', '中校'], ['O-6', '上校'],
+  ['O-7', '准将'], ['O-8', '少将'], ['O-9', '中将'], ['O-10', '上将'], ['★5', '五星上将'],
+];
+
+/**
+ * 升到第 n 级要的荣誉 = `HONOR_BASE × HONOR_GROWTH^(n-2)`。几何曲线：
+ * 前段一两局升一级（正反馈要早），后段十几局一级。
+ * ponytail: 只校准到"一支队满五星的小时数"（哨兵 §12c），P6 关卡线定了再按 100 小时总量回调。
+ */
+export const HONOR_BASE = 24;
+export const HONOR_GROWTH = 1.12;
+
+/** 发转职点的军衔：E-4 / E-7 / W-1 / O-1 / O-4 / O-7 / 五星（C7-2c） */
+export const ADVANCE_RANKS = [4, 7, 10, 15, 18, 21, 25] as const;
+
 export interface Rank {
   level: number;
+  code: string;
   name: string;
   /** 累计荣誉值门槛 */
   req: number;
-  /** 本级给的效果。不含 `attr`——见文件头，由 RankEffect 强制。 */
-  effects: RankEffect[];
-  note: string;
+  /** 本级发转职点 */
+  advance: boolean;
 }
 
-export type RankEffect = Exclude<SpecEffect, { kind: 'attr' }>;
+export const RANKS: Rank[] = (() => {
+  let req = 0;
+  return RANK_TABLE.map(([code, name], i) => {
+    const level = i + 1;
+    if (level > 1) req += Math.round(HONOR_BASE * HONOR_GROWTH ** (level - 2));
+    return { level, code, name, req, advance: (ADVANCE_RANKS as readonly number[]).includes(level) };
+  });
+})();
 
-/** 军衔门槛：到这一级才**允许购买**对应角色的高级技能。 */
-export const ADVANCED_SKILL_RANK = 5;
+export const MAX_RANK = RANKS.length;
+
+/** 累计荣誉值 → 军衔等级 1-25。 */
+export function rankAt(honor: number): number {
+  let lv = 1;
+  for (const r of RANKS) if (honor >= r.req) lv = r.level;
+  return lv;
+}
+
+/** 到这个军衔为止一共发了几个转职点。 */
+export function advancePointsAt(rank: number): number {
+  return ADVANCE_RANKS.filter((r) => r <= rank).length;
+}
 
 /**
- * 战术动作：后段军衔解锁的 AI 行为（用户裁决 #9）。
- *
- * 原来军衔后 6 级只有 `mul ×1.15` 这类看不见的数，90 小时的线靠它撑不住（09 §8 未定项 6）。
- * 战术动作是**看得见的行为**：地上多了一颗雷、路口多了一排沙袋；
- * 每次触发都在 HUD 上给一行文字提示（用户裁决 #10，`callout`）。
- *
- * 它们**不给维度答案**（`effectiveAnswers` 不读军衔）：地雷能帮你打突进，
- * 但阵容里没有突进答案的队伍照样过不了突进关。战术动作改的是
- * "同一套答案执行得好不好"——这正是军衔该管的那一层。
- *
- * `builds` 复用 `scenes.ts` 的 `OBSTACLES`：工事就是一排我方的沙袋，不是新障碍。
+ * 能不能再转一次。`done` = 已转次数（0 = 基础职业，7 = 终极）。
+ * 点数可以攒着不用（C7-2a）；点数按顺序消耗，第 7 点（五星）自然要求先用完前 6 点——
+ * "先补完前 6 次转职"（C7-2b）不需要单独判定。
+ */
+export function canAdvance(rank: number, done: number): boolean {
+  return done < advancePointsAt(rank);
+}
+
+// ── 属性成长与敌人加成 ──
+
+/** 职业每级成长率的允许区间（C7-4）。具体值在职业表，P7 哨兵查越界 */
+export const HERO_GROWTH_BAND = [0.05, 0.1] as const;
+/** 敌人每级关卡上限的加成（C7-4a） */
+export const ENEMY_GROWTH = 0.05;
+
+/** 英雄的军衔乘区：最终生命与最终伤害各乘一次（C7-4b），复利。 */
+export function heroRankMul(rank: number, growth: number): number {
+  return (1 + growth) ** (rank - 1);
+}
+
+/** 敌人加成挂在关卡的军衔上限上（C7-4a）。 */
+export function enemyRankMul(rankCap: number): number {
+  return (1 + ENEMY_GROWTH) ** (rankCap - 1);
+}
+
+/**
+ * 出战校验：人数在 1..partyCap，且**每名**队员军衔都不超过本关上限（C7-15 / 16）。
+ * 全队都超了 = 这关对这批人毕业——防刷就是这一行。
+ */
+export function canDeploy(ranks: number[], rankCap: number, partyCap: number): boolean {
+  return ranks.length >= 1 && ranks.length <= partyCap && ranks.every((r) => r <= rankCap);
+}
+
+/**
+ * 战术动作（地雷 / 陷阱 / 工事 / 堡垒 / 炮火）。第二轮挂在军衔上；
+ * 军衔不再给行为之后，它们在 P4 并入技能表、由职业持有。表先留着当素材。
  */
 export type TacticId = 'fortify' | 'mine' | 'trap' | 'bastion' | 'artillery';
 
 export interface Tactic {
   id: TacticId;
   name: string;
-  /** 能用它的定位 */
-  roles: HeroRole[];
-  /** 冷却秒数。AI 自己判断时机，冷却只是上限 */
   cooldown: number;
-  /** AI 触发条件，一句话。M2 的 `core/ai.ts` 照这句写规则 */
+  /** AI 触发条件，一句话 */
   trigger: string;
   /** 放下去的障碍（复用 OBSTACLES 的 id） */
   builds?: 'sandbag' | 'woodwall';
@@ -144,128 +174,31 @@ export interface Tactic {
 
 export const TACTICS: Record<TacticId, Tactic> = {
   fortify: {
-    id: 'fortify', name: '构筑工事', roles: ['tank', 'meleeDps'], cooldown: 40,
+    id: 'fortify', name: '构筑工事', cooldown: 40,
     trigger: '原地交战超过 8 秒，且正面敌人 ≥ 6', builds: 'sandbag', callout: '{hero} 构筑工事',
     note: '正面放一排沙袋。挡人不挡弹——远程在后面照打，近战怪被拦在外面',
   },
   mine: {
-    id: 'mine', name: '布设地雷', roles: ['control', 'rangedDps', 'meleeDps'], cooldown: 30,
+    id: 'mine', name: '布设地雷', cooldown: 30,
     trigger: '突进 / 自爆僵尸从同一方向接近', callout: '{hero} 布设地雷',
     note: '来路上埋 3 颗雷。对突进与自爆是提前量，对慢速重甲几乎无效',
   },
   trap: {
-    id: 'trap', name: '埋设陷阱', roles: ['control', 'support', 'summoner'], cooldown: 35,
+    id: 'trap', name: '埋设陷阱', cooldown: 35,
     trigger: '卡口 / 走廊地形，且敌人正在排队通过', callout: '{hero} 埋设陷阱',
     note: '减速网 + 短时定身。定身吃抗冻判定（freezeRes），减速永远生效',
   },
   bastion: {
-    id: 'bastion', name: '架设堡垒', roles: ['tank', 'support'], cooldown: 90,
+    id: 'bastion', name: '架设堡垒', cooldown: 90,
     trigger: '护送 / 守护任务进行中，或 BOSS 战开始', builds: 'woodwall', callout: '{hero} 架设堡垒',
     note: '三面木墙围出据点，什么都挡，耐久 900——"原地死守"的物质形态',
   },
   artillery: {
-    id: 'artillery', name: '呼叫炮火', roles: ['rangedDps', 'control', 'support'], cooldown: 120,
+    id: 'artillery', name: '呼叫炮火', cooldown: 120,
     trigger: '视野内有精英，或 ≥ 12 只僵尸聚在 5 格内', callout: '{hero} 呼叫炮火——3 秒后落点',
     note: '3 秒延迟的大范围轰炸。延迟就是它的平衡：AI 要预判"将要在那里"的怪',
   },
 };
-
-export const RANKS: Rank[] = [
-  { level: 1, name: '列兵', req: 0, effects: [], note: '起点。新角色入队时的默认军衔' },
-  {
-    level: 2, name: '上等兵', req: 60,
-    effects: [{ kind: 'ai', field: 'retreatHpPct', amount: 0.05 }],
-    note: '低血撤退早 5% 触发。第一次能明显感觉到的"队员变聪明了"',
-  },
-  {
-    level: 3, name: '下士', req: 150,
-    effects: [{ kind: 'skill', field: 'cooldown', amount: -0.08, mode: 'mul' }],
-    note: '全部技能冷却 -8%。不新增能力，只让已有的转得更勤',
-  },
-  {
-    level: 4, name: '中士', req: 260,
-    effects: [{ kind: 'ai', field: 'aggroRange', amount: 2 }],
-    note: '索敌半径 +2 格。更多时间在开火，更少时间在找目标',
-  },
-  {
-    level: 5, name: '上士', req: 400,
-    effects: [{ kind: 'skill', field: 'duration', amount: 0.15, mode: 'mul' }],
-    note: '技能持续时间 +15%。**本级同时是高级技能的解锁门槛**',
-  },
-  {
-    level: 6, name: '准尉', req: 580,
-    effects: [{ kind: 'tactic', id: 'fortify' }, { kind: 'skill', field: 'mul', amount: 1.12, mode: 'mul' }],
-    note: '技能倍率 ×1.12。**解锁战术动作「构筑工事」**——从这一级起军衔给的是看得见的行为',
-  },
-  {
-    level: 7, name: '少尉', req: 820,
-    effects: [{ kind: 'tactic', id: 'mine' }, { kind: 'ai', field: 'engageDistanceMul', amount: -0.1 }],
-    note: '接敌距离 -10%。解锁「布设地雷」',
-  },
-  {
-    level: 8, name: '中尉', req: 1150,
-    effects: [{ kind: 'tactic', id: 'trap' }, { kind: 'skill', field: 'cooldown', amount: -0.12, mode: 'mul' }],
-    note: '冷却再 -12%（与 3 级叠加 -19%）。解锁「埋设陷阱」',
-  },
-  {
-    level: 9, name: '上尉', req: 1600,
-    effects: [{ kind: 'skill', field: 'mul', amount: 1.15, mode: 'mul' }],
-    note: '倍率再 ×1.15',
-  },
-  {
-    level: 10, name: '少校', req: 2200,
-    effects: [{ kind: 'tactic', id: 'bastion' }, { kind: 'ai', field: 'aggroRange', amount: 3 }],
-    note: '索敌再 +3 格。解锁「架设堡垒」',
-  },
-  {
-    level: 11, name: '中校', req: 3000,
-    effects: [{ kind: 'skill', field: 'duration', amount: 0.2, mode: 'mul' }],
-    note: '持续时间再 +20%',
-  },
-  {
-    level: 12, name: '上校', req: 4000,
-    effects: [{ kind: 'tactic', id: 'artillery' },
-      { kind: 'skill', field: 'mul', amount: 1.18, mode: 'mul' },
-      { kind: 'skill', field: 'cooldown', amount: -0.1, mode: 'mul' },
-    ],
-    note: '满军衔。解锁「呼叫炮火」，倍率与冷却再抬一档',
-  },
-];
-
-export const MAX_RANK = RANKS.length;
-
-/** 累计荣誉值 → 军衔等级 1-12。 */
-export function rankAt(honor: number): number {
-  let lv = 1;
-  for (const r of RANKS) if (honor >= r.req) lv = r.level;
-  return lv;
-}
-
-/** 这个定位在这个军衔能用哪些战术动作。 */
-export function tacticsFor(role: HeroRole, rank: number): Tactic[] {
-  return rankEffects(rank)
-    .flatMap((e) => (e.kind === 'tactic' ? [TACTICS[e.id]] : []))
-    .filter((t) => t.roles.includes(role));
-}
-
-/** 从 1 级到 `level` 级累计得到的效果。军衔效果是**叠加**的，不是取最高级那一条。 */
-export function rankEffects(level: number): RankEffect[] {
-  return RANKS.filter((r) => r.level <= level).flatMap((r) => r.effects);
-}
-
-/**
- * 高级技能的双钥匙判定。
- *
- * 两把都要：军衔给资格，技能点给到手。
- * 于是 P5 的"技能点解锁高级技能"与 P6 的"军衔解锁高级技能"都成立——
- * 少任何一把，另一句需求就会落空。
- */
-export function advancedSkillUnlocked(rank: number, purchased: boolean): boolean {
-  return rank >= ADVANCED_SKILL_RANK && purchased;
-}
-
-/** 高级技能的技能点售价。所有人同价，因为 12 个高级技能是同一量级的设计承诺。 */
-export const ADVANCED_SKILL_COST = 4;
 
 // ─────────────────────────────────────────────
 // 三、局外军械库（用户裁决 #1：买的是非消耗品，全队共享）
@@ -365,27 +298,35 @@ export function clearsToUnlockAll(): number {
   return Math.ceil(totalUnlockCost() / MONEY_PER_CLEAR);
 }
 
+
 // ─────────────────────────────────────────────
-// 四、跨关卡继承什么（用户裁决 #6）
+// 四、跨关卡继承什么
 // ─────────────────────────────────────────────
 
 /**
- * 存档。**只有这里的东西跨关卡继承**：军衔（荣誉）、技能（专精 + 高级技能）、军械库。
- * 其余全部是局内成长，每关从 1 级 / 0 阶开始：等级、武器阶、临时武器、拾取的增益。
+ * 存档 v4。**只有这里的东西跨关卡继承**：名册（每人的职业 / 荣誉 / 已转次数 / 配置）、金钱、军械库、星级。
+ * 战意、临时武器、拾取的增益都是局内的，每关重置。
  */
+export interface Soldier {
+  /** 当前职业 id（职业表在 P2） */
+  classId: string;
+  honor: number;
+  /** 已转次数 0-7；可用转职点 = advancePointsAt(rankAt(honor)) - advances */
+  advances: number;
+  loadout: Loadout;
+}
+
 export interface Profile {
-  version: 3;
+  version: 4;
   money: number;
-  skillPoints: number;
-  honor: Record<string, number>;
-  /** 每个角色已点的专精节点 id */
-  spec: Record<string, string[]>;
-  advanced: Record<string, boolean>;
+  roster: Record<string, Soldier>;
   owned: { weapons: WeaponId[]; items: BuffId[] };
-  loadouts: Record<string, Loadout>;
   /** key = `${关卡 id}@${难度}` */
   stars: Record<string, 0 | 1 | 2 | 3>;
 }
+
+/** 名册上限（C7-14） */
+export const ROSTER_CAP = 64;
 
 // ─────────────────────────────────────────────
 // 五、世界地图与难度解锁（用户裁决 #5 / #7）
@@ -408,20 +349,3 @@ export function difficultyUnlocked(d: DifficultyId, finalCleared: Partial<Record
   if (d === 'normal') return true;
   return !!finalCleared[d === 'hard' ? 'normal' : 'hard'];
 }
-
-/** 专精节点 → 军衔能否给。军衔只给 skill / ai / tactic。 */
-export function rankCanGrant(node: SpecNode): boolean {
-  return node.effect.kind === 'skill' || node.effect.kind === 'ai' || node.effect.kind === 'tactic';
-}
-
-/** 被军衔挡在外面的效果类型。供文档与哨兵自检引用，避免口头约束。 */
-export const RANK_FORBIDDEN_EFFECTS = ['attr', 'answer', 'revive', 'weaponTier'] as const;
-
-/** 仅用于类型完整性自检：RankEffect 必须真能排除掉 attr。 */
-export type _RankEffectExcludesAttr = Extract<RankEffect, { kind: 'attr' }> extends never ? true : never;
-
-/** 维度答案标签的军衔来源检查——军衔不给 answer，这里显式留一个空。 */
-export const RANK_GRANTED_ANSWERS: AnswerTag[] = [];
-
-/** 军衔对 `Primary` 的影响**恒为空**。编译器与运行时双保险。 */
-export const RANK_PRIMARY_DELTA: Partial<Primary> = {};
