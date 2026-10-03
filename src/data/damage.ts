@@ -67,6 +67,13 @@ export interface DamageInput {
   critDmg: number;
   /** 技能倍率，普攻为 1 */
   skillMul?: number;
+  /**
+   * 目标抗暴击 0-1。**只在 `expectedDamage` 里生效，`computeDamage` 不看它**——
+   * 抗暴击是"降低暴击发生的概率"，而 `computeDamage` 拿到的已经是"这一下暴没暴"的既成事实。
+   * 放进 `DamageInput` 而不是 `expectedDamage` 的私有参数，是为了让调用方
+   * 在构造输入时就必须提供它（漏了会被编译器抓住），不提供时默认 0。
+   */
+  targetAntiCrit?: number;
 }
 
 /** 最终伤害 = 基础 × 攻击乘区 × 暴击 × 护甲减免 × 甲型克制 × 技能倍率 */
@@ -82,8 +89,18 @@ export function computeDamage(d: DamageInput): number {
   );
 }
 
-/** 期望伤害（把暴击按概率折算），用于配平计算，不用于实际结算 */
+/**
+ * 期望伤害（把暴击按概率折算），用于配平计算，不用于实际结算。
+ *
+ * 抗暴击在这里**直接扣暴击率**，而不是在伤害上乘一个减伤——
+ * 前者让"抗暴击"与"暴击率"共用一把尺子（都在 0-1 上加减），
+ * 后者会引入第三个乘区，而伤害乘区已经够多了（`04-技术框架.md` §4 的
+ * `SpecEffect` 明确禁止新增伤害乘区，这里是同一原则在数据层的体现）。
+ *
+ * 扣完取 `max(0, ...)`：抗暴击高于攻方暴击率时归零，不倒扣成负暴击。
+ */
 export function expectedDamage(d: Omit<DamageInput, 'crit'> & { critRate: number }): number {
-  const critMul = 1 + d.critRate * (d.critDmg - 1);
+  const critRate = Math.max(0, d.critRate - (d.targetAntiCrit ?? 0));
+  const critMul = 1 + critRate * (d.critDmg - 1);
   return computeDamage({ ...d, crit: false }) * critMul;
 }

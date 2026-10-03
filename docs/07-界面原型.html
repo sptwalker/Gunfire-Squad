@@ -215,8 +215,11 @@ body{
 .hud .tr{position:absolute;top:12px;right:14px;text-align:right;display:flex;flex-direction:column;gap:7px;align-items:flex-end}
 .hud .tc{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:min(46%,340px);text-align:center}
 .hud .bl{position:absolute;bottom:12px;left:14px;display:flex;flex-direction:column;gap:5px}
-.hud .bc{position:absolute;bottom:12px;left:50%;transform:translateX(-50%)}
+.hud .bc{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .hud .br{position:absolute;bottom:12px;right:14px}
+.hud .calls{position:absolute;bottom:58px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;pointer-events:none}
+.hud .calls span{padding:2px 8px;background:rgba(0,0,0,.45);border-radius:3px;color:#fff}
+.hud .calls span.old{opacity:.5}
 .hud .cl{position:absolute;top:50%;left:14px;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px}
 
 .tagline{
@@ -289,7 +292,7 @@ body{
 .buff .ic{width:9px;height:9px;transform:rotate(45deg);display:block}
 .buff .tm{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--g-muted)}
 
-.firebtn{
+.cmdbtn{
   background:rgba(8,12,17,.72);
   border:1px solid #4a3c22;
   padding:7px 16px;
@@ -301,7 +304,7 @@ body{
   gap:9px;
   backdrop-filter:blur(3px);
 }
-.firebtn kbd{
+.cmdbtn kbd{
   font-family:"Saira Condensed",sans-serif;
   background:var(--g-energy);
   color:#1a1208;
@@ -310,6 +313,18 @@ body{
   font-weight:700;
   border-radius:2px;
 }
+
+/* 两态开关：左右各一个词，亮的是当前态。按一次换边，不弹菜单 */
+.cmdbtn .seg{
+  display:flex;align-items:center;gap:4px;
+  font-size:11.5px;font-weight:400;letter-spacing:.06em;
+}
+.cmdbtn .seg > span{padding:1px 6px;color:var(--g-muted);border-radius:2px}
+.cmdbtn .seg > span.on{background:var(--g-energy);color:#1a1208;font-weight:700}
+.cmdbtn .seg > i{color:#3d4a58;font-style:normal}
+/* 即时动作：冷却中整颗按钮降透明度，右侧显示秒数——与队员技能列同一套读法 */
+.cmdbtn.cool{opacity:.5}
+.cmdbtn.cool .tm{font-family:"JetBrains Mono",monospace;color:var(--g-muted);font-size:10.5px}
 
 .minimap{
   width:132px;
@@ -474,6 +489,37 @@ body{
   .wrow .cost,.wrow .act{text-align:left}
 }
 
+/* ══ screen 03 / 04: 状态面板与军械库 ══ */
+.armory{
+  display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;
+}
+@media (max-width:900px){ .armory{grid-template-columns:1fr} }
+.shop-head h3 s.sub{
+  font-family:"Noto Sans SC",sans-serif;font-size:11px;font-weight:400;
+  color:var(--g-muted);text-decoration:none;letter-spacing:.1em;margin-left:6px;
+}
+/* 局内状态面板的三行：只有时间点与来源，不画进度条 */
+.grow{
+  display:grid;gap:1px;background:rgba(42,55,69,.6);
+  border:1px solid rgba(42,55,69,.6);margin-bottom:18px;
+}
+.grow-row{
+  display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;
+  background:var(--g-chrome);padding:10px 13px;
+}
+.grow-row .gk{
+  font-family:"Noto Sans SC",sans-serif;font-size:10px;letter-spacing:.16em;
+  color:var(--g-muted);text-transform:uppercase;
+}
+.grow-row .gv{font-family:"Saira Condensed","Noto Sans SC",sans-serif;font-size:13.5px;color:var(--g-text)}
+.grow-row .gv s{color:var(--g-muted);text-decoration:none;font-size:11.5px}
+.wrow .tag{
+  font-family:"Noto Sans SC",sans-serif;font-size:10.5px;letter-spacing:.1em;
+  color:var(--g-muted);border:1px solid #33404e;padding:2px 6px;justify-self:start;
+}
+.wrow .tag.item{color:var(--g-hp);border-color:rgba(120,200,140,.4)}
+.wrow .cost.auto{color:var(--g-muted);font-size:11.5px}
+
 /* ══ screen 04: 角色选择 ══ */
 .roster{
   font-family:"Saira Condensed","Noto Sans SC",sans-serif;
@@ -629,8 +675,8 @@ footer{
 <div class="wrap">
 
 <header class="masthead">
-  <p class="eyebrow">3D 小队生存射击 · 界面规格 v0.1</p>
-  <h1>五个界面，一张战场</h1>
+  <p class="eyebrow">3D 小队生存射击 · 界面规格 v0.2</p>
+  <h1>八个界面，一张战场</h1>
   <p>
     这套界面是照着 <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px">docs/00–06</code> 的结论画的，
     不是先画图再补设计。每个元件下面都标了它读的是哪份数据——
@@ -675,8 +721,8 @@ footer{
 
       <div class="tr">
         <div class="tagline"><span class="k">等级</span><span class="big mono">5</span></div>
-        <div class="tagline"><span class="k">积分</span><span class="mono">4,194</span></div>
-        <div class="tagline"><span class="k">金钱</span><span class="mono" style="color:var(--g-energy)">832</span></div>
+        <div class="tagline"><span class="k">积分</span><span class="mono">4,163</span></div>
+        <div class="tagline"><span class="k">金钱</span><span class="mono" style="color:var(--g-energy)">4,318</span></div>
       </div>
 
       <div class="quest">护卫商队 <s>·</s> 检查点 <b>2/3</b> <s>·</s> 剩余 <b>01:12</b></div>
@@ -722,7 +768,16 @@ footer{
         </div>
       </div>
 
-      <div class="bc"><div class="firebtn"><kbd>F</kbd>集火当前目标</div></div>
+      <div class="calls">
+        <span class="old">罗恩 构筑工事</span>
+        <span>薇拉 呼叫炮火——3 秒后落点</span>
+      </div>
+
+      <div class="bc">
+        <div class="cmdbtn"><div class="seg"><span class="on">自由索敌</span><i>⇄</i><span>集火进攻</span></div></div>
+        <div class="cmdbtn"><kbd>R</kbd>重整阵型<span class="tm">25s</span></div>
+        <div class="cmdbtn"><div class="seg"><span class="on">跟随</span><i>⇄</i><span>紧密跟随</span></div></div>
+      </div>
 
       <div class="br">
         <div class="minimap">
@@ -732,7 +787,7 @@ footer{
       </div>
 
       <span class="float" style="left:56%;top:38%">412</span>
-      <span class="float crit" style="left:63%;top:26%">2,605</span>
+      <span class="float crit" style="left:63%;top:26%">2,586</span>
       <span class="float poison" style="left:44%;top:56%">86</span>
       <span class="float heal" style="left:31%;top:63%">+240</span>
     </div>
@@ -745,7 +800,9 @@ footer{
     <div class="r"><dt>BOSS 血条</dt><dd>居中置顶，只在 BOSS 存活时出现。血条上有 1px 亮色游标标出最近一次的伤害位置，让「刚打掉多少」不用回看数字。三段式是因为本局有三个 BOSS，游标会依次走完。</dd></div>
     <div class="r"><dt>增益倒计时</dt><dd>左侧竖排，最多同时 5 个（buff 上限）。颜色即道具色，与地面上的拾取物同色，形成「地上捡的＝身上挂的」的对应关系。</dd></div>
     <div class="r"><dt>伤害飘字</dt><dd>常规白色，暴击琥珀色且 1.5 倍字号，毒伤紫色，治疗绿色。四类共用一套字号级差，不靠动画区分——300 只僵尸同屏时动画会被淹没。</dd></div>
-    <div class="r"><dt>集火按钮</dt><dd>全界面唯一的玩家指令。它是一个<b>状态</b>不是菜单：按一次锁定当前目标，队员 AI 的目标优先级被临时覆盖。</dd></div>
+    <div class="r"><dt>命令栏</dt><dd>三个按钮：<code>自由索敌 ⇄ 集火进攻</code>、<code>重整阵型</code>（25s 冷却）、<code>跟随 ⇄ 紧密跟随</code>。<b>两个是状态切换、只有一个是即时动作</b>——所以它给的是效率旋钮不是操作门槛。<span class="warn">默认「自由」必须能通关</span>：不碰命令栏也打不过，说明它已经变成门槛（<code>00-决策清单.md</code> A29）。</dd></div>
+    <div class="r"><dt>战术提示</dt><dd>命令栏正上方，最多两行，新的在下、旧的变淡，3 秒后消失。队员放高级技能或军衔解锁的战术动作（工事 / 地雷 / 陷阱 / 堡垒 / 炮火）时各出一行，文案取 <code>progression.ts</code> 的 <code>TACTICS[].callout</code>。<span class="warn">只写动作不写数字</span>——它回答"队员刚做了什么"，不是战斗日志。</dd></div>
+    <div class="r"><dt>两态开关的画法</dt><dd>左右两个词并排，亮色的是当前态，中间一个 <code>⇄</code>。按一次换边，<span class="warn">不弹菜单</span>——弹菜单会让玩家的视线离开战场，而本作的核心体验是"读战场"。冷却中的按钮整颗降透明度并显示剩余秒数，与队员技能列是同一套读法。</dd></div>
     <div class="r"><dt>小地图</dt><dd>132px 见方，显示 256×256 全图。只画三样：小队点、僵尸云、任务点。<span class="warn">不画地形</span>——俯视主视角已经能看到地形，小地图重复画等于浪费一块像素。</dd></div>
     <div class="r"><dt>任务提示</dt><dd>BOSS 血条正下方，一行，不占用操作区。任务都设计成「战斗中顺手完成」，所以提示必须能被余光扫到而不是要去读。</dd></div>
   </dl>
@@ -833,54 +890,69 @@ footer{
 <section class="screen">
   <div class="screen-head">
     <span class="num">03</span>
-    <h2>武器升级面板</h2>
+    <h2>局内状态面板</h2>
     <p class="lede">
-      金钱唯一的用途，关卡内随时可开（<kbd style="font-family:'JetBrains Mono',monospace;background:var(--panel-2);border:1px solid var(--hair);padding:1px 5px;font-size:12px">Tab</kbd> 同键切换）。
-      关键设计：<em>升级面板要显示 DPS 增量，不只是伤害数字</em>——
-      玩家买的是输出，不是攻击力。
+      关卡内随时可开（<kbd class="kbd">Tab</kbd> 同键切换）。<em>这一版不是商店</em>——
+      局内零购买（<code>00-决策清单.md</code> A25），等级与武器阶都自动涨，
+      所以这个面板只回答一个问题：<b>我现在长到哪了，下一跳什么时候来</b>。
     </p>
   </div>
 
   <div class="shop">
     <div class="shop-head">
-      <h3>武器升级 · 阶段 3</h3>
-      <div class="purse">金钱 <b>832</b> <s>/ 本局累计 4,318</s></div>
+      <h3>成长 · 11:20</h3>
+      <div class="purse">等级 <b>5</b> <s>/ 满级</s></div>
+    </div>
+
+    <div class="grow">
+      <div class="grow-row">
+        <span class="gk">下一级</span>
+        <span class="gv">已满级<s> · 11:00 到顶（660s）</s></span>
+      </div>
+      <div class="grow-row">
+        <span class="gk">金钱</span>
+        <span class="gv">本局累计 <b class="mono">4,318</b><s> · 结算带出</s></span>
+      </div>
+      <div class="grow-row">
+        <span class="gk">荣誉值</span>
+        <span class="gv">已得 <b class="mono">36</b><s> · 完成 3 个任务，结算均分给参战队员</s></span>
+      </div>
     </div>
 
     <div class="wrow hdr">
-      <span></span><span>武器 / 持有者</span><span>武器阶</span><span>DPS</span><span>升级后</span><span>花费</span>
+      <span></span><span>武器 / 持有者</span><span>武器阶</span><span>DPS</span><span>阶 · 穿透</span><span class="r">变化</span>
     </div>
 
     <div class="wrow">
       <span style="font-size:15px">▸</span>
-      <span class="wnm">狙击枪<s>鹰眼·薇拉 · 穿刺 112</s></span>
-      <span class="tier"><i class="on"></i><i class="on"></i><i></i></span>
-      <span class="dps">1,738<em>+0%</em></span>
-      <span class="dps">2,041<em>+17.4%</em></span>
-      <span class="cost afford">1,400</span>
-    </div>
-
-    <div class="wrow">
-      <span style="font-size:15px">▸</span>
-      <span class="wnm">剑<s>疾风·凯 · 斩击/穿刺 35</s></span>
-      <span class="tier"><i class="on"></i><i class="on"></i><i></i></span>
-      <span class="dps">1,622<em>+0%</em></span>
-      <span class="dps">1,902<em>+17.3%</em></span>
-      <span class="cost no">1,400</span>
-    </div>
-
-    <div class="wrow dim">
-      <span style="font-size:15px">▸</span>
-      <span class="wnm">冷冻器<s>霜语·艾拉 · 冰霜 21</s></span>
+      <span class="wnm">狙击枪<s>鹰眼·薇拉 · 穿刺</s></span>
       <span class="tier"><i class="on"></i><i class="on"></i><i class="on"></i></span>
-      <span class="dps">1,402<em>已满阶</em></span>
-      <span class="dps">—</span>
-      <span class="cost">—</span>
+      <span class="dps">1,741<em>已满阶</em></span>
+      <span class="dps">+2 阶<s>穿透 112</s></span>
+      <span class="cost auto">已到顶</span>
+    </div>
+
+    <div class="wrow">
+      <span style="font-size:15px">▸</span>
+      <span class="wnm">大刀<s>铁壁·罗恩 · 斩击</s></span>
+      <span class="tier"><i class="on"></i><i class="on"></i><i></i></span>
+      <span class="dps">1,022<em>+17.4%</em></span>
+      <span class="dps">+1 阶<s>穿透 36</s></span>
+      <span class="cost auto">随等级</span>
+    </div>
+
+    <div class="wrow">
+      <span style="font-size:15px">▸</span>
+      <span class="wnm">冷冻器<s>霜语·艾拉 · 冰霜</s></span>
+      <span class="tier"><i class="on"></i><i></i><i></i></span>
+      <span class="dps">598<em>+34.6%</em></span>
+      <span class="dps">+1 阶<s>穿透 21</s></span>
+      <span class="cost auto">随等级</span>
     </div>
 
     <div class="wrow dim">
       <span style="font-size:15px">▸</span>
-      <span class="wnm">手枪<s>圣手·莉安 · 冲击 28</s></span>
+      <span class="wnm">手枪<s>圣手·莉安 · 冲击</s></span>
       <span class="tier"><i class="on"></i><i></i><i></i></span>
       <span class="dps">—<em>已阵亡</em></span>
       <span class="dps">—</span>
@@ -888,16 +960,17 @@ footer{
     </div>
 
     <div class="shop-foot">
-      <span>武器阶上限 +2 · 本局结束清零，不带出关卡</span>
-      <span>Tab 关闭 · 战斗中不暂停</span>
+      <span>武器阶随等级自动提升：1–2 级 0 阶 · 3–4 级 1 阶 · 5 级 2 阶</span>
+      <span>局内不花任何钱 · <kbd class="kbd">Tab</kbd> 关闭</span>
     </div>
   </div>
 
   <dl class="specs">
-    <div class="r"><dt>为什么显示 DPS</dt><dd>伤害 ×(1+0.35×阶) 是武器阶的规则，但穿透 ×(1+0.20×阶) 同时也在涨。两个乘区叠加后，<b>各武器的实际收益差 12%–19%</b>，只看伤害数字会选错。</dd></div>
-    <div class="r"><dt>「已满阶」与「已阵亡」</dt><dd>两种不可购买的原因分开写。前者是成长到顶，后者是队员没了——后者的字面意思是「这个格子以后都不会再有用」，玩家需要知道这点。</dd></div>
-    <div class="r"><dt>买不起</dt><dd>价格标红，但<b>不禁用</b>那一行。玩家可以点，点了没反应比灰掉更好——灰掉会让人以为是 bug。</dd></div>
-    <div class="r"><dt>不暂停</dt><dd>打开面板时战斗继续。这是刻意的：升级决策应该是<b>有代价的</b>，站在战场上犹豫 10 秒就是 10 秒的风险。</dd></div>
+    <div class="r"><dt>这一版没有「购买」按钮</dt><dd>旧版这里是<b>关卡内商店</b>：金钱 832、按阶报价 1,400。A25 之后金钱只在<b>局外</b>花，所以整块面板从「买什么」重写成了「长到哪了」。<span class="warn">留着购买按钮就等于把局内零购买悄悄作废</span>——这不是排版问题，是设计问题。</dd></div>
+    <div class="r"><dt>为什么还留着 DPS 这一列</dt><dd>因为阶是自动的，玩家更需要知道<b>「下一跳有多远」</b>而不是「花多少钱」。所以右列从价格换成了<b>阶的来源</b>，DPS 保留下来做前后对照——同一个面板，读的东西从「值不值」变成了「还有多久」。</dd></div>
+    <div class="r"><dt>金钱与荣誉值在这里露出</dt><dd>两者都是<b>带出去才生效</b>的：本局拿多少，只影响结算后能买什么、能升几级军衔。面板上标出「结算带出」，是为了让玩家知道<b>局内的钱不是可花资源</b>，不用为它留手。</dd></div>
+    <div class="r"><dt>阶的三格不是进度条</dt><dd>三个方块是<b>离散的阶</b>，不是连续进度。玩家读到的是「还差一档」而不是「还差 40%」，与它在局内的实际跳变方式一致。左侧三行也只写时间点与来源，不画进度条——进度条会让人以为可以加速。</dd></div>
+    <div class="r"><dt>不暂停</dt><dd>开面板时战斗继续。这一条没变——站在战场上犹豫 10 秒就是 10 秒的风险。</dd></div>
   </dl>
 </section>
 
@@ -905,6 +978,118 @@ footer{
 <section class="screen">
   <div class="screen-head">
     <span class="num">04</span>
+    <h2>军械库与军衔</h2>
+    <p class="lede">
+      结算之后、出击之前。左右两块是<b>两条独立成长线</b>：
+      左边花<b>金钱</b>买装备（全队共享），右边看<b>荣誉值</b>换来的军衔。
+      <em>两条都必须给新答案，不能给新数字</em>——
+      这是「卡住只能换阵容」能不能守住的地方。
+    </p>
+  </div>
+
+  <div class="armory">
+    <div class="shop">
+      <div class="shop-head">
+        <h3>军械库 <s class="sub">只卖种类</s></h3>
+        <div class="purse">金钱 <b>30,864</b> <s>/ 全解锁 142,800 · 19 件</s></div>
+      </div>
+
+      <div class="wrow hdr">
+        <span></span><span>解锁项</span><span>类型</span><span>已购</span><span class="r">价格</span>
+      </div>
+
+      <div class="wrow">
+        <span style="font-size:15px">▸</span>
+        <span class="wnm">火箭筒<s>唯一的成规模击退来源。五段判定 + 70 击退，是控制流的入口</s></span>
+        <span class="tag">武器</span>
+        <span class="tier"><i></i></span>
+        <span class="cost afford">16,000</span>
+      </div>
+
+      <div class="wrow">
+        <span style="font-size:15px">▸</span>
+        <span class="wnm">激光枪<s>对【重甲】的答案：高穿透 + 高频 + 中甲克制，几无短板所以最贵</s></span>
+        <span class="tag">武器</span>
+        <span class="tier"><i class="on"></i></span>
+        <span class="cost afford">16,800</span>
+      </div>
+
+      <div class="wrow">
+        <span style="font-size:15px">▸</span>
+        <span class="wnm">冷却缩减<s>15 秒冷却 -40%。把一次技能窗口变成两次 · 解锁后进入掉落池</s></span>
+        <span class="tag">道具</span>
+        <span class="tier"><i class="on"></i></span>
+        <span class="cost afford">4,800</span>
+      </div>
+
+      <div class="wrow">
+        <span style="font-size:15px">▸</span>
+        <span class="wnm">冷冻枪<s>唯一的成规模减速来源。【突进】与【自爆】的通用解</s></span>
+        <span class="tag">武器</span>
+        <span class="tier"><i></i></span>
+        <span class="cost no">8,800</span>
+      </div>
+
+      <div class="shop-foot">
+        <span>买的是<b>种类</b>：阶与等级局内自动涨，买了也不会更强</span>
+        <span>一局产出约 10,313 · 全解锁 14 局 ≈ 4 小时</span>
+      </div>
+    </div>
+
+    <div class="shop">
+      <div class="shop-head">
+        <h3>军衔 <s class="sub">全队共享</s></h3>
+        <div class="purse">荣誉值 <b>403</b> <s>/ 满级 4,000 · 12 级</s></div>
+      </div>
+
+      <div class="wrow hdr">
+        <span></span><span>军衔</span><span>门槛</span><span>效果</span><span class="r">状态</span>
+      </div>
+
+      <div class="wrow dim">
+        <span style="font-size:15px">▸</span>
+        <span class="wnm">中士<s>4 级 · 上等兵 60 · 下士 150 · 中士 260</s></span>
+        <span class="tag">260</span>
+        <span class="dps">索敌半径<em>ai 参数 +2 格</em></span>
+        <span class="cost">已过</span>
+      </div>
+
+      <div class="wrow">
+        <span style="font-size:15px">▸</span>
+        <span class="wnm">上士<s>第 5 级 · 高级技能的资格线（另需 4 技能点）</s></span>
+        <span class="tag">400</span>
+        <span class="dps">技能持续<em>skill 参数 +15%</em></span>
+        <span class="cost afford">当前</span>
+      </div>
+
+      <div class="wrow">
+        <span style="font-size:15px">▸</span>
+        <span class="wnm">准尉<s>第 6 级 · 从这里开始低级技能追得很紧</s></span>
+        <span class="tag">580</span>
+        <span class="dps">技能倍率<em>skill 参数 ×1.12</em></span>
+        <span class="cost">下一级</span>
+      </div>
+
+      <div class="shop-foot">
+        <span>军衔<b>不加任何战斗属性</b>——由 <code>RankEffect</code> 在编译期禁止</span>
+        <span>荣誉值按参战人数均分（56/局 ÷ 5 人 = 每人 +11.2）</span>
+      </div>
+    </div>
+  </div>
+
+  <dl class="specs">
+    <div class="r"><dt>两张表为什么并排</dt><dd>它们回答同一个问题的两面：<b>「我打不过这一关，能做什么」</b>。左边给<b>选项</b>（新武器＝新的维度解），右边给<b>资格</b>（高级技能与更聪明的 AI）。两列都<span class="warn">不出现属性数字</span>，这就是它们的分工。</dd></div>
+    <div class="r"><dt>武器只写一行小字解释它解什么</dt><dd>不写伤害、不写 DPS——那些是局内自动涨的，写在这里会让人以为买了就变强。写的是它带来的<b>新答案</b>（火箭筒＝成规模的击退来源），玩家按「我缺什么解」买，而不是按「哪个数字大」买。</dd></div>
+    <div class="r"><dt>道具那一行有个「开局携带 1 个」</dt><dd>这是本轮<b>读法最软</b>的一处：玩家原话是「用金钱买武器和道具」，这里读成<b>种类解锁</b>而不是消耗品。若原意是可囤积的消耗品，这一行要重做（<code>01-系统策划案.md</code> §12 已标注）。</dd></div>
+    <div class="r"><dt>军衔的「效果」列不写数字</dt><dd>写的是 <code>ai 参数</code> / <code>skill 参数</code> 这两个<b>类别名</b>。原因和上面一样，但更强：军衔在类型层面就<b>不允许给属性</b>（<code>RankEffect = Exclude&lt;SpecEffect, { kind: 'attr' }&gt;</code>），所以这里就算想写数值也没有可写的。</dd></div>
+    <div class="r"><dt>军衔不分人，按全队算</dt><dd>荣誉值是整支队的战功，按参战人数均分（<code>honorPerHero</code>）。所以界面不按角色分列——分了就会诱导玩家去「养一个主力」，而这正是要避免的。</dd></div>
+  </dl>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="screen">
+  <div class="screen-head">
+    <span class="num">05</span>
     <h2>角色选择界面</h2>
     <p class="lede">
       开局前，12 选 5。这张界面的任务不是展示角色，是<em>让玩家看懂阵容缺什么</em>——
@@ -927,33 +1112,34 @@ footer{
     </div>
 
     <div class="roster-grid">
-      <div class="card picked" style="--sc:var(--c-ron)"><span class="pick">✓</span><div class="nm">铁壁·罗恩</div><div class="role">坦克</div><div class="attr">力34 敏16 韧38 智12</div></div>
-      <div class="card" style="--sc:#4a7fa8"><div class="nm">磐石·格温</div><div class="role">坦克</div><div class="attr">力28 敏14 韧40 智18</div></div>
-      <div class="card picked" style="--sc:var(--c-kai)"><span class="pick">✓</span><div class="nm">疾风·凯</div><div class="role">近战</div><div class="attr">力30 敏34 韧20 智16</div></div>
-      <div class="card" style="--sc:#d08a3a"><div class="nm">断岳·铁牛</div><div class="role">近战</div><div class="attr">力42 敏14 韧30 智14</div></div>
-      <div class="card picked" style="--sc:var(--c-vera)"><span class="pick">✓</span><div class="nm">鹰眼·薇拉</div><div class="role">远程</div><div class="attr">力34 敏36 韧14 智16</div></div>
-      <div class="card" style="--sc:#d8b83c"><div class="nm">弹幕·杰特</div><div class="role">远程</div><div class="attr">力24 敏40 韧16 智20</div></div>
-      <div class="card picked" style="--sc:var(--c-ella)"><span class="pick">✓</span><div class="nm">霜语·艾拉</div><div class="role">控制</div><div class="attr">力18 敏22 韧24 智36</div></div>
-      <div class="card" style="--sc:#c8a860"><div class="nm">震地·博姆</div><div class="role">控制</div><div class="attr">力30 敏18 韧32 智20</div></div>
-      <div class="card picked" style="--sc:var(--c-lian)"><span class="pick">✓</span><div class="nm">圣手·莉安</div><div class="role">辅助</div><div class="attr">力16 敏24 韧22 智38</div></div>
-      <div class="card" style="--sc:#c06030"><div class="nm">烈焰·萨满</div><div class="role">辅助</div><div class="attr">力22 敏18 韧26 智34</div></div>
-      <div class="card" style="--sc:#8a5fb8"><div class="nm">傀儡师·诺克斯</div><div class="role">召唤</div><div class="attr">力20 敏20 韧20 智40</div></div>
-      <div class="card locked" style="--sc:#3fb0a0"><div class="nm">蜂群·西芙</div><div class="role">召唤</div><div class="attr">局外解锁</div></div>
+      <div class="card picked" style="--sc:var(--c-ron)"><span class="pick">✓</span><div class="nm">铁壁·罗恩</div><div class="role">坦克</div><div class="attr">力28 敏8 韧42 智14 幸4 体54</div></div>
+      <div class="card" style="--sc:#4a7fa8"><div class="nm">磐石·格温</div><div class="role">坦克</div><div class="attr">力30 敏12 韧42 智10 幸6 体50</div></div>
+      <div class="card picked" style="--sc:var(--c-kai)"><span class="pick">✓</span><div class="nm">疾风·凯</div><div class="role">近战</div><div class="attr">力40 敏28 韧18 智10 幸32 体22</div></div>
+      <div class="card" style="--sc:#d08a3a"><div class="nm">断岳·铁牛</div><div class="role">近战</div><div class="attr">力50 敏16 韧26 智10 幸20 体28</div></div>
+      <div class="card picked" style="--sc:var(--c-vera)"><span class="pick">✓</span><div class="nm">鹰眼·薇拉</div><div class="role">远程</div><div class="attr">力33 敏34 韧14 智16 幸38 体15</div></div>
+      <div class="card" style="--sc:#d8b83c"><div class="nm">弹幕·杰特</div><div class="role">远程</div><div class="attr">力30 敏38 韧16 智14 幸36 体16</div></div>
+      <div class="card picked" style="--sc:var(--c-ella)"><span class="pick">✓</span><div class="nm">霜语·艾拉</div><div class="role">控制</div><div class="attr">力14 敏22 韧18 智54 幸22 体20</div></div>
+      <div class="card" style="--sc:#c8a860"><div class="nm">震地·博姆</div><div class="role">控制</div><div class="attr">力22 敏20 韧26 智34 幸20 体28</div></div>
+      <div class="card picked" style="--sc:var(--c-lian)"><span class="pick">✓</span><div class="nm">圣手·莉安</div><div class="role">辅助</div><div class="attr">力14 敏20 韧20 智52 幸22 体22</div></div>
+      <div class="card" style="--sc:#c06030"><div class="nm">烈焰·萨满</div><div class="role">辅助</div><div class="attr">力20 敏18 韧24 智44 幸18 体26</div></div>
+      <div class="card" style="--sc:#8a5fb8"><div class="nm">傀儡师·诺克斯</div><div class="role">召唤</div><div class="attr">力22 敏18 韧22 智46 幸20 体22</div></div>
+      <div class="card locked" style="--sc:#3fb0a0"><div class="nm">蜂群·西芙</div><div class="role">召唤</div><div class="attr">力18 敏22 韧20 智44 幸24 体22</div></div>
     </div>
   </div>
 
   <dl class="specs">
     <div class="r"><dt>阵容槽</dt><dd>左侧 5 个槽位按<b>定位</b>而不是按选择顺序排列（坦/近战/远程/控制/辅助）。玩家一眼能看出「我缺一个控制」，而不是要先在心里数一遍。</dd></div>
-    <div class="r"><dt>卡片属性行</dt><dd>四个数字，每角色合计恰好 100 点。这是唯一需要展示的数值——<b>不显示武器伤害</b>，因为武器可以升级，一级属性不能。</dd></div>
-    <div class="r"><dt>锁定卡</dt><dd>局外解锁角色（C3：只解锁种类，不解锁数值）。锁定卡的属性行换成「局外解锁」四个字，而不是把数字藏起来。</dd></div>
+    <div class="r"><dt>卡片属性行：六个数字，合计恰好 150</dt><dd>顺序固定在「力敏韧智幸体」，与 <code>characters.ts</code> 的 <code>primary</code> 逐字同源。<b>不显示武器伤害</b>——武器阶局内自动涨，一级属性不会。</dd></div>
+    <div class="r"><dt>为什么敢排到六列</dt><dd>150 点摊到六项＝均分 25，位置差从三个数压到三十几，<b>颗粒度反而比四属性 × 100 更细</b>。代价是这一行更长，所以字号收到 10px、字距压负——它本来就是给人扫一眼找极值的，不是给人读的。</dd></div>
+    <div class="r"><dt>锁定卡</dt><dd>局外解锁角色（C3：只解锁种类，不解锁数值）。这一版的锁定卡<b>照样写属性</b>——数字本身不是秘密，藏起来只会让人以为是"解锁了会更强"，而解锁只多一个选项。</dd></div>
     <div class="r"><dt>没有的筛选</dt><dd>12 张卡不分组、不筛选、不分页。一屏能放下就不该有交互控件——这个数量级上加筛选器只会增加一次点击。</dd></div>
   </dl>
 </section>
 
-<!-- ══════════ 05 ══════════ -->
+<!-- ══════════ 06 ══════════ -->
 <section class="screen">
   <div class="screen-head">
-    <span class="num">05</span>
+    <span class="num">06</span>
     <h2>结算界面</h2>
     <p class="lede">
       一局的收尾。按 A18，胜负判据是<em>三个 BOSS 是否全部击杀</em>；
@@ -970,8 +1156,9 @@ footer{
     <div class="stats">
       <div class="st"><div class="k">总击杀</div><div class="v">3,078</div></div>
       <div class="st"><div class="k">阵亡</div><div class="v" style="color:var(--g-danger)">1 <s>/ 5</s></div></div>
-      <div class="st"><div class="k">剩余金钱</div><div class="v">832</div></div>
-      <div class="st"><div class="k">总积分</div><div class="v">4,194</div></div>
+      <div class="st"><div class="k">带出金钱</div><div class="v">10,313</div></div>
+      <div class="st"><div class="k">荣誉值</div><div class="v">56<s> / 5 人</s></div></div>
+      <div class="st"><div class="k">总积分</div><div class="v">4,163</div></div>
       <div class="st"><div class="k">最低血量</div><div class="v">94.7<s>%</s></div></div>
     </div>
 
@@ -1014,10 +1201,10 @@ footer{
   </dl>
 </section>
 
-<!-- ══════════ 06 ══════════ -->
+<!-- ══════════ 07 ══════════ -->
 <section class="screen">
   <div class="screen-head">
-    <span class="num">06</span>
+    <span class="num">07</span>
     <h2>元件与数据源对照表</h2>
     <p class="lede">
       每个 HUD 元件读的是哪份数据、找谁要。<em>对不上的格子就是还没定的设计</em>——
@@ -1034,18 +1221,18 @@ footer{
         <tr><td>阶段 / 剩余时间</td><td><code>run.ts</code> RUN_DURATION / STAGES</td><td>已定</td></tr>
         <tr><td>地形标签</td><td>地图配置（6 张，M3 才定数据）</td><td>待 M3</td></tr>
         <tr><td>BOSS 血条</td><td><code>run.ts</code> BOSSES · bossReport</td><td>已定</td></tr>
-        <tr><td>等级 / 积分</td><td><code>run.ts</code> LEVEL_COST</td><td>已定</td></tr>
+        <tr><td>等级 / 下一跳</td><td><code>run.ts</code> LEVEL_TIME（时间阈值，非金钱）</td><td>已定</td></tr>
         <tr><td>金钱</td><td><code>zombies.ts</code> money 字段累加</td><td>已定</td></tr>
         <tr><td>小队生命条</td><td>角色 hpMax × 当前 hp</td><td>已定</td></tr>
         <tr><td>能量条</td><td>INT 派生 energyMax</td><td>已定</td></tr>
         <tr><td>技能冷却</td><td><code>characters.ts</code> AIProfile 技能参数</td><td>已定</td></tr>
         <tr><td>增益倒计时</td><td><code>run.ts</code> BUFFS（5 种 × 15s）</td><td>已定</td></tr>
         <tr><td>伤害飘字</td><td><code>combat.ts</code> computeDamage 输出</td><td>已定</td></tr>
-        <tr><td>集火按钮</td><td>core 的 AI 目标覆盖</td><td>待 M1</td></tr>
+        <tr><td>命令栏三按钮</td><td><code>characters.ts</code> SQUAD_COMMANDS（free 是默认态不是按钮）</td><td>待 M3</td></tr>
         <tr><td>小地图</td><td>core 空间索引查询</td><td>待 M2</td></tr>
         <tr><td>任务进度</td><td><code>quest.ts</code>（三种任务类型）</td><td>待 M3</td></tr>
         <tr><td>武器升级 DPS 增量</td><td><code>weapons.ts</code> 阶系数 + 穿透收益</td><td>已定</td></tr>
-        <tr><td>角色卡属性</td><td><code>characters.ts</code> primary（合计 100）</td><td>已定</td></tr>
+        <tr><td>角色卡属性</td><td><code>characters.ts</code> primary（六项，合计 150）</td><td>已定</td></tr>
         <tr><td>局外解锁状态</td><td>存档（M5，只存解锁不存数值）</td><td>待 M5</td></tr>
       </tbody>
     </table>
@@ -1055,7 +1242,7 @@ footer{
 <footer>
   本页为 HTML 实机原型，非引擎截图。战场由 canvas 程序化绘制，
   HUD 为真实 DOM 覆盖层 —— 与 <code style="font-family:inherit">src/ui/</code> 的实现方式一致。<br>
-  配套文档：docs/00-决策清单 · 01-系统策划案 · 02-数值表 · 03-计算演示 · 04-技术框架 · 05-资产清单 · 06-开发路线图
+  配套文档：docs/00-决策清单 · 01-系统策划案 · 02-数值表 · 03-计算演示 · 04-技术框架 · 05-资产清单 · 06-开发路线图 · 08-关卡方案 · 09-角色与成长
 </footer>
 
 </div>

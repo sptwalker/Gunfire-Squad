@@ -185,6 +185,30 @@ h2{
   margin:0 0 16px;
 }
 
+/* ── 本轮新增的四件事 ── */
+.axis{
+  border:1px solid var(--hair);
+  border-top:3px solid var(--accent);
+  background:var(--panel);
+  padding:20px 22px;
+  margin:-32px 0 52px;
+}
+.axis .axh{
+  font-family:"Noto Sans SC",sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 14px;
+}
+.axis ol{
+  margin:0;padding:0;list-style:none;
+  display:grid;gap:12px;
+}
+.axis li{
+  font-size:14px;line-height:1.7;color:var(--ink-2);
+  padding-left:15px;border-left:2px solid var(--hair);
+}
+.axis li b{color:var(--ink);font-weight:700}
+@media (max-width:560px){ .axis{margin-top:-36px;padding:16px} }
+
 /* ── doc index ── */
 .docs{
   border:1px solid var(--hair);
@@ -306,7 +330,7 @@ footer{
   <p class="eyebrow">创意阶段规划 · 已完成</p>
   <h1>Gunfire Squad</h1>
   <p class="lede">
-    俯视 3D 小队生存射击。玩家只控制队长，另外 4 名队员自动跟随、索敌、开火、放技能。
+    俯视 3D 小队生存射击，Q 版体素美术。玩家只控制队长，另外 4 名队员自动跟随、索敌、开火、放技能。
     结构是 <b>世界地图 → 6 个场景 → 82 个子关卡</b>，每个子关卡是一次 15 分钟的 run。
     关与关之间变难靠的不是数值，是<b>构成</b>——每关提出一种新的挑战维度，卡住时该换阵容。
     <b>本仓库当前只有文档与数值模拟器，不含游戏代码。</b>
@@ -329,10 +353,20 @@ footer{
   <div><dt>僵尸</dt><dd>9</dd></div>
   <div><dt>场景</dt><dd>6</dd></div>
   <div><dt>子关卡</dt><dd>82</dd></div>
-  <div><dt>挑战维度</dt><dd>12</dd></div>
+  <div><dt>挑战维度</dt><dd>13</dd></div>
   <div><dt>单局</dt><dd>15<small> 分</small></dd></div>
   <div><dt>BOSS</dt><dd>3</dd></div>
 </dl>
+
+<div class="axis">
+  <p class="axh">本轮加进来的四件事</p>
+  <ol>
+    <li><b>六属性</b>　一等属性从 4 项合计 100 改成 <b>6 项合计 150</b>——新增<b>幸运</b>与<b>体质</b>，暴击率从敏捷迁出、生命上限从韧性迁出。重新参数化而非加强：逐角色 DPS 与有效生命相对旧值偏离 ≤10%（实测最大 6.9%）。</li>
+    <li><b>控制对抗轴</b>　击退 / 冻结 / 嘲讽各有独立的对抗属性（<b>霸体</b> / <b>抗冻</b> / <b>狡诈</b>），三扇门各自上锁；减速是唯一不设对抗的一格。它成为第 13 个挑战维度，约束在<b>判定</b>不在覆盖。</li>
+    <li><b>局外经济与双成长线</b>　局内<b>零购买</b>，等级与武器阶按时间自动涨；金钱买<b>装备本身</b>，会用这一类武器的角色共享。技能点来自<b>星级</b>（三星封顶，不可刷），荣誉值→<b>军衔</b>来自局内任务，后段军衔解锁地雷、工事、炮火等<b>战术动作</b>。</li>
+    <li><b>玩家指令与可破坏障碍</b>　自由 / 集火、重整阵型、跟随 / 紧密跟随三个命令；沙袋 / 铁丝网 / 木墙三种新障碍只带来「子弹能穿人不能穿」与「可炸开」两类新语义。</li>
+  </ol>
+</div>
 
 <h2>文档</h2>
 <div class="docs">
@@ -363,7 +397,7 @@ footer{
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/05-资产清单.md">
     <span class="n">05</span>
-    <span class="t">资产清单<small>角色 / 僵尸 / 地形 / 特效清单，Rodin 生成提示词模板，6 场景的材质着色契约，动画方案风险</small></span>
+    <span class="t">资产清单<small>角色 / 僵尸 / 地形 / 特效清单，Q 版体素部件规格，6 场景的材质着色契约，动画方案风险</small></span>
     <span class="fmt">MD</span>
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/06-开发路线图.md">
@@ -378,12 +412,12 @@ footer{
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/08-关卡方案.md">
     <span class="n">08</span>
-    <span class="t">关卡方案<small>12 个挑战维度的定义与判据、6 个场景的阶梯、三档难度、原始丛林 15 关的完整推导表</small></span>
+    <span class="t">关卡方案<small>13 个挑战维度的定义与判据、控制对抗的三张判定表、6 个场景的阶梯、三档难度、原始丛林 15 关的完整推导表</small></span>
     <span class="fmt">MD</span>
   </a>
   <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/09-角色与成长.md">
     <span class="n">09</span>
-    <span class="t">角色与成长<small>12 角色技能重做、15 个答案标签的覆盖矩阵、专精树与 SpecEffect 约束、成长线、每关可行阵容数</small></span>
+    <span class="t">角色与成长<small>六属性分配（合计 150）、13 维答案矩阵、专精树与 SpecEffect 约束、技能点与军衔两条成长线、每关可行阵容数</small></span>
     <span class="fmt">MD</span>
   </a>
 </div>
@@ -392,7 +426,7 @@ footer{
 <div class="run">
   <p>所有数值表的真源是 <code>src/data/*.ts</code>，输出由模拟器生成。文档里的数字全部从模拟器导出，不手填。82 个子关卡的刷怪表同理，由 <code>scenes.ts</code> 的 <code>expandScene()</code> 推导，没有手写的关卡配置。</p>
 <pre>npm run sim          <span class="c"># = node src/sim/balance-check.ts</span></pre>
-  <p>Node 24 原生支持 TypeScript 类型剥离，不需要 tsx / ts-node。输出十节实测表：角色属性预算 / 单角色基准 / BOSS DPS 锚点 / BOSS 血量反向校准 / 生存压力 / 15 分钟全程模拟 / 承伤现实检查 / 多阵容鲁棒性 / 挑战维度覆盖矩阵 / 阵容多样性枚举。</p>
+  <p>Node 24 原生支持 TypeScript 类型剥离，不需要 tsx / ts-node。输出十二节实测表：角色属性预算 / 单角色基准（含四属性→六属性的偏离闸门） / BOSS DPS 锚点 / BOSS 血量反向校准 / 生存压力 / 15 分钟全程模拟 / 承伤现实检查 / 多阵容鲁棒性 / 挑战维度覆盖矩阵 / 阵容多样性枚举 / 控制对抗矩阵 / 军衔与技能点的时间成本。</p>
   <p>改数字去 <code>src/data/</code>；改图表去 <code>src/sim/balance-check.ts</code>，重跑，再把输出同步进 <code>02-数值表.md</code>。</p>
 </div>
 
@@ -409,7 +443,7 @@ footer{
   </p>
   <p>
     还有一条被证伪过的期待：它能证明「每个维度都有多种解」，但<b>不能</b>证明「很多种组合真的可行」——
-    12 个维度实际只收敛出 1 条真约束。这条边界如实记在
+    13 个维度实际只收敛出 1 条真约束（新维度「控制抗性」回答面是全员 12 人，约束力为 0）。这条边界如实记在
     <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/00-决策清单.md">00-决策清单</a> D0。
   </p>
   <p>

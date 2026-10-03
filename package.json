@@ -6,5 +6,12 @@
   "description": "俯视 3D 小队生存射击 — 创意阶段数值验证",
   "scripts": {
     "sim": "node src/sim/balance-check.ts"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1",
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "three": "^0.170.0"
   }
 }

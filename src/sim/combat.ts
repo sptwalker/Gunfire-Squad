@@ -34,6 +34,8 @@ export function heroRawDps(
   targetArmor: number,
   targetArmorType: ArmorType,
   dtype: DamageType,
+  /** 目标抗暴击 0-1。不传 = 0，即打一个没有韧性的目标。 */
+  targetAntiCrit = 0,
 ): number {
   const w = WEAPONS[hero.weapon];
   const d = derive(hero.primary, level);
@@ -48,6 +50,7 @@ export function heroRawDps(
     atkMul: d.atkMul * d.levelDmgMul * skillAvgMul(hero),
     critRate: d.critRate + w.critBonus,
     critDmg: d.critDmg,
+    targetAntiCrit,
   });
 
   // 攻速乘区（敏捷）必须作用在【频率】上，不能乘进单发伤害——
@@ -74,9 +77,10 @@ export function heroEffectiveDps(
   targetArmorType: ArmorType,
   dtype: DamageType,
   targets = 1,
+  targetAntiCrit = 0,
 ): number {
   const w = WEAPONS[hero.weapon];
-  const single = heroRawDps(hero, level, tier, targetArmor, targetArmorType, dtype);
+  const single = heroRawDps(hero, level, tier, targetArmor, targetArmorType, dtype, targetAntiCrit);
   // 单体武器 targets 再大也只有 1 倍收益
   const hitMul = w.hitsPerAttack === 1 ? 1 : Math.min(targets, w.hitsPerAttack) / 1;
   return single * (w.hitsPerAttack === 1 ? 1 : hitMul);
@@ -89,6 +93,7 @@ export function squadDps(
   targetArmor: number,
   targetArmorType: ArmorType,
   targets = 1,
+  targetAntiCrit = 0,
 ): { total: number; per: { hero: Hero; dps: number }[] } {
   const per = heroes.map((h) => ({
     hero: h,
@@ -100,6 +105,7 @@ export function squadDps(
       targetArmorType,
       WEAPONS[h.weapon].dtype,
       targets,
+      targetAntiCrit,
     ),
   }));
   return { total: per.reduce((s, x) => s + x.dps, 0), per };
@@ -149,4 +155,113 @@ export function zombieDps(z: Zombie, stage: number): number {
 /** 队伍总有效生命，用于判断尸潮能否扛住 */
 export function squadEhp(heroes: Hero[], level: number): number {
   return heroes.reduce((s, h) => s + heroEhp(derive(h.primary, level)), 0);
+}
+
+// ────────────────────────────────────────────────────────────
+// 控制对抗（第二轮新增）
+// ────────────────────────────────────────────────────────────
+
+/**
+ * 击退/击倒的命中率上限。
+ *
+ * **不能到 1.0**，理由与 `ANTI_CRIT_CAP = 0.5` 是同一条：
+ * 一旦某把武器能 100% 推住某个目标，位移就不再是对局变量，
+ * "把怪推在门外"会变成一条万能的通关路径。
+ * 0.85 的意思是"堆击退能把控场做到八成五，剩下那一成半永远靠站位和运气"。
+ */
+export const KNOCK_CAP = 0.85;
+
+/**
+ * 判定的陡峭度。命中率取的是 Hill 形式：
+ *
+ *     命中率 = clamp(KNOCK_CAP × atk^n / (atk^n + stab^n), 0, KNOCK_CAP)
+ *
+ * n = 2 而不是 1，这条是本设计的要害，值得写清楚：
+ * 用 n = 1 的裸比值时，冲锋枪（击退力 8.7）对普通僵尸（稳固 12）能拿到 42% ——
+ * 一把"几乎推不动"的武器推出了四成概率，与它的设计定位直接矛盾。
+ * n = 2 之后同一组数字是 34%（再乘 cap），而火箭筒 vs 护盾僵尸只有 34%（且它霸体，实际为 0）。
+ * **平方关系表达的是"击退力必须明显压过稳固才推得动"，这正是这个属性该有的手感。**
+ *
+ * 它同时也是"控制抗性"这个维度成立的前提：抗性高的单位不是"少被推一点"，
+ * 而是"根本推不动"，玩家才会去换手段而不是加力度。
+ */
+export const KNOCK_EXP = 2;
+
+/**
+ * 一次控制判定的命中率 0-1。
+ *
+ * 攻方击退力 = 武器 knockback × (近战 ? knockMelee : knockRanged)，见 `heroKnock()`
+ * 守方稳固   = 英雄 `Derived.stab` / 僵尸 `Zombie.stab`
+ *
+ * 霸体**不在这里判**——它是"免疫位移"的是非题而不是概率调节，
+ * 由调用方先行短路，见 `canDisplace()`。
+ */
+export function knockChance(attackerKnock: number, defenderStab: number): number {
+  const a = Math.max(0, attackerKnock);
+  if (a <= 0) return 0;
+  const s = Math.max(0, defenderStab);
+  const an = Math.pow(a, KNOCK_EXP);
+  const sn = Math.pow(s, KNOCK_EXP);
+  const raw = an / (an + sn);
+  return Math.min(KNOCK_CAP, KNOCK_CAP * raw);
+}
+
+/**
+ * 霸体只免位移。冻结与嘲讽各走自己的对抗属性（`freezeRes` / `cunning`），
+ * 减速**故意不设**对抗属性——控制体系需要一层永远关不上的门，
+ * 否则"控制流"作为一个流派会整体作废。
+ */
+export function canDisplace(defender: { superArmor: boolean }): boolean {
+  return !defender.superArmor;
+}
+
+/**
+ * 冻结的实际时长。抗冻同时**降概率也缩时长**——
+ * 只降概率的话，堆满抗冻的单位一旦被冻住，时长和零抗冻一模一样，
+ * 直觉上是错的（"抗冻"应该冻得更短）。
+ */
+export function freezeDuration(baseSec: number, freezeRes: number): number {
+  const res = Math.max(0, Math.min(1, freezeRes));
+  return baseSec * (1 - res);
+}
+
+/** 嘲讽是否生效。狡诈按概率抵抗。`roll` 是 0-1 的随机数，由调用方给。 */
+export function tauntLands(cunning: number, roll: number): boolean {
+  return roll >= Math.max(0, Math.min(1, cunning));
+}
+
+/**
+ * 一个英雄的击退力。
+ * 近战看力量（`knockMelee`），远程看敏捷（`knockRanged`）——
+ * 与"力量越大近战击退越高、敏捷越高远程击退越高"一一对应。
+ * 武器阶额外 +10%/阶：高阶武器更重，与"阶自动成长"的局内节奏同向。
+ */
+export function heroKnock(hero: Hero, level: number, tier: 0 | 1 | 2): number {
+  const w = WEAPONS[hero.weapon];
+  const d = derive(hero.primary, level);
+  const isMelee = w.category === 'melee';
+  return w.knockback * (isMelee ? d.knockMelee : d.knockRanged) * (1 + 0.1 * tier);
+}
+
+/**
+ * 僵尸对英雄的击退力。僵尸端的 `knock` 是表值，**刻意不随等级涨**——
+ * 英雄的稳固随等级涨（`tgh × g`），如果两边一起涨就等于没涨。
+ * 让守方随成长变稳，玩家才会感觉到"练起来之后队形不那么容易被冲散"。
+ */
+export function zombieKnock(z: Zombie, stage: number): number {
+  return z.knock * stageMods(stage).dmg;
+}
+
+/**
+ * 控制抗性的综合评分 0-1，只给哨兵和文档用，不参与实际结算。
+ * 四项取平均：霸体视作稳固满分，其余三项是各自的抵抗值。
+ * 它的用途是让"哪个僵尸最抗控"这件事可排序、可被文档引用，
+ * 而不是散在四列数字里靠人眼比。
+ */
+export function controlResistance(z: Zombie): number {
+  const armorScore = z.superArmor ? 1 : 0;
+  // 稳固的归一化直接复用 knockChance 的 60 饱和点——
+  // 两处若各用各的常数，"评分"和"实际命中率"会给出互相矛盾的排序。
+  const stabScore = z.stab / (z.stab + 60);
+  return (armorScore + stabScore + z.freezeRes + z.cunning) / 4;
 }

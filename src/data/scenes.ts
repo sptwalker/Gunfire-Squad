@@ -36,6 +36,7 @@ export type DimensionId =
   | 'heavyArmor'   // 重甲：高护甲单位阻挡推进
   | 'split'        // 分裂：死亡分裂惩罚无脑 AOE
   | 'shielded'     // 精英护盾：需破盾窗口，吃不吃控
+  | 'ctrlResist'   // 控制抗性：霸体免疫位移、抗冻、狡诈，逼你换一种控制手段
   // F3 地形与空间
   | 'choke'        // 卡口：走廊强制单线接战
   | 'open'         // 开阔：无掩体，四面来敌
@@ -58,7 +59,11 @@ export type TerrainTag =
   | 'ice'        // 冰面：打滑/减速
   | 'pool'       // 毒洼：持续伤害地面
   | 'barrel'     // 可引爆物
-  | 'crate';     // 可破坏补给
+  | 'crate'      // 可破坏补给
+  // ── 第二轮新增的三种可破坏障碍，语义与数值见下方 OBSTACLES ──
+  | 'sandbag'    // 沙袋：挡人不挡子弹
+  | 'wire'       // 铁丝网：挡人不挡子弹，附带减速
+  | 'woodwall';  // 木墙：什么都挡，但可以被炸开
 
 export interface Dimension {
   id: DimensionId;
@@ -119,6 +124,13 @@ export const DIMENSIONS: Dimension[] = [
     needs: '破盾手段 + 集火窗口，AOE 磨盾是浪费',
     terrain: [],
     zombies: ['ward'],
+  },
+  {
+    id: 'ctrlResist', name: '控制抗性', family: 'resist',
+    feels: '推不动、冻不住、嘲讽不灵——你最顺手的那一招突然不响了',
+    needs: '换一种控制手段，或者干脆放弃控制用点杀与续航硬吃。**加大力度没有用**',
+    terrain: ['sandbag', 'wire'],
+    zombies: ['brute', 'ward', 'toxic', 'leaper'],
   },
 
   // ── F3 地形与空间 ──
@@ -216,19 +228,25 @@ export type AnswerTag =
  */
 export const ANSWER_DIMS: Record<AnswerTag, DimensionId[]> = {
   aoeClear: ['swarm'],
-  singleTarget: ['split', 'shielded'],
+  // 硬解点杀：不去控它，直接把它打掉。
+  singleTarget: ['split', 'shielded', 'ctrlResist'],
   // 潮涌的第三种解法：不是一次打多个，而是【单位时间打得足够快】。
   // 和 aoeClear 是不同形状——扫/炸吃站位，高射速吃持续站桩。
   sustainedDps: ['open', 'eliteHunt', 'swarm'],
   // 分裂的第三种解法：在它分裂出孩子之前把母体连着孩子一起秒掉。
-  burst: ['eliteHunt', 'shielded', 'rush', 'split'],
+  burst: ['eliteHunt', 'shielded', 'rush', 'split', 'ctrlResist'],
   pierce: ['heavyArmor', 'choke'],
   explosive: ['heavyArmor', 'choke', 'swarm'],
-  armorShred: ['heavyArmor', 'shielded', 'eliteHunt'],
-  control: ['rush', 'suicide', 'split'],
-  taunt: ['choke', 'eliteHunt'],
+  // 破甲不看霸体，也不看抗冻——它根本不是控制。
+  armorShred: ['heavyArmor', 'shielded', 'eliteHunt', 'ctrlResist'],
+  // 减速是全游戏唯一【不设对抗属性】的控制，所以它永远是控制抗性那扇没关的门。
+  // 这不是漏洞，是地板：任何一层控制都能被完全免疫的话，控制流整体作废。
+  control: ['rush', 'suicide', 'split', 'ctrlResist'],
+  // 霸体只免位移，嘲讽照常生效；挡它的是狡诈。
+  taunt: ['choke', 'eliteHunt', 'ctrlResist'],
   mitigate: ['rush', 'poison', 'suppress'],
-  sustain: ['poison', 'sluggish'],
+  // 续航硬吃：不动控，靠治疗扛住被推挤与冻不住的代价。
+  sustain: ['poison', 'sluggish', 'ctrlResist'],
   // 射程同时回答四件事：够得着远程、点得掉自爆、不用踩毒、不用走位
   ranged: ['suppress', 'suicide', 'sluggish', 'poison'],
   // 机动同理：躲开自爆、离开毒区、脱离迟滞、在开阔地重新站位
@@ -298,6 +316,80 @@ export const DIFFICULTY_BY_ID: Record<DifficultyId, Difficulty> = Object.fromEnt
 
 export type SceneId = 'city' | 'jungle' | 'swamp' | 'desert' | 'snow' | 'military';
 
+/**
+ * 可破坏障碍。
+ *
+ * 三种新障碍带来的**新语义只有两条**，其余都能被已有的地形要素解释：
+ *   1. **子弹穿得过去，人过不去**（沙袋 / 铁丝网）——创造"能打不能走"的掩体，
+ *      于是远程在这里白拿一段射程，而近战必须绕路或先把障碍拆了。
+ *   2. **木墙可以被打开**（与建筑的唯一区别就是 `destructible`）——
+ *      让玩家有一次"这条路不通，那我把它打通"的选择权。
+ *
+ * 建筑作为对照留在表里，是为了让"可破坏"这个维度有一个确定的另一端：
+ * 只要看见建筑，就知道这一格的答案永远是【绕开】，不是【拆掉】。
+ *
+ * 摆放仍归 M2 的 `core/terrain.ts`，本表只定义语义与耐久，不定义坐标。
+ */
+export interface Obstacle {
+  id: string;
+  name: string;
+  /** 能否被摧毁。false 的障碍对阵容的要求是"绕开"而不是"打开" */
+  destructible: boolean;
+  /** 阻挡通行 */
+  blocksMovement: boolean;
+  /** 阻挡射击（子弹会被挡下） */
+  blocksShots: boolean;
+  /** 阻挡视线与索敌（AI 看不见对面） */
+  blocksSight: boolean;
+  /** 摧毁所需的有效伤害，0 = 不可摧毁 */
+  hp: number;
+  /** 摧毁后的残留：none 完全清空，rubble 留下可通行但不提供掩体的废墟 */
+  residue: 'none' | 'rubble';
+  note: string;
+}
+
+export const OBSTACLES: Record<string, Obstacle> = {
+  sandbag: {
+    id: 'sandbag', name: '沙袋',
+    destructible: true, blocksMovement: true, blocksShots: false, blocksSight: false,
+    hp: 320, residue: 'rubble',
+    note: '新语义①。挡人不挡子弹：远程站在后面是纯赚，近战被挡在外面。拆它最便宜，所以它也是"拆开一条路"的默认选项',
+  },
+  wire: {
+    id: 'wire', name: '铁丝网',
+    destructible: true, blocksMovement: true, blocksShots: false, blocksSight: false,
+    hp: 180, residue: 'none',
+    note: '与沙袋同族但血更少——拆得最快，代价是它拦人的时间也最短。敌我双方都受影响',
+  },
+  woodwall: {
+    id: 'woodwall', name: '木墙',
+    destructible: true, blocksMovement: true, blocksShots: true, blocksSight: true,
+    hp: 900, residue: 'rubble',
+    note: '新语义②。什么都挡，但可以被炸开——它把"这条路不通"从绝对事实变成一次有代价的选择。耐久 900 要求真投入，随口打两枪拆不掉',
+  },
+  building: {
+    id: 'building', name: '建筑',
+    destructible: false, blocksMovement: true, blocksShots: true, blocksSight: true,
+    hp: 0, residue: 'none',
+    note: '对照组。**不可摧毁**是它与木墙的唯一区别，也正是这个区别让"绕开"和"打开"成为两种可学的反应',
+  },
+  barrel: {
+    id: 'barrel', name: '油桶',
+    destructible: true, blocksMovement: true, blocksShots: false, blocksSight: false,
+    hp: 60, residue: 'none',
+    note: '一打就炸的伤害源，不是掩体。原先散落在场景表里，现在收进本表统一表述',
+  },
+  crate: {
+    id: 'crate', name: '补给箱',
+    destructible: true, blocksMovement: true, blocksShots: false, blocksSight: false,
+    hp: 120, residue: 'none',
+    note: '打碎给增益道具。是"停下来打点东西"的诱因，与掩体职责相反',
+  },
+};
+
+/** 语义自查用：四种代表性障碍，哨兵按这四个检查布尔组合是否只有两类。 */
+export const OBSTACLE_KINDS = ['sandbag', 'wire', 'woodwall', 'building'] as const;
+
 /** 地形对战斗的修正。由场景声明，子关卡继承。 */
 export interface TerrainMods {
   /** 单位移动倍率。<1 = 迟滞地形（沼泽/冰面/水域） */
@@ -308,6 +400,14 @@ export interface TerrainMods {
   coverDensity: number;
   /** 可引爆物数量等级 0-2 */
   explosives: number;
+  /**
+   * 木墙密度 0-1。与 `coverDensity` 分开是因为两者管的不是一件事：
+   *   `coverDensity`    管【沙袋/铁丝网】——挡人不挡子弹，影响接战跨度
+   *   `blockerDensity`  管【木墙】——什么都挡，影响"能不能看见/打到"
+   * 合成一个字段会让"这条走廊是被掩体切成段、还是被墙堵死"无法表达，
+   * 而这两者对阵容的要求完全不同（前者要穿透，后者要爆破）。
+   */
+  blockerDensity: number;
 }
 
 /**
@@ -354,7 +454,7 @@ export const SCENES: Scene[] = [
     signature: ['choke', 'suicide', 'heavyArmor'],
     brief: '街道被楼体切成一条条走廊，爆炸僵尸从拐角后面走出来，胖僵尸堵住唯一的出口。',
     terrain: ['building', 'corridor', 'barrel'],
-    mods: { moveMul: 1.0, hazardPools: false, coverDensity: 0.8, explosives: 2 },
+    mods: { moveMul: 1.0, hazardPools: false, coverDensity: 0.8, explosives: 2, blockerDensity: 0.5 },
     bossStages: [0, 1, 2],
     ladder: [
       { levels: 3, dims: { choke: 10 }, threatGrowth: 1.06, tag: '街区',
@@ -374,7 +474,7 @@ export const SCENES: Scene[] = [
     signature: ['swarm', 'poison', 'rush'],
     brief: '树冠遮住视线，小僵尸像潮水一样从每一丛灌木里渗出来，毒液僵尸死在你退无可退的地方。',
     terrain: ['marsh', 'pool', 'openField'],
-    mods: { moveMul: 0.9, hazardPools: true, coverDensity: 0.35, explosives: 0 },
+    mods: { moveMul: 0.9, hazardPools: true, coverDensity: 0.35, explosives: 0, blockerDensity: 0.15 },
     bossStages: [0, 1, 2],
     ladder: [
       { levels: 3, dims: { swarm: 10 }, threatGrowth: 1.07, tag: '丛林边缘',
@@ -394,7 +494,7 @@ export const SCENES: Scene[] = [
     signature: ['sluggish', 'poison', 'suppress'],
     brief: '每走一步都在往下陷，喷吐僵尸站在你够不到的地方慢慢磨，脚下还在掉血。',
     terrain: ['marsh', 'water', 'pool'],
-    mods: { moveMul: 0.6, hazardPools: true, coverDensity: 0.2, explosives: 0 },
+    mods: { moveMul: 0.6, hazardPools: true, coverDensity: 0.2, explosives: 0, blockerDensity: 0.0 },
     bossStages: [1, 2, 0],
     ladder: [
       { levels: 3, dims: { sluggish: 10 }, threatGrowth: 1.06, tag: '浅滩',
@@ -414,7 +514,7 @@ export const SCENES: Scene[] = [
     signature: ['open', 'suppress', 'rush'],
     brief: '没有一处掩体，四个方向同时来人，跑得最快的和最远的同时在打你。',
     terrain: ['openField', 'barrel'],
-    mods: { moveMul: 1.0, hazardPools: false, coverDensity: 0.05, explosives: 1 },
+    mods: { moveMul: 1.0, hazardPools: false, coverDensity: 0.05, explosives: 1, blockerDensity: 0.1 },
     bossStages: [0, 2, 1],
     ladder: [
       { levels: 3, dims: { open: 10 }, threatGrowth: 1.06, tag: '戈壁',
@@ -434,7 +534,7 @@ export const SCENES: Scene[] = [
     signature: ['sluggish', 'eliteHunt', 'shielded'],
     brief: '冰面上刹不住脚，精英护盾僵尸顶在最前面，小怪趁你打不动它的时候围上来。',
     terrain: ['ice', 'openField', 'crate'],
-    mods: { moveMul: 0.7, hazardPools: false, coverDensity: 0.25, explosives: 0 },
+    mods: { moveMul: 0.7, hazardPools: false, coverDensity: 0.25, explosives: 0, blockerDensity: 0.2 },
     bossStages: [1, 0, 2],
     ladder: [
       { levels: 3, dims: { sluggish: 10 }, threatGrowth: 1.06, tag: '冻土',
@@ -451,22 +551,25 @@ export const SCENES: Scene[] = [
   },
   {
     id: 'military', name: '军事禁区',
-    signature: ['heavyArmor', 'eliteHunt', 'split'],
-    brief: '装甲单位推进得又稳又慢，精英在正面吸引火力，分裂僵尸逼你不能用范围武器。',
-    terrain: ['building', 'corridor', 'crate', 'barrel'],
-    mods: { moveMul: 1.0, hazardPools: false, coverDensity: 0.7, explosives: 2 },
+    // 第二轮把第三个签名从 eliteHunt 换成 ctrlResist，eliteHunt 降为阶梯里的次级维度。
+    // 理由：本场景是霸体僵尸（胖 / 护盾）的主场，加上铁丝网与沙袋同场出现，
+    // "推不动、冻不住、路还被拦着"是本场景最独特的那句话，值得占一个签名位。
+    signature: ['heavyArmor', 'ctrlResist', 'split'],
+    brief: '装甲单位推进得又稳又慢，推不动也冻不住；精英在正面吸引火力，分裂僵尸逼你不能用范围武器；铁丝网与沙袋把路切成一段段。',
+    terrain: ['building', 'corridor', 'crate', 'barrel', 'sandbag', 'wire', 'woodwall'],
+    mods: { moveMul: 1.0, hazardPools: false, coverDensity: 0.7, explosives: 2, blockerDensity: 0.6 },
     bossStages: [2, 1, 0],
     ladder: [
       { levels: 3, dims: { heavyArmor: 10 }, threatGrowth: 1.06, tag: '外围哨所',
         note: '纯重甲。穿透/爆炸是唯一的门，堆攻击力进不来' },
       { levels: 3, dims: { heavyArmor: 8, split: 4 }, threatGrowth: 1.06, tag: '装甲库',
         note: '分裂加入。刚学会用爆炸打重甲，马上就被告知爆炸有代价' },
-      { levels: 3, dims: { heavyArmor: 7, split: 5, eliteHunt: 4 }, threatGrowth: 1.05, tag: '指挥环',
-        note: '围猎加入。三者的组合逼出一个"既有爆发又有点杀"的阵容' },
-      { levels: 3, dims: { heavyArmor: 8, split: 6, eliteHunt: 6 }, threatGrowth: 1.04, tag: '地下层',
-        note: '权重拉平，本作配平精度的压力测试点' },
-      { levels: 1, dims: { heavyArmor: 10, split: 7, eliteHunt: 8 }, threatGrowth: 1.0, tag: '发射井',
-        note: '全游戏最后一关。三个反制维度同时顶格' },
+      { levels: 3, dims: { heavyArmor: 7, ctrlResist: 5, split: 5 }, threatGrowth: 1.05, tag: '指挥环',
+        note: '控制抗性加入。胖僵尸与护盾僵尸成规模，冷冻与击退流在这里第一次失效——**加大力度没有用，要换一种控制**' },
+      { levels: 3, dims: { heavyArmor: 8, ctrlResist: 6, split: 6, eliteHunt: 4 }, threatGrowth: 1.04, tag: '地下层',
+        note: '围猎也压上来，权重拉平，本作配平精度的压力测试点' },
+      { levels: 1, dims: { heavyArmor: 10, ctrlResist: 8, split: 7, eliteHunt: 6 }, threatGrowth: 1.0, tag: '发射井',
+        note: '全游戏最后一关。四个维度同时顶格，其中控制抗性会直接废掉一整类阵容' },
     ],
   },
 ];

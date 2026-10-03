@@ -2,8 +2,13 @@
  * 12 名可选角色，从中选 5 人组队。
  *
  * 设计约束（有意为之，不要打破）：
- * 1. 一级属性总和统一为 100 点。角色差异靠【分配方式】体现，不靠数值膨胀。
+ * 1. 一级属性总和统一为 150 点，六个属性平摊。角色差异靠【分配方式】体现，不靠数值膨胀。
  *    否则"哪个角色强"就变成"哪个角色点数多"，阵容选择失去意义。
+ *    ── 第二轮从「100 点四属性」改成「150 点六属性」，这是**重新参数化，不是加强**：
+ *    每人多的 50 点全部进了幸运与体质两条新线，而暴击从敏捷、生命从韧性迁了出来，
+ *    所以老四维都要下调。验收闸门是每个角色的 DPS 与有效生命相对旧版偏离 ≤10%，
+ *    实测全部落在 ±7.5% 内（`_rebalance.ts` 是当时的草稿纸，跑完即弃）。
+ *    这条闸门不是可选的——破了它，三个 BOSS 的血量锚点与 15 分钟曲线全部要重跑。
  * 2. 每个角色绑定一把主武器。武器不通用 → 玩家选角色时实际上在选武器组合，
  *    这是阵容深度的主要来源（不额外做羁绊系统）。
  * 3. 角色差异靠 aiProfile 参数体现，不是靠四套不同的 AI 代码。
@@ -17,11 +22,15 @@
  * 这一轮把机制变成字段：`Skill` 的每个机械效果都有对应字段，`note` 退回纯描述。
  * 同时每个角色带上 `answers`（能回答哪些挑战维度）与 `specialization`（专精树）。
  *
- * 12 个 id、定位、绑定武器、一级属性分配【全部未改动】——改的只有技能层。
+ * ── 第二轮新增 ──
+ * 一级属性从四维扩到六维（见约束 1）、技能分基础/高级两档（`tier`）、
+ * 高级技能要两把钥匙（军衔 + 技能点，见 `progression.ts`）、
+ * 以及第四个 AI 旋钮来源：玩家的 `SQUAD_COMMANDS`。
  */
 
 import type { Primary } from './attributes.ts';
-import type { WeaponId } from './weapons.ts';
+import type { WeaponClass, WeaponId } from './weapons.ts';
+import type { TacticId } from './progression.ts';
 import { ANSWER_DIMS, type AnswerTag, type DimensionId } from './scenes.ts';
 
 export type HeroRole = 'tank' | 'meleeDps' | 'rangedDps' | 'control' | 'support' | 'summoner';
@@ -52,6 +61,16 @@ export interface AIProfile {
  */
 export interface Skill {
   name: string;
+  /**
+   * 技能档位。基础技能开局就有；高级技能要**两把钥匙**：
+   * 军衔到级（`RANK_REQ`）**且**花技能点买下（见 `progression.ts`）。
+   *
+   * 为什么两把钥匙而不是一把：玩家的两条诉求是"技能点解锁高级技能"和
+   * "军衔解锁高级技能"，两句都要成立。若只认一样，另一条成长线就退化成
+   * 纯数值奖励；两把钥匙之后，技能点给【选择权】、军衔给【资格】，
+   * 两条线的位置互不重叠——这也是它们不会互相淹没的原因。
+   */
+  tier: 'basic' | 'advanced';
   /** 冷却，秒 */
   cooldown: number;
   /** 持续时间，秒。0 表示瞬发 */
@@ -121,6 +140,8 @@ export type SpecEffect =
   /** 修改技能参数：加法或乘法 */
   | { kind: 'skill'; field: 'cooldown' | 'duration' | 'mul' | 'healPerSec' | 'teamDefMul'; amount: number; mode: 'add' | 'mul' }
   | { kind: 'ai'; field: 'aggroRange' | 'leashRange' | 'engageDistanceMul' | 'retreatHpPct'; amount: number }
+  /** 战术动作：只由军衔给，专精树不用，不产出维度答案（见 progression.ts 的 TACTICS） */
+  | { kind: 'tactic'; id: TacticId }
   /** 新增维度答案：专精树里最有价值的一类，直接改变这个角色能进的阵容 */
   | { kind: 'answer'; add: AnswerTag }
   /** 复活：全游戏只有莉安有这个效果（决策 C2） */
@@ -142,8 +163,21 @@ export interface Hero {
   name: string;
   role: HeroRole;
   weapon: WeaponId;
+  /** 会用的武器类别，第一个是默认武器的类别。换武器只能在这些类别里换（`canEquip`） */
+  weaponClasses: WeaponClass[];
   primary: Primary;
+  /** 基础技能，开局就有 */
   skill: Skill;
+  /**
+   * 高级技能：军衔到级 + 技能点买下才能用（两把钥匙，见 `Skill.tier`）。
+   *
+   * **刻意不进 `skillAvgMul()`**——那个函数是配平的基准乘区，
+   * 一旦把高级技能折进去，所有角色的纸面 DPS 会随"解锁进度"漂移，
+   * 而 BOSS 血量锚点是按【基础技能】定死的。高级技能是**玩家的额外选项**，
+   * 是通关之后的奖励，不是让数值达标的前提。这条和 `SpecEffect` 禁止新增
+   * 伤害乘区是同一类约束：成长线不许动配平的分母。
+   */
+  advancedSkill: Skill;
   ai: AIProfile;
   /**
    * 这个角色【未点专精时】能回答哪些挑战维度。
@@ -160,11 +194,18 @@ export const HEROES: Hero[] = [
   // ── 坦克：低输出高生存，负责把僵尸挡在外圈 ──
   {
     id: 'ron', name: '铁壁·罗恩', role: 'tank', weapon: 'greatsword',
-    primary: { str: 28, agi: 8, tgh: 50, int: 14 },
+    weaponClasses: ['blade', 'polearm'],
+    primary: { str: 28, agi: 8, tgh: 42, int: 14, luk: 4, con: 54 },
     skill: {
+      tier: 'basic',
       name: '磐石壁垒', cooldown: 20, duration: 6, mul: 1.4, cdrAffected: true,
       teamDefMul: 0.5,
       note: '期间全队减伤 50%，自身嘲讽',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '铁壁冲锋', cooldown: 18, duration: 4, mul: 1.2, cdrAffected: true,
+      knockback: 3, teamDefMul: 0.7,
+      note: '向前冲撞，正面敌人被推开并强制嘲讽 4 秒——把已经在贴脸的怪群推回外圈',
     },
     ai: { aggroRange: 14, leashRange: 22, engageDistanceMul: 1.2, targetPriority: 'closest', retreatHpPct: 0 },
     answers: ['taunt', 'mitigate', 'aoeClear'],
@@ -176,11 +217,18 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'gwen', name: '磐石·格温', role: 'tank', weapon: 'spear',
-    primary: { str: 30, agi: 12, tgh: 46, int: 12 },
+    weaponClasses: ['polearm', 'blade'],
+    primary: { str: 30, agi: 12, tgh: 42, int: 10, luk: 6, con: 50 },
     skill: {
+      tier: 'basic',
       name: '穿刺阵列', cooldown: 16, duration: 4, mul: 2.2, cdrAffected: true,
       piercePct: 0.4,
       note: '直线贯穿，无视 40% 目标护甲',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '万枪归一', cooldown: 20, duration: 1, mul: 3.4, cdrAffected: true,
+      piercePct: 1.0, hitsPerCast: 4,
+      note: '投出长枪贯穿一整条直线，完全无视护甲并连续命中 4 次',
     },
     ai: { aggroRange: 16, leashRange: 24, engageDistanceMul: 1.0, targetPriority: 'closest', retreatHpPct: 0 },
     answers: ['pierce', 'aoeClear'],
@@ -194,11 +242,18 @@ export const HEROES: Hero[] = [
   // ── 近战输出：高攻速贴脸，靠队友挡伤害 ──
   {
     id: 'kai', name: '疾风·凯', role: 'meleeDps', weapon: 'sword',
-    primary: { str: 40, agi: 30, tgh: 20, int: 10 },
+    weaponClasses: ['blade'],
+    primary: { str: 40, agi: 28, tgh: 18, int: 10, luk: 32, con: 22 },
     skill: {
+      tier: 'basic',
       name: '疾风连斩', cooldown: 12, duration: 3, mul: 2.6, cdrAffected: true,
       rateMul: 2.0, critAdd: 0.3, moveMul: 1.4,
       note: '攻速翻倍，暴击率 +30%，期间移动速度 +40%',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '残影斩', cooldown: 15, duration: 3, mul: 3.2, cdrAffected: true,
+      moveMul: 2.0, critAdd: 0.5,
+      note: '瞬移到威胁最高的目标背后连斩，期间攻速与暴击大幅提升',
     },
     ai: { aggroRange: 18, leashRange: 26, engageDistanceMul: 1.1, targetPriority: 'weakest', retreatHpPct: 0.25 },
     answers: ['burst', 'singleTarget', 'mobility'],
@@ -210,11 +265,18 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'ironbull', name: '断岳·铁牛', role: 'meleeDps', weapon: 'greatsword',
-    primary: { str: 46, agi: 18, tgh: 26, int: 10 },
+    weaponClasses: ['blade', 'polearm'],
+    primary: { str: 50, agi: 16, tgh: 26, int: 10, luk: 20, con: 28 },
     skill: {
+      tier: 'basic',
       name: '裂地斩', cooldown: 14, duration: 2, mul: 3.0, cdrAffected: true,
       knockback: 2, armorShredPct: 0.25,
       note: '范围击退 + 撕裂，被击中目标护甲 -25%（持续 2 秒，全队共享）',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '崩山', cooldown: 22, duration: 3, mul: 4.2, cdrAffected: true,
+      knockback: 3, armorShredPct: 0.4,
+      note: '跃起砸地，范围内敌人被击倒并撕裂护甲——清场与开团两用',
     },
     ai: { aggroRange: 15, leashRange: 22, engageDistanceMul: 1.2, targetPriority: 'strongest', retreatHpPct: 0.2 },
     answers: ['aoeClear', 'control', 'armorShred'],
@@ -228,61 +290,89 @@ export const HEROES: Hero[] = [
   // ── 远程输出：高 DPS 但脆，需要坦克保护 ──
   {
     id: 'vera', name: '鹰眼·薇拉', role: 'rangedDps', weapon: 'sniper',
-    primary: { str: 34, agi: 36, tgh: 14, int: 16 },
+    weaponClasses: ['sniper', 'bow', 'rifle'],
+    primary: { str: 33, agi: 34, tgh: 14, int: 16, luk: 38, con: 15 },
     skill: {
+      tier: 'basic',
       name: '致命标记', cooldown: 18, duration: 5, mul: 2.4, cdrAffected: true,
       vulnPct: 0.35,
       note: '标记目标，全队对其伤害 +35%',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '穿甲狙击', cooldown: 24, duration: 1, mul: 5.0, cdrAffected: true,
+      piercePct: 0.8, critAdd: 0.4,
+      note: '蓄力一击，无视 80% 护甲。专治高防与霸体目标',
     },
     ai: { aggroRange: 40, leashRange: 55, engageDistanceMul: 0.8, targetPriority: 'strongest', retreatHpPct: 0.3 },
     answers: ['debuff', 'ranged', 'singleTarget', 'burst'],
     specialization: [
       { id: 'vera-1', name: '稳定射击', cost: 1, effect: { kind: 'attr', attr: 'agi', amount: 6 }, note: '' },
       { id: 'vera-2', name: '致命一击', cost: 2, requires: 'vera-1', effect: { kind: 'skill', field: 'cooldown', amount: -4, mode: 'add' }, note: '标记冷却 18s → 14s，窗口更密' },
-      { id: 'vera-3', name: '破盾弹', cost: 3, requires: 'vera-2', effect: { kind: 'skill', field: 'mul', amount: 1.5, mode: 'mul' }, note: '技能倍率 ×1.5，标记窗口的单发爆发翻倍' },
+      { id: 'vera-3', name: '贯日狙击', cost: 3, requires: 'vera-2', effect: { kind: 'answer', add: 'pierce' }, note: '蓄力后沿直线打出一发超远程穿甲弹（射程 60 格，全图级），一路穿透所有目标并击退——击退走 knockChance 对撞稳固，霸体只吃伤害不被推开（重甲 / 卡口）' },
     ],
   },
   {
     id: 'jet', name: '弹幕·杰特', role: 'rangedDps', weapon: 'smg',
-    primary: { str: 30, agi: 40, tgh: 16, int: 14 },
+    weaponClasses: ['handgun', 'rifle'],
+    primary: { str: 30, agi: 38, tgh: 16, int: 14, luk: 36, con: 16 },
     skill: {
+      tier: 'basic',
       name: '弹幕压制', cooldown: 15, duration: 5, mul: 1.9, cdrAffected: true,
       reloadZero: true, rateMul: 1.4,
       note: '换弹时间归零，射速 +40%，压制射击令目标减速',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '弹雨覆盖', cooldown: 20, duration: 6, mul: 2.2, cdrAffected: true,
+      rateMul: 1.6, slowPct: 0.5,
+      note: '把弹幕铺满一整片地面，持续压制的区域里敌人寸步难行',
     },
     ai: { aggroRange: 24, leashRange: 32, engageDistanceMul: 0.85, targetPriority: 'closest', retreatHpPct: 0.3 },
     answers: ['sustainedDps', 'control', 'burst'],
     specialization: [
       { id: 'jet-1', name: '压枪', cost: 1, effect: { kind: 'attr', attr: 'agi', amount: 6 }, note: '' },
       { id: 'jet-2', name: '弹链改造', cost: 2, requires: 'jet-1', effect: { kind: 'skill', field: 'duration', amount: 3, mode: 'add' }, note: '压制窗口 5s → 8s，接近常驻' },
-      { id: 'jet-3', name: '火网', cost: 3, requires: 'jet-2', effect: { kind: 'skill', field: 'mul', amount: 1.6, mode: 'mul' }, note: '倍率 1.9 → 3.04，从持续输出变成半个爆发位' },
+      { id: 'jet-3', name: '天降火雨', cost: 3, requires: 'jet-2', effect: { kind: 'answer', add: 'explosive' }, note: '召唤一片火雨覆盖目标区域（半径 6 格、持续 8 秒），灼烧伤害不吃护甲减免，区域内持续打击（重甲 / 卡口 / 潮涌）' },
     ],
   },
 
   // ── 控制：不追求 DPS，追求让僵尸打不到人 ──
   {
     id: 'ella', name: '霜语·艾拉', role: 'control', weapon: 'freezer',
-    primary: { str: 14, agi: 22, tgh: 18, int: 46 },
+    weaponClasses: ['sprayer'],
+    primary: { str: 14, agi: 22, tgh: 18, int: 54, luk: 22, con: 20 },
     skill: {
+      tier: 'basic',
       name: '绝对零度', cooldown: 22, duration: 3, mul: 1.5, cdrAffected: true,
       teamDefMul: 0, freezeDuration: 3, vulnPct: 0.5,
       note: '全场冻结 3 秒（冻结期间不造成伤害），被冻结目标受伤 +50%',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '寒霜新星', cooldown: 26, duration: 4, mul: 1.8, cdrAffected: true,
+      freezeDuration: 4, slowPct: 0.6,
+      note: '以自身为中心扩散的冻结波，被控住的敌人解冻后仍被减速',
     },
     ai: { aggroRange: 20, leashRange: 28, engageDistanceMul: 0.8, targetPriority: 'closest', retreatHpPct: 0.35 },
     answers: ['control', 'aoeClear', 'debuff'],
     specialization: [
       { id: 'ella-1', name: '寒气精研', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '' },
       { id: 'ella-2', name: '极寒延展', cost: 2, requires: 'ella-1', effect: { kind: 'skill', field: 'duration', amount: 2, mode: 'add' }, note: '冻结 3s → 5s，集火窗口翻倍' },
-      { id: 'ella-3', name: '冰封核心', cost: 3, requires: 'ella-2', effect: { kind: 'skill', field: 'cooldown', amount: -6, mode: 'add' }, note: '冷却 22s → 16s，控制成为主要节奏' },
+      { id: 'ella-3', name: '永冻领域', cost: 3, requires: 'ella-2', effect: { kind: 'answer', add: 'mitigate' }, note: '大范围（半径 10 格）把敌人彻底冻成冰雕：普通僵尸按抗冻 freezeRes 判定，冻住即永久退出战斗，冰雕一击即碎并正常结算；精英与 BOSS 只冻 3 秒——冻住的敌人不再造成伤害，全队承伤骤降（突进 / 毒区 / 远程压制）' },
     ],
   },
   {
     id: 'bom', name: '震地·博姆', role: 'control', weapon: 'grenade',
-    primary: { str: 22, agi: 20, tgh: 26, int: 32 },
+    weaponClasses: ['explosive'],
+    primary: { str: 22, agi: 20, tgh: 26, int: 34, luk: 20, con: 28 },
     skill: {
+      tier: 'basic',
       name: '连环爆破', cooldown: 18, duration: 4, mul: 2.8, cdrAffected: true,
       teamDefMul: 0.6, knockback: 1.5, slowPct: 0.4, hitsPerCast: 3,
       note: '投掷 3 枚手雷，附带击退与减速 40%',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '定点轰炸', cooldown: 24, duration: 5, mul: 3.6, cdrAffected: true,
+      knockback: 2.5, burnPctPerSec: 0.015,
+      note: '呼叫炮击覆盖一整片区域，持续击倒并燃烧',
     },
     ai: { aggroRange: 26, leashRange: 34, engageDistanceMul: 0.9, targetPriority: 'closest', retreatHpPct: 0.3 },
     answers: ['explosive', 'aoeClear', 'control'],
@@ -296,11 +386,19 @@ export const HEROES: Hero[] = [
   // ── 辅助：治疗与增益 ──
   {
     id: 'lian', name: '圣手·莉安', role: 'support', weapon: 'pistol',
-    primary: { str: 14, agi: 20, tgh: 20, int: 46 },
+    // ponytail: 弓箭对她是 ×2.00（跨类别也会击穿 BOSS 锚点），步枪 ×1.53，所以只留短枪
+    weaponClasses: ['handgun'],
+    primary: { str: 14, agi: 20, tgh: 20, int: 52, luk: 22, con: 22 },
     skill: {
+      tier: 'basic',
       name: '生命涌流', cooldown: 20, duration: 4, mul: 1.0, cdrAffected: true,
       healPerSec: 0.06,
       note: '持续治疗全队，总量约等于自身最大生命 120%',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '圣愈领域', cooldown: 28, duration: 8, mul: 1.0, cdrAffected: true,
+      healPerSec: 0.09, teamDefMul: 0.8,
+      note: '展开持续治疗领域，范围内的队员同时获得减伤',
     },
     ai: { aggroRange: 22, leashRange: 30, engageDistanceMul: 0.75, targetPriority: 'weakest', retreatHpPct: 0.4 },
     answers: ['sustain', 'mitigate', 'singleTarget'],
@@ -313,11 +411,18 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'shaman', name: '烈焰·萨满', role: 'support', weapon: 'flamer',
-    primary: { str: 20, agi: 18, tgh: 24, int: 38 },
+    weaponClasses: ['sprayer'],
+    primary: { str: 20, agi: 18, tgh: 24, int: 44, luk: 18, con: 26 },
     skill: {
+      tier: 'basic',
       name: '战意图腾', cooldown: 24, duration: 8, mul: 1.7, cdrAffected: true,
       atkMul: 0.3, rateMul: 1.2, burnPctPerSec: 0.01,
       note: '全队攻击 +30%，攻速 +20%，范围内敌人每秒受到最大生命 1% 的灼烧伤害',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '熔岩图腾', cooldown: 26, duration: 10, mul: 2.0, cdrAffected: true,
+      burnPctPerSec: 0.02, slowPct: 0.35,
+      note: '图腾涌出熔岩，覆盖的地面持续灼烧并拖慢敌人',
     },
     ai: { aggroRange: 18, leashRange: 26, engageDistanceMul: 1.0, targetPriority: 'closest', retreatHpPct: 0.3 },
     answers: ['explosive', 'sustainedDps', 'debuff'],
@@ -331,27 +436,41 @@ export const HEROES: Hero[] = [
   // ── 召唤：用数量换输出，自动战斗里收益稳定 ──
   {
     id: 'nox', name: '傀儡师·诺克斯', role: 'summoner', weapon: 'boomerang',
-    primary: { str: 22, agi: 18, tgh: 22, int: 38 },
+    weaponClasses: ['thrown', 'bow'],
+    primary: { str: 22, agi: 18, tgh: 22, int: 46, luk: 20, con: 22 },
     skill: {
+      tier: 'basic',
       name: '骸骨傀儡', cooldown: 26, duration: 10, mul: 1.8, cdrAffected: true,
       summons: 2,
       note: '召唤 2 只傀儡参战，分摊仇恨并自动索敌',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '骸骨巨像', cooldown: 30, duration: 15, mul: 2.4, cdrAffected: true,
+      summons: 1,
+      note: '召唤一只大型傀儡，血量与伤害远超普通傀儡，能独立顶住一条线',
     },
     ai: { aggroRange: 20, leashRange: 28, engageDistanceMul: 0.9, targetPriority: 'closest', retreatHpPct: 0.3 },
     answers: ['summon', 'singleTarget', 'aoeClear'],
     specialization: [
       { id: 'nox-1', name: '傀儡加固', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '傀儡属性随智力走' },
       { id: 'nox-2', name: '双生', cost: 2, requires: 'nox-1', effect: { kind: 'attr', attr: 'tgh', amount: 8 }, note: '本体更耐打，傀儡不需要保护召唤者' },
-      { id: 'nox-3', name: '亡者军团', cost: 3, requires: 'nox-2', effect: { kind: 'skill', field: 'duration', amount: 10, mode: 'add' }, note: '傀儡持续 10s → 20s，接近常驻兵力' },
+      { id: 'nox-3', name: '亡者军团', cost: 3, requires: 'nox-2', effect: { kind: 'answer', add: 'mitigate' }, note: '把周围（半径 8 格）地上的敌方尸体唤起为傀儡军团，至多 12 具、持续 30 秒、血量为原僵尸的 50%；精英与 BOSS 的尸体唤不起。军团是一堵会走的肉墙，替小队吃突进与喷吐（突进 / 毒区 / 远程压制）' },
     ],
   },
   {
     id: 'sif', name: '蜂群·西芙', role: 'summoner', weapon: 'laser',
-    primary: { str: 18, agi: 22, tgh: 20, int: 40 },
+    weaponClasses: ['energy', 'handgun'],
+    primary: { str: 18, agi: 22, tgh: 20, int: 44, luk: 24, con: 22 },
     skill: {
+      tier: 'basic',
       name: '纳米蜂群', cooldown: 16, duration: 6, mul: 2.1, cdrAffected: true,
       chainTargets: 6, armorShredPct: 0.2,
       note: '链式激光额外跳 5 目标，附带腐蚀（护甲 -20%）',
+    },
+    advancedSkill: {
+      tier: 'advanced', name: '蜂群风暴', cooldown: 22, duration: 6, mul: 2.6, cdrAffected: true,
+      chainTargets: 12, armorShredPct: 0.35,
+      note: '蜂群扩散至全场，链式跳跃到 12 个目标并深度腐蚀护甲',
     },
     ai: { aggroRange: 28, leashRange: 36, engageDistanceMul: 0.85, targetPriority: 'weakest', retreatHpPct: 0.35 },
     answers: ['aoeClear', 'armorShred', 'sustainedDps', 'summon'],
@@ -368,6 +487,60 @@ export const HEROES_BY_ID: Record<string, Hero> = Object.fromEntries(
 );
 
 export const SQUAD_SIZE = 5;
+
+/**
+ * 玩家的三个小队命令（第二轮新增）。
+ *
+ * 命令是 AI 的**输入**，不是新的 AI 代码——每个命令只改 `AIProfile` 的字段取值，
+ * 与 `spec` 树里 `{kind:'ai'}` 的节点走同一条通路。这是刻意的：
+ * 命令栏给玩家的是"我现在想让队伍怎么打"，不是第四个技能。
+ *
+ * **默认「自由」必须能通关。** 三个命令都是效率旋钮，不是门槛——
+ * 若某一关【必须】切到集火才打得过，那关就是设计失败，
+ * 因为这意味着关卡在考操作而不是考阵容，而本作的前提是后者。
+ *
+ * 覆盖规则：命令的乘区叠在角色自己的 `ai` 之上，取两者中更激进的约束
+ * （集火覆盖索敌方式，紧密跟随收窄 leash 与交战距离，重整阵型是即时动作）。
+ */
+export interface SquadCommand {
+  id: SquadCommandId;
+  name: string;
+  /** toggle = 常驻状态切换；action = 即时动作，有冷却 */
+  kind: 'toggle' | 'action';
+  /** action 专用：冷却秒数 */
+  cooldown?: number;
+  /** 切到这个命令时，队员 AI 的覆盖值 */
+  overrides: Partial<AIProfile>;
+  /** 集火：索敌目标改为"队长当前攻击/标记的目标" */
+  focusFire?: boolean;
+  note: string;
+}
+
+export type SquadCommandId = 'free' | 'focus' | 'regroup' | 'tight';
+
+export const SQUAD_COMMANDS: SquadCommand[] = [
+  {
+    id: 'free', name: '自由索敌', kind: 'toggle',
+    overrides: {},
+    note: '默认状态。每个队员按自己的 aiProfile 独立索敌，覆盖最大面积',
+  },
+  {
+    id: 'focus', name: '集火进攻', kind: 'toggle',
+    overrides: { targetPriority: 'strongest' },
+    focusFire: true,
+    note: '全队改打队长正在打的那个目标。单体伤害集中，但清场范围会变窄',
+  },
+  {
+    id: 'regroup', name: '重整阵型', kind: 'action', cooldown: 25,
+    overrides: {},
+    note: '即时动作：全员脱战回到队长周围的标准阵位。用来把被冲散或被卡住的队员拉回来',
+  },
+  {
+    id: 'tight', name: '紧密跟随', kind: 'toggle',
+    overrides: { leashRange: 12, engageDistanceMul: 0.7 },
+    note: '收窄脱战半径与交战距离，全队贴着队长走。窄道与室内用，代价是火力覆盖变窄',
+  },
+];
 
 /**
  * 技能的平均 DPS 乘区 = 1 + 冷却占比 × (倍率 - 1)。

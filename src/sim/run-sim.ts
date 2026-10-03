@@ -15,9 +15,9 @@
 
 import { HEROES_BY_ID, type Hero } from '../data/characters.ts';
 import { derive } from '../data/attributes.ts';
-import { WEAPONS, WEAPON_PRICE, type WeaponId } from '../data/weapons.ts';
+import { WEAPONS, tierForLevel, type WeaponId } from '../data/weapons.ts';
 import { ZOMBIES, stageMods, type ZombieId } from '../data/zombies.ts';
-import { STAGES, BOSSES, RUN_DURATION, RUN_END, BOSS_TIMEOUT, BOSS_PHASE_SPAWN_MUL, levelForPoints } from '../data/run.ts';
+import { STAGES, BOSSES, RUN_DURATION, RUN_END, BOSS_TIMEOUT, BOSS_PHASE_SPAWN_MUL, levelAt } from '../data/run.ts';
 import { heroRawDps } from './combat.ts';
 
 // ── 可调参数：改这里就是改整个关卡的难度手感 ──
@@ -202,16 +202,13 @@ export function simulate(squadIds: string[], seed = SEED): SimResult {
     const stage = stageOf(t);
     const mods = stageMods(stage);
 
-    // ── 等级与武器购买（有钱就升，模拟玩家自动消费）──
-    level = levelForPoints(points);
-    for (const h of squad) {
-      const cur = tiers[h.weapon] ?? 0;
-      const next = (cur + 1) as 0 | 1 | 2;
-      if (cur < 2 && money >= WEAPON_PRICE[next]) {
-        money -= WEAPON_PRICE[next];
-        tiers[h.weapon] = next;
-      }
-    }
+    // ── 等级与武器阶：全部按时间自动成长 ──
+    // 第二轮起局内【没有任何购买动作】。等级由秒表决定（run.ts 的 LEVEL_TIME），
+    // 武器阶跟着等级走（weapons.ts 的 tierForLevel）。
+    // 于是"打得好的队伍升级更快"这条雪球被拆掉了——阵容强弱只决定这段时间
+    // 打得轻不轻松，不决定你什么时候变强。money 只累积，结算时带出关卡。
+    level = levelAt(t);
+    for (const h of squad) tiers[h.weapon] = tierForLevel(level);
 
     // ── BOSS 出现 / 常规刷怪（BOSS 战期间暂停刷怪）──
     const bossPhase = bossPhaseAt(t);

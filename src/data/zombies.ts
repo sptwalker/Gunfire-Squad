@@ -69,6 +69,52 @@ export interface Zombie {
   threat: number;
   /** 机械行为标签 */
   behavior: ZombieBehavior;
+
+  // ── 以下六个是第二轮新增的【控制对抗】字段 ──
+  /**
+   * 稳固。守方值，与英雄的 `Derived.stab` 同量纲。
+   * 对方的击退力 / 自己的稳固 决定自己被推开的概率，见 `sim/combat.ts`。
+   * 它也是英雄端"稳固"属性存在的理由——只给英雄加稳固、僵尸这边没有对应值，
+   * 那条属性就永远只在自己人之间比大小，没有战场意义。
+   *
+   * ── 量纲必须咬住英雄的击退力 ──
+   * 英雄击退力实测跨度是 7.7（喷火器）到 96.8（大刀，5 级满阶），
+   * 所以这张表的稳定段定在 **32-90**——落在英雄跨度之内，两端才都够得着：
+   *   喷火器 7.7  vs 36 → 4%   （火力压制型本来就不该推得动谁）
+   *   冲锋枪 11.5 vs 36 → 9%   （同上，它的设计定位就是"几乎推不动"）
+   *   激光 19.4   vs 36 → 23%
+   *   长枪 62     vs 36 → 72%
+   *   大刀 96.8   vs 90 → 56%  （"最抗推的普通怪"身上也只有一半）
+   *
+   * 第一版把稳定段定在 8-20（照抄英雄端 TGH×1.0 的量纲），结果是
+   * **任何一把像样的武器对任何一只非霸体僵尸都恒为 0.84**——
+   * "控制抗性"这一维根本没有咬合，玩家感觉不到稳固的存在。
+   * 数值轴要能被感觉到，两端的尺度必须先对齐。
+   */
+  stab: number;
+  /**
+   * 霸体。**只免疫位移**（击退 + 击倒）。
+   *
+   * 刻意不免疫冻结/嘲讽/减速——那三类各有独立的对抗属性
+   * （`freezeRes` / `cunning`，减速故意不设，见 `attributes.ts` 的地板原则）。
+   * 霸体做成"免一切控制"是最省事也最糟的写法：它会让整个控制流一次性作废，
+   * 于是玩家学到的教训是"别带控制"，而不是"换一种控制"。
+   */
+  superArmor: boolean;
+  /** 抗冻 0-1：按概率抵抗冻结，并削减冻结时长 */
+  freezeRes: number;
+  /** 狡诈 0-1：按概率抵抗嘲讽 */
+  cunning: number;
+  /**
+   * 僵尸施加的击退力。英雄端的稳固靠它才有意义——
+   * 这是"僵尸也反推英雄"的那一半。
+   */
+  knock: number;
+  /**
+   * 近战单位偏【击倒】（短暂失去行动，不位移），远程单位偏【击退】（位移）。
+   * 前者惩罚站桩，后者打乱阵型，两者都过 `superArmor` 这一关。
+   */
+  knockKind: 'knockback' | 'knockdown' | 'none';
   /** 这只僵尸给关卡贡献哪些挑战维度（决定它被哪些场景招募） */
   dims: DimensionId[];
   /** 特殊行为说明 */
@@ -82,48 +128,64 @@ export const ZOMBIES: Record<ZombieId, Zombie> = {
     id: 'normal', name: '普通僵尸', hp: 200, speed: 2.2, armor: 30,
     armorType: 'none', atk: 90, atkInterval: 1.2, radius: 0.45,
     points: 1, money: 3, threat: 1, behavior: 'none', dims: ['swarm'],
+    stab: 36, superArmor: false, freezeRes: 0.0, cunning: 0.0,
+    knock: 25, knockKind: 'knockback',
     special: '无', tag: '基础单位，构成战场底噪',
   },
   runner: {
     id: 'runner', name: '高速僵尸', hp: 120, speed: 5.0, armor: 15,
     armorType: 'none', atk: 70, atkInterval: 0.8, radius: 0.4,
     points: 2, money: 4, threat: 1.2, behavior: 'charge', dims: ['rush', 'open'],
+    stab: 32, superArmor: false, freezeRes: 0.0, cunning: 0.0,
+    knock: 18, knockKind: 'knockback',
     special: '冲刺突进，命中打断换弹', tag: '惩罚站桩与长换弹武器',
   },
   brute: {
     id: 'brute', name: '高防胖僵尸', hp: 1400, speed: 1.2, armor: 220,
     armorType: 'heavy', atk: 260, atkInterval: 2.0, radius: 0.9,
     points: 6, money: 12, threat: 3, behavior: 'block', dims: ['heavyArmor', 'choke'],
+    stab: 90, superArmor: true, freezeRes: 0.2, cunning: 0.0,
+    knock: 60, knockKind: 'knockdown',
     special: '减伤 60%，缓慢推挤玩家', tag: '必须用穿刺/爆炸/火焰处理',
   },
   toxic: {
     id: 'toxic', name: '毒液僵尸', hp: 350, speed: 2.0, armor: 60,
     armorType: 'light', atk: 110, atkInterval: 1.5, radius: 0.5,
     points: 3, money: 6, threat: 1.8, behavior: 'poisonTrail', dims: ['poison', 'choke'],
+    stab: 52, superArmor: false, freezeRes: 0.6, cunning: 0.0,
+    knock: 20, knockKind: 'knockback',
     special: '死亡留下毒池，5 格 / 8 秒持续伤害', tag: '区域封锁，逼玩家放弃阵地',
   },
   bomber: {
     id: 'bomber', name: '爆炸僵尸', hp: 400, speed: 2.6, armor: 100,
     armorType: 'medium', atk: 550, atkInterval: 99, radius: 0.6,
     points: 5, money: 8, threat: 2, behavior: 'suicide', dims: ['suicide'],
+    stab: 40, superArmor: false, freezeRes: 0.15, cunning: 0.0,
+    knock: 30, knockKind: 'knockback',
     special: '靠近后自爆，范围 2.5 格', tag: '迫使玩家主动拉开距离',
   },
   splitter: {
     id: 'splitter', name: '分裂僵尸', hp: 300, speed: 2.2, armor: 40,
     armorType: 'none', atk: 100, atkInterval: 1.2, radius: 0.55,
     points: 4, money: 7, threat: 2, behavior: 'split', dims: ['split'],
+    stab: 34, superArmor: false, freezeRes: 0.1, cunning: 0.15,
+    knock: 15, knockKind: 'knockback',
     special: '死亡分裂为 3 只分裂小僵尸', tag: 'AOE 武器在这里是负收益，单体武器反而更优',
   },
   leaper: {
     id: 'leaper', name: '跳跃僵尸', hp: 250, speed: 3.0, armor: 45,
     armorType: 'none', atk: 140, atkInterval: 1.4, radius: 0.5,
     points: 4, money: 9, threat: 2, behavior: 'leap', dims: ['sluggish', 'open'],
+    stab: 36, superArmor: false, freezeRes: 0.1, cunning: 0.6,
+    knock: 22, knockKind: 'knockback',
     special: '跳跃越过障碍，落地 AOE', tag: '无视地形，让掩体战术失效',
   },
   ward: {
     id: 'ward', name: '护盾僵尸', hp: 900, speed: 1.8, armor: 160,
     armorType: 'medium', atk: 180, atkInterval: 1.8, radius: 0.7,
     points: 7, money: 14, threat: 3.5, behavior: 'shielded', dims: ['shielded', 'eliteHunt'],
+    stab: 120, superArmor: true, freezeRes: 0.35, cunning: 0.3,
+    knock: 45, knockKind: 'knockdown',
     special: '正面护盾吸收固定伤害，破盾后 3 秒虚弱（受伤 +50%）',
     tag: '不吃控、只能靠破盾窗口集火，惩罚无爆发阵容',
   },
@@ -131,6 +193,8 @@ export const ZOMBIES: Record<ZombieId, Zombie> = {
     id: 'spitter', name: '喷吐僵尸', hp: 600, speed: 1.6, armor: 90,
     armorType: 'light', atk: 200, atkInterval: 2.4, radius: 0.55,
     points: 8, money: 15, threat: 3, behavior: 'ranged', dims: ['suppress', 'eliteHunt'],
+    stab: 48, superArmor: false, freezeRes: 0.2, cunning: 0.25,
+    knock: 35, knockKind: 'knockback',
     special: '在 12 格外远程喷吐，不进入接触距离',
     tag: '站在原地就有输出，逼玩家主动前压而不是龟缩',
   },
@@ -138,6 +202,8 @@ export const ZOMBIES: Record<ZombieId, Zombie> = {
     id: 'spawnling', name: '分裂小僵尸', hp: 80, speed: 3.2, armor: 10,
     armorType: 'none', atk: 55, atkInterval: 1.0, radius: 0.3,
     points: 1, money: 1, threat: 0, behavior: 'none', dims: ['swarm', 'split'],
+    stab: 20, superArmor: false, freezeRes: 0.0, cunning: 0.0,
+    knock: 8, knockKind: 'knockback',
     special: '由分裂僵尸产生', tag: '不接受预算刷怪，只由分裂产生',
   },
 };

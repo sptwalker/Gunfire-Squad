@@ -182,21 +182,39 @@ export const RUN_DURATION = 900;
 export const RUN_END = RUN_DURATION + BOSS_TIMEOUT;
 
 /**
- * 积分 → 角色等级。关卡内临时，不带出关卡。
+ * 存活时长 → 角色等级。关卡内临时，不带出关卡。
  *
- * 校准依据：15 分钟全程约产出 1800 积分，所以满级阈值定在 1400，
- * 让玩家在 12 分钟前后满级——留出 3 分钟的"完全体"体验期。
- * 早期版本把阈值定在 520，结果 4:30 就满级了，占整局 1/3 都不到，
- * 成长曲线后半程完全空转。
+ * ── 第二轮改动：等级从【积分驱动】改成【时间驱动】 ──
+ * 旧版是 `LEVEL_COST = [0,150,400,800,1400]`，拿积分换等级。积分来自击杀，
+ * 而击杀速率取决于阵容强度——于是"打得好的队伍升级更快、变得更强"，
+ * 强队更强、弱队更弱，成长本身成了雪球。
+ *
+ * 现在等级只由秒表决定：满级时刻对每支队伍都一样，
+ * **阵容强弱只决定这段时间里你打得轻不轻松**，不决定你什么时候变强。
+ * 这是"局内零购买"的前提——购买和积分两套雪球一起拆掉，局内成长才真正中正。
+ *
+ * 时间表的校准：满级定在 660 秒（11:00），对齐旧版实测的 8-11 分钟区间。
+ * 之后还有一段常规阶段 + 关底决战，玩家能拿到 4 分钟以上的"完全体"体验期。
+ * 下一轮若发现前 5 分钟发闷，只动这张表，不要动别处。
+ *
+ * 积分（`points`）仍然统计，但降级为**结算显示用的得分**，不再参与任何成长计算。
  */
-export const LEVEL_COST = [0, 150, 400, 800, 1400];
+export const LEVEL_TIME = [0, 90, 240, 450, 660];
 
-export function levelForPoints(points: number): number {
+/** 关卡内等级 1-5，由存活秒数决定。 */
+export function levelAt(t: number): number {
   let lv = 1;
-  for (let i = 1; i < LEVEL_COST.length; i++) {
-    if (points >= LEVEL_COST[i]) lv = i + 1;
+  for (let i = 1; i < LEVEL_TIME.length; i++) {
+    if (t >= LEVEL_TIME[i]) lv = i + 1;
   }
   return lv;
+}
+
+/** 升到下一级还剩多少秒；已满级返回 0。UI 的等级条直接读它。 */
+export function secondsToNextLevel(t: number): number {
+  const lv = levelAt(t);
+  if (lv >= LEVEL_TIME.length) return 0;
+  return Math.max(0, LEVEL_TIME[lv] - t);
 }
 
 /** 增益道具 */
