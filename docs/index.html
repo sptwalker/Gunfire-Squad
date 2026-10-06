@@ -370,55 +370,65 @@ footer{
 
 <h2>文档</h2>
 <div class="docs">
-  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/00-决策清单.md">
+  <a href="00-决策清单.html">
     <span class="n">00</span>
     <span class="t">决策清单<small>已定项 A1–A18 · 核心机制 B1–B7 · 已裁决 C1–C5 · 已知边界 D · 原型阶段待答问题 E</small></span>
-    <span class="fmt">MD</span>
+    <span class="fmt">HTML</span>
   </a>
-  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/01-系统策划案.md">
+  <a href="01-系统策划案.html">
     <span class="n">01</span>
     <span class="t">系统策划案<small>核心玩法循环、战斗规则、队员 AI 与自动战斗、经济与成长、任务、6 个场景与地形</small></span>
-    <span class="fmt">MD</span>
+    <span class="fmt">HTML</span>
   </a>
-  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/02-数值表.md">
+  <a href="02-数值表.html">
     <span class="n">02</span>
     <span class="t">数值表<small>属性公式、13 武器、9 僵尸、12 角色、82 子关卡推导、三档难度、BOSS 反向校准，以及模拟器能力边界（§10）</small></span>
-    <span class="fmt">MD</span>
+    <span class="fmt">HTML</span>
   </a>
-  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/03-计算演示.md">
+  <a href="03-计算演示.html">
     <span class="n">03</span>
     <span class="t">计算演示<small>伤害 / DPS / TTK / 有效生命的手算全过程，每一步可独立复核</small></span>
-    <span class="fmt">MD</span>
+    <span class="fmt">HTML</span>
   </a>
-  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/04-技术框架.md">
+  <a href="04-技术框架.html">
     <span class="n">04</span>
     <span class="t">技术框架<small>逻辑与渲染解耦、元层与存档 schema、流场寻路、分块剔除、core 与 sim 的对账测试、单帧性能预算</small></span>
-    <span class="fmt">MD</span>
+    <span class="fmt">HTML</span>
   </a>
-  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/05-资产清单.md">
+  <a href="05-资产清单.html">
     <span class="n">05</span>
     <span class="t">资产清单<small>角色 / 僵尸 / 地形 / 特效清单，Q 版体素部件规格，6 场景的材质着色契约，动画方案风险</small></span>
-    <span class="fmt">MD</span>
+    <span class="fmt">HTML</span>
   </a>
-  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/06-开发路线图.md">
+  <a href="06-开发路线图.html">
     <span class="n">06</span>
     <span class="t">开发路线图<small>M0–M6 里程碑，每个都有可执行的验收标准；含「现在处在哪一步」</small></span>
-    <span class="fmt">MD</span>
+    <span class="fmt">HTML</span>
   </a>
   <a class="live" href="07-界面原型.html">
     <span class="n">07</span>
     <span class="t">界面原型<small>五个界面的实机原型：战斗 HUD、小队面板、武器升级、角色选择、结算，附元件数据源对照表</small></span>
     <span class="fmt">交互</span>
   </a>
-  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/08-关卡方案.md">
+  <a href="08-关卡方案.html">
     <span class="n">08</span>
     <span class="t">关卡方案<small>13 个挑战维度的定义与判据、控制对抗的三张判定表、6 个场景的阶梯、三档难度、原始丛林 15 关的完整推导表</small></span>
-    <span class="fmt">MD</span>
+    <span class="fmt">HTML</span>
   </a>
-  <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/09-角色与成长.md">
+  <a href="09-角色与成长.html">
     <span class="n">09</span>
     <span class="t">角色与成长<small>六属性分配（合计 150）、13 维答案矩阵、专精树与 SpecEffect 约束、技能点与军衔两条成长线、每关可行阵容数</small></span>
-    <span class="fmt">MD</span>
+    <span class="fmt">HTML</span>
+  </a>
+  <a href="10-职业树.html">
+    <span class="n">10</span>
+    <span class="t">职业树<small>五棵树 955 个职业：转职规则、共用轴、特色职业分线、专精光环 / 英雄号令 / 五星特性、答案标签覆盖。由 class-doc.ts 生成</small></span>
+    <span class="fmt">生成</span>
+  </a>
+  <a class="live" href="review/index.html">
+    <span class="n">11</span>
+    <span class="t">职业评审页<small>每棵树 136 个评审单元：设计思路、自评、技能协同说明，可打分写反馈；另含对抗维度设计图</small></span>
+    <span class="fmt">交互</span>
   </a>
 </div>
 
@@ -427,7 +437,7 @@ footer{
   <p>所有数值表的真源是 <code>src/data/*.ts</code>，输出由模拟器生成。文档里的数字全部从模拟器导出，不手填。82 个子关卡的刷怪表同理，由 <code>scenes.ts</code> 的 <code>expandScene()</code> 推导，没有手写的关卡配置。</p>
 <pre>npm run sim          <span class="c"># = node src/sim/balance-check.ts</span></pre>
   <p>Node 24 原生支持 TypeScript 类型剥离，不需要 tsx / ts-node。输出十二节实测表：角色属性预算 / 单角色基准（含四属性→六属性的偏离闸门） / BOSS DPS 锚点 / BOSS 血量反向校准 / 生存压力 / 15 分钟全程模拟 / 承伤现实检查 / 多阵容鲁棒性 / 挑战维度覆盖矩阵 / 阵容多样性枚举 / 控制对抗矩阵 / 军衔与技能点的时间成本。</p>
-  <p>改数字去 <code>src/data/</code>；改图表去 <code>src/sim/balance-check.ts</code>，重跑，再把输出同步进 <code>02-数值表.md</code>。</p>
+  <p>改数字去 <code>src/data/</code>；改图表去 <code>src/sim/balance-check.ts</code>，重跑，再把输出同步进 <code>02-数值表.html</code>。</p>
 </div>
 
 <div class="note">
@@ -444,10 +454,10 @@ footer{
   <p>
     还有一条被证伪过的期待：它能证明「每个维度都有多种解」，但<b>不能</b>证明「很多种组合真的可行」——
     13 个维度实际只收敛出 1 条真约束（新维度「控制抗性」回答面是全员 12 人，约束力为 0）。这条边界如实记在
-    <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/00-决策清单.md">00-决策清单</a> D0。
+    <a href="00-决策清单.html">00-决策清单</a> D0。
   </p>
   <p>
-    难度必须靠真人原型试玩验证。详见 <a href="https://github.com/sptwalker/Gunfire-Squad/blob/main/docs/02-数值表.md">02-数值表</a> §10。
+    难度必须靠真人原型试玩验证。详见 <a href="02-数值表.html">02-数值表</a> §10。
   </p>
 </div>
 

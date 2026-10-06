@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>04 技术框架</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#1.-最重要的一条架构决定-模拟器不升级成引擎">1. 最重要的一条架构决定：模拟器<strong>不</strong>升级成引擎</a></li><li class="d2"><a href="#2.-目录结构">2. 目录结构</a></li><li class="d2"><a href="#2.1-元层-meta-为什么单独存在-本轮新增">2.1 元层：<code>meta/</code> 为什么单独存在（本轮新增）</a></li><li class="d3"><a href="#2.1.1-存档-schema">2.1.1 存档 schema</a></li><li class="d3"><a href="#2.1.2-为什么专精不能进伤害公式-这条约束是编译器执行的">2.1.2 为什么专精不能进伤害公式（这条约束是编译器执行的）</a></li><li class="d3"><a href="#2.1.3-世界地图的界面-ui-worldmap.ts">2.1.3 世界地图的界面（<code>ui/worldmap.ts</code>）</a></li><li class="d3"><a href="#2.1.4-两条成长线为什么在-data-而不是-meta-本轮新增">2.1.4 两条成长线为什么在 <code>data/</code> 而不是 <code>meta/</code>（本轮新增）</a></li><li class="d3"><a href="#2.2-三种阵型的数据形状-characters.ts-的-squad_commands">2.2 三种阵型的数据形状（<code>characters.ts</code> 的 <code>SQUAD_COMMANDS</code>）</a></li><li class="d3"><a href="#2.3-障碍的通行位掩码-terraintag-的三个新值">2.3 障碍的通行位掩码（<code>TerrainTag</code> 的三个新值）</a></li><li class="d2"><a href="#3.-主循环-固定步长逻辑-+-可变步长渲染">3. 主循环：固定步长逻辑 + 可变步长渲染</a></li><li class="d2"><a href="#4.-防止-core-与-sim-漂移-对账测试">4. 防止 <code>core/</code> 与 <code>sim/</code> 漂移：对账测试</a></li><li class="d2"><a href="#5.-寻路-一个流场覆盖全场僵尸">5. 寻路：一个流场覆盖全场僵尸</a></li><li class="d3"><a href="#5.1-为什么不用-a*">5.1 为什么不用 A*</a></li><li class="d3"><a href="#5.2-流场-flow-field-方案">5.2 流场（Flow Field）方案</a></li><li class="d3"><a href="#5.3-静态障碍">5.3 静态障碍</a></li><li class="d3"><a href="#5.4-鼠标控制队伍-第三轮-点击移动从&quot;可选&quot;升为主控制">5.4 鼠标控制队伍（第三轮：点击移动从&quot;可选&quot;升为主控制）</a></li><li class="d3"><a href="#5.5-阵型朝向-自动优先-玩家拖拽覆盖">5.5 阵型朝向：自动优先，玩家拖拽覆盖</a></li><li class="d3"><a href="#5.6-站位锚点-可达性吸附与卡住恢复">5.6 站位锚点：可达性吸附与卡住恢复</a></li><li class="d3"><a href="#5.7-队伍作为一个整体-第三轮的附带收益">5.7 队伍作为一个整体（第三轮的附带收益）</a></li><li class="d2"><a href="#6.-空间索引-给碰撞和索敌共用">6. 空间索引：给碰撞和索敌共用</a></li><li class="d2"><a href="#7.-渲染">7. 渲染</a></li><li class="d3"><a href="#7.1-分块剔除">7.1 分块剔除</a></li><li class="d3"><a href="#7.2-instancedmesh-池">7.2 InstancedMesh 池</a></li><li class="d3"><a href="#7.3-阴影-只给小分队">7.3 阴影：只给小分队</a></li><li class="d3"><a href="#7.4-相机">7.4 相机</a></li><li class="d2"><a href="#8.-资产管线">8. 资产管线</a></li><li class="d2"><a href="#9.-typescript-构建配置">9. TypeScript / 构建配置</a></li><li class="d2"><a href="#10.-这条路线上的三个风险">10. 这条路线上的三个风险</a></li></ol></nav>
+<main class="doc">
+<h1 id="04-技术框架"><a class="anchor" href="#04-技术框架">#</a>04 技术框架</h1>
+<blockquote>
+<p>这一版框架不是从零设计的，是<strong>从已经跑通的代码里长出来的</strong>。
+<code>src/data/</code> + <code>src/sim/</code> 这套&quot;数值真源 + 无渲染哨兵&quot;的结构已经在用，
+本文要做的是把它扩成一个能跑的游戏，而不是换一套新架构。</p>
+</blockquote>
+<hr>
+<h2 id="1.-最重要的一条架构决定-模拟器不升级成引擎"><a class="anchor" href="#1.-最重要的一条架构决定-模拟器不升级成引擎">#</a>1. 最重要的一条架构决定：模拟器<strong>不</strong>升级成引擎</h2>
+<p>最省事的做法是&quot;把 <code>src/sim/</code> 加个渲染层，直接变成游戏&quot;。
+<strong>不这么做</strong>，理由是它已经在 §10 被实测证伪过一次：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>模拟器简化</th>
+<th>变成引擎时必须做的事</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一维距离</td>
+<td>二维空间 + 寻路 + 包围</td>
+</tr>
+<tr>
+<td>单点索敌</td>
+<td>多目标 + 空间分区</td>
+</tr>
+<tr>
+<td>队员不走位</td>
+<td>走位、牵引、地形回避</td>
+</tr>
+</tbody></table>
+</div>
+<p>要让 <code>sim/</code> 撑起这些，它就得引入寻路、空间索引、地形——
+而这些恰恰是它<strong>现在能跑得比游戏快 1000 倍</strong>的原因。
+把哨兵改造成引擎，等于同时失去哨兵和引擎。</p>
+<p><strong>边界定在这里：</strong></p>
+<pre><code>src/data/   ← 唯一共享层。策划案、模拟器、游戏三者共用的数值真源
+src/sim/    ← 只给平衡用。无渲染、无寻路、批量化。永远不 import three
+src/core/   ← 游戏逻辑。无渲染，但【有】二维空间、寻路、地形
+src/game/   ← Three.js 渲染。只读 core 的状态，不改
+src/ui/     ← DOM 覆盖层（HUD / 结算 / 小队面板）
+</code></pre>
+<p><code>sim/</code> 和 <code>core/</code> <strong>不互相 import</strong>。它们各自 import <code>data/</code>。
+这样&quot;改了数值表，模拟器读数和游戏行为一起变&quot;，但两边的实现可以完全不同。</p>
+<blockquote>
+<p><strong>代价</strong>：同一套伤害公式会有两份实现（<code>sim/combat.ts</code> 和 <code>core/</code>）。
+这是刻意的取舍——共享公式会逼着两边互相迁就，
+而它们要回答的问题本来就不一样（&quot;数值自洽吗&quot; vs &quot;打起来什么样&quot;）。
+防漂移的手段不是共享代码，是 §4 的<strong>对账测试</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="2.-目录结构"><a class="anchor" href="#2.-目录结构">#</a>2. 目录结构</h2>
+<pre><code>3D-Game/
+  docs/                     规划文档（本套）
+  src/
+    data/                   数值真源（已完成）
+      attributes.ts  characters.ts  damage.ts
+      weapons.ts     zombies.ts     run.ts
+      scenes.ts               ★ 本轮新增：6 场景 / 82 子关卡 / 13 维度（见 §2.1）
+      progression.ts          ★ 本轮新增：技能点 / 军衔 / 局外商店（见 §2.1.4）
+    sim/                    数值哨兵（已完成）
+      combat.ts      run-sim.ts     balance-check.ts
+    meta/                   ← 本轮新增：局外存档与成长，无 Three.js（见 §2.1）
+      profile.ts             存档 schema + 读写（纯 TS，只 import data/）
+      unlock.ts              解锁判定：哪些场景/关卡/角色/武器可见
+    core/                   ← 游戏逻辑，无 Three.js
+      world.ts              世界状态（实体数组 + 空间索引）
+      tick.ts               固定步长主循环
+      spawn.ts              威胁预算刷怪（从 scenes.ts 的子关卡读表）
+      squad.ts              队长控制（鼠标点地）+ 阵型锚点计算（读 SQUAD_COMMANDS.rings）
+      ai.ts                 队员 AI 三层（站位/索敌/开火）
+      path/flowfield.ts     僵尸群寻路
+      path/astar.ts          点地与卡住恢复寻路（单次调用，不是每帧）
+      combat.ts             伤害结算（对账用，见 §4）
+      terrain.ts            地形与通行性（读 Scene.mods 的移动/掩体修正）
+    game/                  ← Three.js 渲染
+      main.ts               bootstrap
+      camera.ts             俯视可旋转相机
+      renderer/
+        chunks.ts           分块剔除
+        instances.ts        InstancedMesh 池
+        fx.ts               命中/爆炸/毒池特效
+      input.ts              鼠标主导（左键移动/朝向、右键相机）+ WASD 微调
+    ui/                    ← DOM 覆盖层
+      hud.ts  squadbar.ts  result.ts
+      worldmap.ts           ★ 本轮新增：世界地图 → 场景 → 子关卡选择
+  assets/
+    models/  textures/  audio/
+  tests/
+    reconcile.test.ts      ★ core 与 sim 的对账测试
+</code></pre>
+<p><strong><code>core/</code> 与 <code>game/</code> 的分离是硬约束</strong>，靠一条 ESLint 规则守住：
+<code>src/core/**</code> 与 <code>src/sim/**</code> 禁止 import <code>three</code>。这条规则比任何文档都管用。</p>
+<hr>
+<h2 id="2.1-元层-meta-为什么单独存在-本轮新增"><a class="anchor" href="#2.1-元层-meta-为什么单独存在-本轮新增">#</a>2.1 元层：<code>meta/</code> 为什么单独存在（本轮新增）</h2>
+<p>长期成长线（解锁关卡 → 换阵容 → 通关下一关）需要<strong>跨局持久化</strong>的状态。
+它不能放进 <code>core/</code>——<code>core/</code> 是&quot;一局之内&quot;的世界状态，随 run 结束销毁；
+也不该放进 <code>ui/</code>——存档是逻辑，不是界面。</p>
+<p>所以新开一层 <code>meta/</code>，与 <code>core/</code> <code>sim/</code> 同级，同样<strong>禁止 import <code>three</code></strong>
+（同一个 ESLint 规则覆盖），并且<strong>只 import <code>data/</code></strong>。</p>
+<pre><code>meta/profile.ts   →  import { SCENES, SCENE_BY_ID, expandScene } from &#39;../data/scenes.ts&#39;
+                  →  import { HEROES, WEAPONS } from &#39;../data/characters.ts&#39;
+                  ✗  绝不 import core/ game/ ui/
+</code></pre>
+<p><strong>依赖方向是单向的</strong>：<code>data/</code> ← <code>meta/</code> ← <code>ui/</code>。
+<code>core/</code> 不认识 <code>meta/</code>——一局怎么打，与&quot;这个玩家解锁了什么&quot;无关。
+衔接点在 <code>game/main.ts</code>：读 <code>meta</code> 决定加载哪个子关卡，把
+<code>expandScene(scene, difficulty)</code> 的结果<strong>当成参数</strong>交给 <code>core/</code>。</p>
+<h3 id="2.1.1-存档-schema"><a class="anchor" href="#2.1.1-存档-schema">#</a>2.1.1 存档 schema</h3>
+<pre><code class="language-ts">type Profile = {
+  version: 3;                          // ★ 必须有，否则改结构时老存档无法迁移
+  cleared: string[];                   // 已通关的子关卡 id（&#39;jungle-07&#39;），82 关的进度真源
+  stars: Record&lt;string, 0|1|2|3&gt;;      // ★ v3：key = `${关卡 id}@${难度}`。技能点只由&quot;新星&quot;产出
+  unlockedHeroes: string[];            // 角色 id
+  owned: { weapons: WeaponId[]; items: BuffId[] };  // ★ v3：军械库，买断、全队共享
+  loadouts: Record&lt;string, { weapon: WeaponId; item?: BuffId }&gt;;  // ★ v3：每人出战配置，canEquip 校验
+  skillPoints: number;                 // 同一批点管技能等级与专精树
+  specs: Record&lt;string, string[]&gt;;     // 角色 id → 已点开的节点 id
+  advanced: Record&lt;string, boolean&gt;;   // ★ v3：高级技能是否已购（军衔门槛另算）
+  money: number;                       // 局外货币余额（每局结算带出）
+  honor: Record&lt;string, number&gt;;       // ★ v3：按角色累计（结算时 honorPerHero 均分）；军衔由 rankAt 现算
+};
+</code></pre>
+<p><strong>跨关继承的白名单就是这张表</strong>（用户裁决 #6）：军衔（<code>honor</code>）、技能（<code>specs</code> / <code>advanced</code>）、
+军械库（<code>owned</code> / <code>loadouts</code>）。等级、武器阶、临时武器、拾取的增益<strong>不进存档</strong>。</p>
+<p><strong>v2 → v3 的迁移</strong>：<code>unlockedWeapons</code> / <code>unlockedItems</code> → <code>owned</code>；<code>ranks</code> 删除（由 <code>honor</code> 现算）；
+<code>honor</code> 总数按当时参战名单均分成按角色的记录；<code>stars</code> / <code>loadouts</code> / <code>advanced</code> 补空。</p>
+<p>三条规则：</p>
+<ol>
+<li><strong><code>cleared</code> 存关卡 id，不存&quot;进度百分比&quot;。</strong> 关卡 id 由 <code>scenes.ts</code> 推导，
+是稳定的；百分比会在关数变化时失准（上一轮就动过 15 → 13）。</li>
+<li><strong><code>owned</code> 存种类，不存阶。</strong> 军械库买的是装备本身——
+武器阶由等级自动带动（<code>weapons.ts</code> 的 <code>tierForLevel</code>），存档里没有它的位置。
+局内<strong>零购买</strong>（A25），所以存档里也<strong>不该有</strong>任何&quot;当前等级/当前阶&quot;的字段。</li>
+<li><strong><code>specs</code> 存节点 id，不存效果。</strong> 效果从 <code>characters.ts</code> 的
+<code>specialization</code> 现算——否则改一次节点数值就要迁移全部存档。</li>
+</ol>
+<p>存档落地方式由 M3 决定（<code>localStorage</code> 或文件），本节只钉 schema。</p>
+<h3 id="2.1.2-为什么专精不能进伤害公式-这条约束是编译器执行的"><a class="anchor" href="#2.1.2-为什么专精不能进伤害公式-这条约束是编译器执行的">#</a>2.1.2 为什么专精不能进伤害公式（这条约束是编译器执行的）</h3>
+<p><code>meta/</code> 会往 <code>core/</code> 传一个角色列表。很自然的想法是&quot;顺便把专精效果也传进去&quot;——
+<strong>不能。</strong> 原因在 §4 的对账测试。</p>
+<pre><code>core.computeDamage(...)   与   sim.computeDamage(...)   签名必须完全一致
+                          ↑
+      前提是：伤害只由「属性 / 等级 / 武器阶 / 技能参数 / 目标护甲」决定
+</code></pre>
+<p>专精的效果被<strong>限定在公式的输入侧</strong>：</p>
+<pre><code class="language-ts">export type SpecEffect =
+  | { kind: &#39;attr&#39;; ... }        // 改属性   → 改了公式的输入
+  | { kind: &#39;weaponTier&#39;; ... }  // 改武器阶 → 同上
+  | { kind: &#39;skill&#39;; ... }       // 改技能参数 → 同上
+  | { kind: &#39;ai&#39;; ... }          // 改 AI 参数 → 不进公式
+  | { kind: &#39;answer&#39;; ... }      // 加维度答案 → 不进公式
+  | { kind: &#39;revive&#39;; ... };     // 复活次数 → 不进公式
+</code></pre>
+<p><strong>里面刻意没有&quot;新增伤害乘区&quot;这个变体。</strong> 所以专精满点的角色对 <code>computeDamage</code>
+而言，就是一个&quot;属性更高、武器阶更高、技能参数不同&quot;的普通角色——
+签名没变，对账测试继续成立。</p>
+<p><strong>这条由 TypeScript 联合类型执行，不是靠注释提醒。</strong> 谁想加一个
+<code>{ kind: &#39;damageMul&#39; }</code>，编译期就会在 <code>core</code> 与 <code>sim</code> 两侧同时报错，
+因为两个 <code>computeDamage</code> 都会收到一个它们不认识的参数。</p>
+<h3 id="2.1.3-世界地图的界面-ui-worldmap.ts"><a class="anchor" href="#2.1.3-世界地图的界面-ui-worldmap.ts">#</a>2.1.3 世界地图的界面（<code>ui/worldmap.ts</code>）</h3>
+<p><strong>三层渐进的 DOM 覆盖层</strong>，与 <code>hud.ts</code> 同级，不碰 Three.js 场景：</p>
+<pre><code>第 1 层  世界地图   6 个场景节点，连线表示推荐顺序（不是强制顺序）
+第 2 层  场景详情   该场景的子关卡列表 + 三档难度选择 + 签名维度标签
+第 3 层  出击前确认 阵容编成（选 5 人）+ 该关的活跃维度提示
+</code></pre>
+<p>第 3 层的&quot;维度提示&quot;是<strong>唯一一处把挑战维度直接告诉玩家的地方</strong>。
+不给的话玩家只能靠反复失败去猜，而本作的核心循环要求玩家
+&quot;看到维度 → 想到解法&quot;——这个信息必须是明示的。</p>
+<p><strong>当前数据层不做解锁限制</strong>（任何场景任何关卡都能直接进），
+<code>meta/unlock.ts</code> 先只提供查询接口，解锁曲线属于 M3。
+这样做的原因是解锁规则还没定（<code>00-决策清单.html</code> E9），
+先留下接口比先写死规则便宜。</p>
+<h3 id="2.1.4-两条成长线为什么在-data-而不是-meta-本轮新增"><a class="anchor" href="#2.1.4-两条成长线为什么在-data-而不是-meta-本轮新增">#</a>2.1.4 两条成长线为什么在 <code>data/</code> 而不是 <code>meta/</code>（本轮新增）</h3>
+<p><code>progression.ts</code> 放在 <code>data/</code> 而不是 <code>meta/</code>，因为它是<strong>规则表，不是存档</strong>：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>在 <code>progression.ts</code>（纯数据）</th>
+<th>在 <code>Profile</code>（存档）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>starsFor</code> / <code>skillPointsFor</code> 通关·全员存活·任务 → 几星 → 给几点</td>
+<td><code>stars</code> / <code>skillPoints</code></td>
+</tr>
+<tr>
+<td><code>RANKS</code> / <code>TACTICS</code> 12 级军衔与战术动作</td>
+<td><code>honor[heroId]</code> → <code>rankAt()</code></td>
+</tr>
+<tr>
+<td><code>SHOP</code> 19 件装备与价格、<code>canEquip</code></td>
+<td><code>owned</code> / <code>loadouts</code></td>
+</tr>
+<tr>
+<td><code>HONOR_PER_TASK</code> / <code>HONOR_CLEAR_BONUS</code></td>
+<td><code>honor</code> 他累计了多少</td>
+</tr>
+<tr>
+<td><code>advancedSkillUnlocked(rank, purchased)</code></td>
+<td>—（纯函数，看上面两列求值）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>同一条规则被 <code>sim/</code> 与 <code>core/</code> 两边引用，所以它只能在 <code>data/</code>。</strong>
+<code>04-技术框架.html</code> §1 的边界规定 <code>sim/</code> 与 <code>core/</code> 不互相 import——
+把它们共享的东西放在 <code>data/</code> 是唯一不需要第三份实现的解法。</p>
+<p>军衔的架构不变量也在这里执行（<code>00-决策清单.html</code> A27）：</p>
+<pre><code class="language-ts">export type RankEffect = Exclude&lt;SpecEffect, { kind: &#39;attr&#39; }&gt;;
+</code></pre>
+<p>军衔<strong>不能</strong>给 <code>attr</code>，由编译器挡。<code>progression.ts</code> 底部还留了两个空常量
+<code>RANK_GRANTED_ANSWERS</code> / <code>RANK_PRIMARY_DELTA</code> 作为运行时的第二道保险，
+哨兵会断言它们为空——想给军衔加属性的人，会先撞上类型错误，再撞上哨兵断言。</p>
+<h3 id="2.2-三种阵型的数据形状-characters.ts-的-squad_commands"><a class="anchor" href="#2.2-三种阵型的数据形状-characters.ts-的-squad_commands">#</a>2.2 三种阵型的数据形状（<code>characters.ts</code> 的 <code>SQUAD_COMMANDS</code>）</h3>
+<blockquote>
+<p><strong>第三轮修订</strong>：原来的四个命令按钮（自由 / 集火 / 重整阵型 / 紧密跟随）重构为
+<strong>三个互斥阵型</strong>。集火并入鼠标（见 §5.4），重整阵型并入&quot;换档自动回位&quot;（见 §5.6），
+撤退并入&quot;点队长身后&quot;的移动意图（见 §5.4）。旧的 <code>kind: &#39;toggle&#39; | &#39;action&#39;</code>
+与 <code>focusFire</code> 字段随之删除。</p>
+</blockquote>
+<p>阵型仍然<strong>不是</strong>一套新的 AI 代码，但它也不再只是 <code>AIProfile</code> 的一层覆盖。
+它管两件事：<strong>站位锚点怎么算</strong>，以及<strong>切档时 <code>AIProfile</code> 覆盖什么</strong>。
+索敌 / 拴绳 / 走位 / 开火全部复用队员自己的 <code>aiProfile</code>——
+阵型管的是&quot;队伍长什么形状&quot;，不管&quot;队员怎么打架&quot;。</p>
+<pre><code class="language-ts">interface FormationRing {
+  roles: HeroRole[];   // 这一层站哪些定位（tank/meleeDps/rangedDps/control/support/summoner）
+  radius: number;      // 锚点距队长的半径，格
+  bearing: number;     // 相对阵型朝向的方位角：0 = 正前，π = 正后
+  spread: number;      // 该层展开的总张角；2π = 铺满一圈（环形阵）
+  tether: number;      // 最大活动半径，格。**硬约束**，超出即强制回位
+}
+interface SquadCommand {
+  id: &#39;defend&#39; | &#39;ring&#39; | &#39;advance&#39;;
+  name: string;
+  facing: boolean;            // 吃不吃玩家指定的朝向。false = 环形，朝向无意义
+  rings: FormationRing[];     // 从外到内排列
+  overrides: Partial&lt;AIProfile&gt;;
+}
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阵型</th>
+<th>朝向</th>
+<th>近战层</th>
+<th>远程层</th>
+<th>中心层</th>
+<th>覆盖了什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通防御</td>
+<td>有</td>
+<td>r 2.2 / 前扇形 1.1π</td>
+<td>r 4.4 / 后扇形 0.9π</td>
+<td>r 1.3</td>
+<td><code>{}</code> —— 默认态</td>
+</tr>
+<tr>
+<td>环形防御</td>
+<td>无</td>
+<td>r 3.0 / 铺满 2π</td>
+<td>r 5.2 / 铺满 2π</td>
+<td>r 1.6</td>
+<td><code>engageDistanceMul: 0.9</code></td>
+</tr>
+<tr>
+<td>搜索推进</td>
+<td>有</td>
+<td>r 4.0 / 1.4π</td>
+<td>r 5.5 / 1.2π</td>
+<td>r 2.0</td>
+<td><code>aggroRange: 6</code>、<code>engageDistanceMul: 1.15</code></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong><code>rings</code> 的 <code>tether</code> 就是地面画出来的那个活动圈。</strong> 可视化和硬约束读同一个字段，
+不许有两份——否则玩家看到的圈和 AI 实际遵守的圈会随参数漂移，而这是最不该出错的地方。</p>
+<p><strong><code>HeroRole</code> 第一次被 AI 真正用上。</strong> 它从第二轮就定义在 <code>characters.ts</code> 里，
+但此前的阵型只用 <code>short()</code> 做了&quot;近战 / 远程&quot;二分，<code>support</code> / <code>control</code> / <code>summoner</code>
+三个定位在 AI 里完全隐形。<code>FormationRing.roles</code> 让&quot;辅助职业在中心位置&quot;这类需求
+落成数据，而不是又写一个分支。</p>
+<p><strong>放在 <code>characters.ts</code> 而不是 <code>core/ai.ts</code></strong>：<code>AIProfile</code> 就在那个文件里，
+<code>core/ai.ts</code> 的 M2 实现直接 import 这张表，不需要第三份数据结构。
+与 §1 的边界一致——<code>data/</code> 是共享层，阵型表是<strong>参数</strong>，不是逻辑。</p>
+<p><strong>默认档 <code>defend</code> 的 <code>overrides</code> 是 <code>{}</code>。</strong> 这个比例本身就是设计约束
+（<code>00-决策清单.html</code> A29）：阵型栏是<strong>效率旋钮</strong>，不是<strong>操作门槛</strong>。
+压舱石仍是那句&quot;<strong>不碰阵型栏也能通关</strong>&quot;——所以默认值必须是&quot;什么都不覆盖&quot;。</p>
+<blockquote>
+<p>三档<strong>互斥</strong>是同一条轴上的三个档位，不是三个独立开关。互斥不是限制，是<strong>减负</strong>：
+旧的形态是两个独立二态开关（自由⇄集火、跟随⇄紧密跟随）加一个即时动作，
+组合态需要玩家在脑子里同时维持两个位；三选一只需要维持一个位。
+所以这一轮换的是<strong>形状</strong>，不是<strong>数量</strong>——<code>01-系统策划案.html</code> §5.3 那条
+&quot;指令一多就变成 RTS&quot;的担心，靠互斥档位继续守住。</p>
+</blockquote>
+<h3 id="2.3-障碍的通行位掩码-terraintag-的三个新值"><a class="anchor" href="#2.3-障碍的通行位掩码-terraintag-的三个新值">#</a>2.3 障碍的通行位掩码（<code>TerrainTag</code> 的三个新值）</h3>
+<p><code>core/terrain.ts</code> 不为每种障碍写一个分支，而是<strong>每格存一个 4 位掩码</strong>：</p>
+<pre><code>bit 0  BLOCK_MOVE      人不可通行
+bit 1  BLOCK_SHOT      子弹被挡
+bit 2  BLOCK_SIGHT     视线被挡
+bit 3  DESTRUCTIBLE    可被打掉（打掉后该格掩码归零，留 residue）
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>障碍</th>
+<th>MOVE</th>
+<th>SHOT</th>
+<th>SIGHT</th>
+<th>可破坏</th>
+<th>掩码</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>空地</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+<td>—</td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td>沙袋 / 铁丝网</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td><code>1001</code> = 9</td>
+</tr>
+<tr>
+<td>建筑（对照）</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td><code>0111</code> = 7</td>
+</tr>
+<tr>
+<td>木墙</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td><code>1111</code> = 15</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>这张表就是&quot;只引入两条新通行语义&quot;在代码里的样子。</strong>
+<code>TerrainTag</code> 多了两个枚举值（<code>sandbag</code> / <code>wire</code> 共用同一个语义，
+区分只在耐久 320 vs 180），但<strong>掩码只多了一个值（9）</strong>——
+木墙不是第三种东西，它是建筑的值加上 <code>DESTRUCTIBLE</code> 位。</p>
+<p>四个判定因此都退化成一次位与：</p>
+<pre><code>人能过吗      (mask &amp; BLOCK_MOVE) === 0
+子弹能过吗    (mask &amp; BLOCK_SHOT) === 0
+能看见吗      (mask &amp; BLOCK_SIGHT) === 0
+能被拆吗      (mask &amp; DESTRUCTIBLE) !== 0
+</code></pre>
+<blockquote>
+<p><strong>为什么挡视线要单独一位，而不是&quot;挡子弹就等于挡视线&quot;。</strong>
+两者在现有场景里恰好同进同出，看起来可以合并。但合并之后，
+&quot;能穿烟/能看穿玻璃&quot;这类东西以后再也加不进来——而合并省下的是一列数据，
+不是一次判定（判定都是位与，多一位不多一条分支）。
+<strong>结构上分开、数据上一致</strong>，比合成一位便宜。</p>
+</blockquote>
+<p>位掩码的来源是 <code>scenes.ts</code> 的 <code>OBSTACLES</code> 表，<code>core/terrain.ts</code> 只读它——
+摆放在哪是 M2 的事，<strong>语义是谁的由 <code>data/</code> 说了算</strong>。</p>
+<hr>
+<h2 id="3.-主循环-固定步长逻辑-+-可变步长渲染"><a class="anchor" href="#3.-主循环-固定步长逻辑-+-可变步长渲染">#</a>3. 主循环：固定步长逻辑 + 可变步长渲染</h2>
+<pre><code>requestAnimationFrame
+  ├─ 累积真实时间
+  ├─ while (acc &gt;= DT) { core.tick(DT); acc -= DT }      DT = 1/60
+  └─ renderer.render(alpha)                              alpha = acc / DT
+</code></pre>
+<p><strong>为什么逻辑必须固定步长</strong>：伤害结算、AI 决策、刷怪预算全是有状态的累加器。
+可变步长会让同一个种子在不同帧率下跑出不同结果，模拟器与游戏再也对不上账。</p>
+<p><strong>为什么渲染要插值</strong>：俯视视角下，僵尸在 144Hz 显示器上如果只按 60Hz 更新位置，
+会出现肉眼可见的抖动。渲染时用 <code>alpha</code> 在上一帧和当前帧的位置之间插值。
+只需给位置和朝向各存一份 <code>prev</code>。</p>
+<p><strong>帧预算（16.6ms 总额）</strong>：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>预算</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>core.tick × 1</td>
+<td>6ms</td>
+<td>逻辑，含 AI + 寻路 + 碰撞</td>
+</tr>
+<tr>
+<td>渲染提交</td>
+<td>8ms</td>
+<td>剔除 + 实例更新 + draw call</td>
+</tr>
+<tr>
+<td>余量</td>
+<td>2.6ms</td>
+<td>给 GC 和突发</td>
+</tr>
+</tbody></table>
+</div>
+<p>6ms 够不够，取决于 §5 的寻路方案——那是唯一可能爆预算的东西。</p>
+<hr>
+<h2 id="4.-防止-core-与-sim-漂移-对账测试"><a class="anchor" href="#4.-防止-core-与-sim-漂移-对账测试">#</a>4. 防止 <code>core/</code> 与 <code>sim/</code> 漂移：对账测试</h2>
+<p>两份伤害实现必然漂移，除非<strong>强制它们对账</strong>。</p>
+<p><code>tests/reconcile.test.ts</code> 做的事：给定同一组输入，
+断言两边算出的伤害在 <strong>1e-6</strong> 内相等。</p>
+<pre><code class="language-ts">for (const hero of HEROES)
+  for (const tier of [0, 1, 2])
+    for (const level of [1, 3, 5])
+      for (const target of [普通僵尸, 胖僵尸, 关底BOSS])
+        assert.close(
+          core.computeDamage(...) ,   // 游戏实现
+          sim.computeDamage(...),     // 模拟器实现
+          1e-6,
+        )
+</code></pre>
+<p>组合数是 12 × 3 × 3 × 3 = 324 个用例。跑一次几毫秒。</p>
+<p><strong>这条测试是整个技术框架里性价比最高的东西</strong>：它让&quot;改坏了数值公式&quot;
+在 1 秒内暴露，而不是等到真人试玩时发现伤害不对。
+没有它，两份实现就是两颗定时炸弹。</p>
+<hr>
+<h2 id="5.-寻路-一个流场覆盖全场僵尸"><a class="anchor" href="#5.-寻路-一个流场覆盖全场僵尸">#</a>5. 寻路：一个流场覆盖全场僵尸</h2>
+<h3 id="5.1-为什么不用-a*"><a class="anchor" href="#5.1-为什么不用-a*">#</a>5.1 为什么不用 A*</h3>
+<p>N 只僵尸各跑一次 A* 是经典错误。300 只僵尸 × 每次 A* 展开几千格 = 每帧百万级操作，必然爆预算。</p>
+<h3 id="5.2-流场-flow-field-方案"><a class="anchor" href="#5.2-流场-flow-field-方案">#</a>5.2 流场（Flow Field）方案</h3>
+<p>所有僵尸的目标是<strong>同一个</strong>——小队。所以只需要<strong>一张</strong>流场。</p>
+<pre><code>每 N 帧（或小队移动超过 1 格时）：
+  从【小队所在格】做一次 BFS，展开半径上限 64 格
+  每个格子存一个方向（指向父节点）→ 写进 Int32Array(256×256)
+僵尸移动时：
+  查自己所在格子的方向 → 朝那个方向走
+</code></pre>
+<p><strong>BFS 的展开半径限制是关键优化。</strong> 不需要算满 256×256：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>方案</th>
+<th>展开格数</th>
+<th>相对成本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>全图 256²</td>
+<td>65,536</td>
+<td>1.00x</td>
+</tr>
+<tr>
+<td><strong>半径 64 格</strong></td>
+<td><strong>≈ 12,900</strong></td>
+<td><strong>0.20x</strong></td>
+</tr>
+<tr>
+<td>半径 25 格（=刷怪距离）</td>
+<td>≈ 1,960</td>
+<td>0.03x</td>
+</tr>
+</tbody></table>
+</div>
+<p>半径 64 格已经比 <code>SPAWN_DISTANCE = 25</code> 富余一倍多——<strong>僵尸在走进 25 格之前
+就已经在流场里了</strong>，不存在&quot;没有方向可查&quot;的情况。</p>
+<p>半径之外的僵尸（被队伍甩下的落伍者）走<strong>直线趋近</strong>兜底，
+等重新进入流场范围再接管。这条分支在实践中几乎不触发。</p>
+<p><strong>每次 BFS 的真实成本</strong>：12,900 格 × 每格 4 邻居比较 ≈ 5 万次操作，
+JS 里约 <strong>0.2-0.5ms</strong>。按 4Hz 重算，摊到每帧是 <strong>0.02ms</strong>。</p>
+<blockquote>
+<p>顺带一个美术收益：流场按固定频率重算，僵尸的路径会<strong>滞后</strong>于小队移动。
+一秒钟前算的路径，对一群蹒跚的僵尸来说不是 bug，是想要的笨拙感。
+想要更&quot;聪明&quot;的僵尸，提高重算频率即可——这是个手感旋钮，不是固定开销。</p>
+</blockquote>
+<h3 id="5.3-静态障碍"><a class="anchor" href="#5.3-静态障碍">#</a>5.3 静态障碍</h3>
+<p>地形写进流场的<strong>通行位图</strong>。建筑格直接标记为不可通行，BFS 跳过。
+所以&quot;绕开建筑&quot;是流场自带的，不需要额外处理。</p>
+<p>流场只读上面 §2.3 掩码的 <strong><code>BLOCK_MOVE</code> 那一位</strong>——沙袋和铁丝网因此也在流场里
+算障碍（人过不去），但它们的 <code>BLOCK_SHOT = 0</code> 不进流场。
+<strong>流场是给移动用的，不是给弹道用的</strong>，两者读同一个掩码的不同位。</p>
+<p>水域需要按角色判断通行——但僵尸不能过水，所以对僵尸流场是障碍。
+<strong>能过水的角色是玩家那边的事</strong>，走 A*（见下），不影响流场。</p>
+<h3 id="5.4-鼠标控制队伍-第三轮-点击移动从&quot;可选&quot;升为主控制"><a class="anchor" href="#5.4-鼠标控制队伍-第三轮-点击移动从&quot;可选&quot;升为主控制">#</a>5.4 鼠标控制队伍（第三轮：点击移动从&quot;可选&quot;升为主控制）</h3>
+<p><strong>左键单击地面 = 移动指令。</strong> 落点即队伍新的中心，<code>SQUAD_COMMANDS</code> 那一档的
+<code>rings</code> 立刻在落点周围算出每名队员的<strong>目的站位锚点</strong>，地面画出锚点与阵型朝向标识，
+角色随后移动过去。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>输入</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>左键单击地面</td>
+<td>移动指令。落点 = 队伍中心，阵型朝向<strong>自动</strong>决定（见 §5.5）</td>
+</tr>
+<tr>
+<td>左键按住拖拽</td>
+<td>拖出箭头手动指定阵型朝向；松开后才落站位、才移动。仅对 <code>facing: true</code> 的档位有效</td>
+</tr>
+<tr>
+<td>左键单击敌人</td>
+<td>集火该目标（取代原来的&quot;集火进攻&quot;按钮）</td>
+</tr>
+<tr>
+<td><strong>点队长身后</strong></td>
+<td><strong>撤退</strong>：保持原阵型与迎敌朝向，有序边打边撤</td>
+</tr>
+<tr>
+<td>右键拖拽</td>
+<td>相机 yaw（§7.4）。与左键完全分离，不冲突</td>
+</tr>
+<tr>
+<td>WASD</td>
+<td>微调平移，<strong>不改变阵型</strong>（见下）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>&quot;点队长身后&quot;与&quot;按住左键拖朝向&quot;是两种意图，靠有没有拖拽区分。</strong>
+只点不拖、且落点在队长身后 → 判为撤退，队伍不转向，维持迎敌朝向往后走；
+拖出箭头 → 判为指定朝向，队伍转到箭头方向。这两种意图在实现上是两条分支，
+但共用同一套锚点计算与移动代码。</p>
+<p><strong>集火并进鼠标</strong>：原来是一个独立的二态按钮（<code>targetPriority: &#39;strongest&#39;</code> + <code>focusFire</code>），
+现在左键点敌人就是集火，再点地面解除。这样命令栏上不再有&quot;集火&quot;这一项，
+<code>SquadCommand</code> 的 <code>focusFire</code> 字段随之删除（见 §2.2）。</p>
+<p><strong>WASD 保留，但语义变了。</strong> 不再是&quot;五个队员各自朝输入方向走&quot;，
+而是<strong>整队平移的微调</strong>：<code>W</code> / <code>A</code> / <code>D</code> 按相机相对方向平移整个队伍，
+<strong>阵型朝向保持不变</strong>（只挪位置，不转阵）；<code>S</code> 判为<strong>撤退</strong>，
+和&quot;点队长身后&quot;走同一条分支——保持阵型与迎敌朝向边打边撤。</p>
+<blockquote>
+<p>这是第三轮里唯一&quot;看起来加了复杂度、实际减了复杂度&quot;的地方：
+&quot;按住 WASD 持续走&quot;是连续输入，&quot;点一下地面&quot;是离散输入。
+玩家从&quot;手一直在动&quot;变成&quot;想好了点一下&quot;，控制带宽是降的。</p>
+</blockquote>
+<p><strong>落点校验</strong>：点进 <code>BLOCK_MOVE</code> 格（建筑、沙袋）→ 吸附到最近的可走格，
+与 §5.6 的锚点吸附复用同一个函数。不校验的话整队会朝一堵墙走到底。</p>
+<h3 id="5.5-阵型朝向-自动优先-玩家拖拽覆盖"><a class="anchor" href="#5.5-阵型朝向-自动优先-玩家拖拽覆盖">#</a>5.5 阵型朝向：自动优先，玩家拖拽覆盖</h3>
+<p>有朝向的档位（普通防御、搜索推进）需要一个 yaw。<strong>默认由系统决定，
+玩家的左键拖拽是精调</strong>——这样&quot;不碰朝向也能通关&quot;才成立。</p>
+<p><strong>自动朝向用威胁扇区，不用&quot;最近一只敌人&quot;。</strong> 把 360° 切成 8 个扇区，
+数每个扇区里的敌人数，取最重的那个扇区的中心方向：</p>
+<pre><code>最重扇区 = argmax over 8 sectors of (该扇区敌人数 / (该扇区中心到队长的距离 + 1))
+</code></pre>
+<p>若用&quot;朝向最近的那只敌人&quot;，一只从侧面绕过来的僵尸就能骗走整队的朝向——
+这是 bug 级的手感坑，且玩家无法理解为什么队伍突然转了个方向。</p>
+<p><strong>环形的档位（<code>facing: false</code>）跳过这一步</strong>：朝向对环形阵没有意义，
+<code>rings</code> 里的 <code>spread = 2π</code> 已经让站位铺满一圈。</p>
+<h3 id="5.6-站位锚点-可达性吸附与卡住恢复"><a class="anchor" href="#5.6-站位锚点-可达性吸附与卡住恢复">#</a>5.6 站位锚点：可达性吸附与卡住恢复</h3>
+<p>阵型每帧只改一件事——每个队员的<strong>站位锚点</strong>（原型里的 <code>h.home</code>）。
+索敌 / 拴绳 / 走位 / 开火全部复用现成的队员 AI。这是原型里最值钱的结构，
+第三轮沿用，不重写。</p>
+<p>但原型有一处真实缺陷：<strong>回位是直线走，撞墙就滑，卡住就永久卡住。</strong>
+如果锚点落在墙的另一侧，那名队员会一直贴着墙挪、永远到不了，
+也不会有人发现——他就是慢慢掉队，最后单独战斗。这正好是
+&quot;不出现因为地形卡住丢失队员&quot;要解决的问题。解法是两层，从便宜到贵：</p>
+<p><strong>第一层：根因层——别把锚点指到墙里。</strong> 锚点算完后做一次<strong>可达性吸附</strong>：
+落在 <code>BLOCK_MOVE</code> 格就吸到最近的可走格。环形与扇形摆位踩到建筑是<strong>必然</strong>发生的
+（&quot;近战站左前方 3 格&quot;，那里正好有栋楼），这一步消掉绝大部分卡死。</p>
+<p><strong>第二层：兜底层——卡住检测。</strong> 连续 N 帧位移低于阈值且未到位 → 判为卡住，
+触发一次 <code>astar.ts</code> 算到锚点，缓存路径跟着走。<strong>不是每帧算</strong>，只有被卡时算一次，
+99% 的时间里这条分支的成本是零。</p>
+<p><strong>不给每名队员各配一张流场。</strong> §5.2 那张流场能一张覆盖全场僵尸，
+是因为<strong>所有僵尸的目标相同</strong>（小队）——而五名队员的锚点各不相同，共用不成立。
+单次 <code>astar.ts</code> 调用就够，不需要新结构。</p>
+<p><strong>回位优先于追击。</strong> 接敌中的队员若锚点偏差超过该层的 <code>tether</code>，
+<strong>放弃当前目标先归位</strong>。这条就是&quot;近战不会被敌人带离&quot;在代码里的样子——
+<code>tether</code> 是硬约束，不是软牵引。地面画出来的活动圈读的也是这个字段，
+所以玩家看到的圈和 AI 遵守的圈永远是同一个数。</p>
+<hr>
+<h3 id="5.7-队伍作为一个整体-第三轮的附带收益"><a class="anchor" href="#5.7-队伍作为一个整体-第三轮的附带收益">#</a>5.7 队伍作为一个整体（第三轮的附带收益）</h3>
+<p>下面三条都不增加任何玩家操作，但直接命中&quot;把队伍视作一个整体作战单元&quot;。</p>
+<p><strong>1. 移动途中不主动索敌。</strong> 移动指令下达后，全队在到达锚点前不主动找架打，
+只在被贴脸时自卫，到位才展开接敌。不加这条的话，跑在前面的队员先撞上僵尸就停下开火、
+后面的还在走，<strong>队伍被拉成一条长条</strong>——这就是&quot;某个队员单独战斗&quot;的来源。</p>
+<p><strong>2. 切档时按距离贪心分配槽位。</strong> 现役的环形摆位是 <code>forEach((h, i) =&gt; ...)</code>
+按固定索引给角度，<strong>换档时可能全体对冲</strong>（A 跑 B 的位、B 跑 A 的位，路上互相穿）。
+改成&quot;每名队员认领离自己最近的那个新槽位&quot;，切阵型看起来才像<strong>收缩</strong>而不是打架。</p>
+<p><strong>3. 环形阵按威胁动态分配角位。</strong> 现役环阵是静态等分。只有两名近战时应该对分；
+某一侧敌人特别多时应该往那侧多派人。这是环阵从静态摆位升级为动态摆位，
+<strong>且不增加任何玩家操作</strong>。</p>
+<hr>
+<h2 id="6.-空间索引-给碰撞和索敌共用"><a class="anchor" href="#6.-空间索引-给碰撞和索敌共用">#</a>6. 空间索引：给碰撞和索敌共用</h2>
+<p>僵尸之间要分离（避免叠在一起）、子弹要命中判定、AI 要索敌——
+三者都需要&quot;附近有哪些实体&quot;。</p>
+<p><strong>用统一网格哈希</strong>（uniform grid hash），不是四叉树：</p>
+<pre><code>格子边长 = 2 × 最大僵尸半径 ≈ 2 格
+每帧重建：300 次插入（数组 push）→ O(n)，不需要清空整个表
+查询：3×3 邻域，常数时间
+</code></pre>
+<p>选网格哈希不选四叉树的原因：<strong>实体每帧都在动</strong>。
+四叉树每帧重建的成本远高于网格哈希，而俯视射击的实体分布足够均匀，
+网格哈希没有四叉树的退化问题。</p>
+<hr>
+<h2 id="7.-渲染"><a class="anchor" href="#7.-渲染">#</a>7. 渲染</h2>
+<h3 id="7.1-分块剔除"><a class="anchor" href="#7.1-分块剔除">#</a>7.1 分块剔除</h3>
+<p>256×256 格分 8×8 = 64 个 chunk，每块 32×32 格。</p>
+<p>俯视相机在典型缩放下的可视范围约 <strong>40×40 格</strong>，
+即同时最多可见 <strong>4 个 chunk</strong>（跨边界时 6 个）。剔除掉 90% 以上的地块。</p>
+<p>地形本身<strong>烘焙成整块的合并 mesh</strong>（每 chunk 一个），不是每格一个物体——
+64 个 draw call 是上限，实际可见时只有 4-6 个。</p>
+<h3 id="7.2-instancedmesh-池"><a class="anchor" href="#7.2-instancedmesh-池">#</a>7.2 InstancedMesh 池</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>对象</th>
+<th>池大小</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>僵尸（9 种各一个池）</td>
+<td>每类 120</td>
+<td>一个池装不下 300 只，按类型分摊</td>
+</tr>
+<tr>
+<td>子弹（可视化的）</td>
+<td>400</td>
+<td>只有投掷物和火箭需要实体，其余走 hitscan</td>
+</tr>
+<tr>
+<td>血渍 / 弹坑</td>
+<td>200</td>
+<td>环形复用，不增长</td>
+</tr>
+<tr>
+<td>增益道具</td>
+<td>16</td>
+<td></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>命中判定走 hitscan</strong>（射线 vs 空间哈希），不做子弹实体——
+14 把武器里只有手雷、火箭筒、回旋镖需要飞行实体。
+其余 10 把用 hitscan，省掉一整个子弹更新循环。</p>
+<h3 id="7.3-阴影-只给小分队"><a class="anchor" href="#7.3-阴影-只给小分队">#</a>7.3 阴影：只给小分队</h3>
+<p>真阴影贴图对 300 个移动单位太贵。方案：</p>
+<ul>
+<li><strong>定向光阴影</strong>只覆盖相机中心 60×60 格，1024×1024 贴图，只渲染 5 名队员 + BOSS</li>
+<li><strong>僵尸用 blob shadow</strong>（一个贴地的暗色圆片，跟着实例矩阵走，零额外 draw call）</li>
+</ul>
+<p>俯视 3D 视角下，僵尸脚下那个圆片读起来和真阴影几乎没差别，
+而队员是有细节的模型，值得真阴影。</p>
+<h3 id="7.4-相机"><a class="anchor" href="#7.4-相机">#</a>7.4 相机</h3>
+<pre><code>俯仰角：35° ~ 80°（下限防止穿地平线，上限防止变成纯正交）
+旋转：  自由 yaw，鼠标右键拖拽
+缩放：  滚轮，正交/透视混合 —— 远看接近正交（便于读战场），近看透视（有纵深）
+</code></pre>
+<p><strong>俯仰角下限 35° 是硬约束</strong>：再低就会看到地图边缘外面，
+而 256×256 的地图之外什么都没有。</p>
+<hr>
+<h2 id="8.-资产管线"><a class="anchor" href="#8.-资产管线">#</a>8. 资产管线</h2>
+<pre><code>角色 / 僵尸 / 武器：部件表 → tools/voxel.py（Blender）→ GLB（顶点色，无贴图）→ gltf-transform meshopt → assets/
+地形道具：        Rodin 生成或手拼 → 体素化 → 同上
+</code></pre>
+<p>命令（一次性，写进 <code>package.json</code> 的 script）：</p>
+<pre><code>gltf-transform optimize in.glb out.glb --compress draco --texture-compress ktx2
+</code></pre>
+<p>美术是 Q 版体素（<code>00</code> A3）：每个部件整块绑一根骨，不做权重。旧路线的背景：见 <code>05-资产清单.html</code> §1
+对&quot;哪些用 Rodin、哪些买&quot;的划分。</p>
+<hr>
+<h2 id="9.-typescript-构建配置"><a class="anchor" href="#9.-typescript-构建配置">#</a>9. TypeScript / 构建配置</h2>
+<pre><code>Node 24 原生 type stripping（≥23.6）→ node xxx.ts 直接跑，无需 tsx/ts-node
+  · 所有 import 必须带显式 .ts 后缀
+  · 因此 tsconfig 需要 allowImportingTsExtensions + noEmit
+</code></pre>
+<p>这份配置<strong>同时服务于 <code>sim/</code>（node 直接跑）和 Vite（游戏构建）</strong>——
+一份 tsconfig，两边都能用，不需要为模拟器单独留一套。</p>
+<p><strong>Vite 只负责游戏</strong>，<code>sim/</code> 不进打包产物。<code>package.json</code> 里两条独立命令：</p>
+<pre><code>npm run sim     →  node src/sim/balance-check.ts      （数值哨兵）
+npm run dev     →  vite                                （游戏）
+</code></pre>
+<hr>
+<h2 id="10.-这条路线上的三个风险"><a class="anchor" href="#10.-这条路线上的三个风险">#</a>10. 这条路线上的三个风险</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>风险</th>
+<th>触发条件</th>
+<th>应对</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>流场重算频率不够</td>
+<td>僵尸在拐角处贴墙抖动</td>
+<td>提高重算频率；给流场方向加一点随机扰动，让它们&quot;贴墙滑&quot;而不是&quot;卡墙&quot;</td>
+</tr>
+<tr>
+<td>队员 AI 可读性差</td>
+<td>5 个人各打各的，玩家看不懂</td>
+<td>见 <code>00-决策清单.html</code> E1——这是原型阶段第一优先验证项</td>
+</tr>
+<tr>
+<td>两份伤害实现漂移</td>
+<td>有人改了 <code>sim/combat.ts</code> 没改 <code>core/</code></td>
+<td>§4 的对账测试。<strong>这条必须在 M1 就建起来</strong>，不能等到 M3</td>
+</tr>
+</tbody></table>
+</div>
+<p>第三条是最容易被推迟、也最贵的一条。<strong>对账测试要和对账对象同时诞生。</strong></p>
+</main>
+</div>
+</body>
+</html>

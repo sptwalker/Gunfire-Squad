@@ -793,7 +793,7 @@ footer{
     <div class="r"><dt>BOSS 血条</dt><dd>居中置顶，只在 BOSS 存活时出现。血条上有 1px 亮色游标标出最近一次的伤害位置，让「刚打掉多少」不用回看数字。三段式是因为本局有三个 BOSS，游标会依次走完。</dd></div>
     <div class="r"><dt>增益倒计时</dt><dd>左侧竖排，最多同时 5 个（buff 上限）。颜色即道具色，与地面上的拾取物同色，形成「地上捡的＝身上挂的」的对应关系。</dd></div>
     <div class="r"><dt>伤害飘字</dt><dd>常规白色，暴击琥珀色且 1.5 倍字号，毒伤紫色，治疗绿色。四类共用一套字号级差，不靠动画区分——300 只僵尸同屏时动画会被淹没。</dd></div>
-    <div class="r"><dt>阵型栏</dt><dd>三个按钮：<code>普通防御</code>、<code>环形防御</code>、<code>搜索推进</code>，亮色的是当前档。<b>三档互斥</b>——同一条轴上的三个位置，不存在叠加态，所以玩家只需要记住一个位（旧版是两个独立开关，要同时记两个）。它给的是效率旋钮不是操作门槛。<span class="warn">默认「普通防御」必须能通关</span>：不碰阵型栏也打不过，说明它已经变成门槛（<code>00-决策清单.md</code> A29）。</dd></div>
+    <div class="r"><dt>阵型栏</dt><dd>三个按钮：<code>普通防御</code>、<code>环形防御</code>、<code>搜索推进</code>，亮色的是当前档。<b>三档互斥</b>——同一条轴上的三个位置，不存在叠加态，所以玩家只需要记住一个位（旧版是两个独立开关，要同时记两个）。它给的是效率旋钮不是操作门槛。<span class="warn">默认「普通防御」必须能通关</span>：不碰阵型栏也打不过，说明它已经变成门槛（<code>00-决策清单.html</code> A29）。</dd></div>
     <div class="r"><dt>没有按钮的战斗操作</dt><dd>集火不再是按钮——<b>左键点敌人就是集火</b>，点地面解除。移动也是：<b>左键点地面</b>落点即阵型中心，逐帧画出每名队员的目的站位与阵型朝向标识，角色随后移动过去；<b>按住左键拖</b>则出现箭头手动指定朝向，松开才落位。点<b>队长身后</b>判为撤退，队伍不转向、保持迎敌朝向边打边撤。<span class="warn">WASD 仍在，但只做整队平移微调，不改变阵型</span>。</dd></div>
     <div class="r"><dt>地面站位指示</dt><dd>下达移动指令后显示 1–2 秒，队员到位后淡出。<b>不常驻</b>——常驻就变成玩家盯地面读摆位，正是 §5.3 担心的"视线离开战场"。同时画出<b>近战的最大活动圈</b>，它读的就是该阵型层的 <code>tether</code>：<span class="warn">画出来的圈和 AI 实际遵守的圈是同一个字段</span>，不许有两份。</dd></div>
     <div class="r"><dt>战术提示</dt><dd>命令栏正上方，最多两行，新的在下、旧的变淡，3 秒后消失。队员放高级技能或军衔解锁的战术动作（工事 / 地雷 / 陷阱 / 堡垒 / 炮火）时各出一行，文案取 <code>progression.ts</code> 的 <code>TACTICS[].callout</code>。<span class="warn">只写动作不写数字</span>——它回答"队员刚做了什么"，不是战斗日志。</dd></div>
@@ -888,7 +888,7 @@ footer{
     <h2>局内状态面板</h2>
     <p class="lede">
       关卡内随时可开（<kbd class="kbd">Tab</kbd> 同键切换）。<em>这一版不是商店</em>——
-      局内零购买（<code>00-决策清单.md</code> A25），等级与武器阶都自动涨，
+      局内零购买（<code>00-决策清单.html</code> A25），等级与武器阶都自动涨，
       所以这个面板只回答一个问题：<b>我现在长到哪了，下一跳什么时候来</b>。
     </p>
   </div>
@@ -1075,7 +1075,7 @@ footer{
   <dl class="specs">
     <div class="r"><dt>两张表为什么并排</dt><dd>它们回答同一个问题的两面：<b>「我打不过这一关，能做什么」</b>。左边给<b>选项</b>（新武器＝新的维度解），右边给<b>资格</b>（高级技能与更聪明的 AI）。两列都<span class="warn">不出现属性数字</span>，这就是它们的分工。</dd></div>
     <div class="r"><dt>武器只写一行小字解释它解什么</dt><dd>不写伤害、不写 DPS——那些是局内自动涨的，写在这里会让人以为买了就变强。写的是它带来的<b>新答案</b>（火箭筒＝成规模的击退来源），玩家按「我缺什么解」买，而不是按「哪个数字大」买。</dd></div>
-    <div class="r"><dt>道具那一行有个「开局携带 1 个」</dt><dd>这是本轮<b>读法最软</b>的一处：玩家原话是「用金钱买武器和道具」，这里读成<b>种类解锁</b>而不是消耗品。若原意是可囤积的消耗品，这一行要重做（<code>01-系统策划案.md</code> §12 已标注）。</dd></div>
+    <div class="r"><dt>道具那一行有个「开局携带 1 个」</dt><dd>这是本轮<b>读法最软</b>的一处：玩家原话是「用金钱买武器和道具」，这里读成<b>种类解锁</b>而不是消耗品。若原意是可囤积的消耗品，这一行要重做（<code>01-系统策划案.html</code> §12 已标注）。</dd></div>
     <div class="r"><dt>军衔的「效果」列不写数字</dt><dd>写的是 <code>ai 参数</code> / <code>skill 参数</code> 这两个<b>类别名</b>。原因和上面一样，但更强：军衔在类型层面就<b>不允许给属性</b>（<code>RankEffect = Exclude&lt;SpecEffect, { kind: 'attr' }&gt;</code>），所以这里就算想写数值也没有可写的。</dd></div>
     <div class="r"><dt>军衔不分人，按全队算</dt><dd>荣誉值是整支队的战功，按参战人数均分（<code>honorPerHero</code>）。所以界面不按角色分列——分了就会诱导玩家去「养一个主力」，而这正是要避免的。</dd></div>
   </dl>
@@ -1223,7 +1223,7 @@ footer{
         <tr><td>技能冷却</td><td><code>characters.ts</code> AIProfile 技能参数</td><td>已定</td></tr>
         <tr><td>增益倒计时</td><td><code>run.ts</code> BUFFS（5 种 × 15s）</td><td>已定</td></tr>
         <tr><td>伤害飘字</td><td><code>combat.ts</code> computeDamage 输出</td><td>已定</td></tr>
-        <tr><td>阵型栏三档 + 鼠标点地</td><td><code>characters.ts</code> SQUAD_COMMANDS（defend 是默认态不是按钮）· 锚点与地面指示见 <code>04-技术框架.md</code> §5.4</td><td>待 M3</td></tr>
+        <tr><td>阵型栏三档 + 鼠标点地</td><td><code>characters.ts</code> SQUAD_COMMANDS（defend 是默认态不是按钮）· 锚点与地面指示见 <code>04-技术框架.html</code> §5.4</td><td>待 M3</td></tr>
         <tr><td>小地图</td><td>core 空间索引查询</td><td>待 M2</td></tr>
         <tr><td>任务进度</td><td><code>quest.ts</code>（三种任务类型）</td><td>待 M3</td></tr>
         <tr><td>武器升级 DPS 增量</td><td><code>weapons.ts</code> 阶系数 + 穿透收益</td><td>已定</td></tr>

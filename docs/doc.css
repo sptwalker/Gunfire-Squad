@@ -1,0 +1,67 @@
+/* 策划文档共用样式：色板与 index.html 一致（暖金强调 + 偏蓝灰中性色）。 */
+:root{
+  color-scheme:light;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --ground:#f4f5f6; --panel:#ffffff; --panel-2:#eceef0;
+  --hair:#dadee2; --hair-soft:#e7eaed;
+  --ink:#111820; --ink-2:#3d4954; --muted:#65727e;
+  --accent:#9a6412; --accent-soft:#f0e4cd;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#0d1116; --panel:#141a21; --panel-2:#1b222b;
+    --hair:#252f3a; --hair-soft:#1e262f;
+    --ink:#e5eaef; --ink-2:#aeb9c4; --muted:#808e9b;
+    --accent:#f0b450; --accent-soft:#2e2515;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0d1116; --panel:#141a21; --panel-2:#1b222b;
+  --hair:#252f3a; --hair-soft:#1e262f;
+  --ink:#e5eaef; --ink-2:#aeb9c4; --muted:#808e9b;
+  --accent:#f0b450; --accent-soft:#2e2515;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  font-size:15px; line-height:1.72; -webkit-font-smoothing:antialiased;
+}
+.layout{display:grid; grid-template-columns:260px minmax(0,1fr); gap:40px; max-width:1240px; margin:0 auto; padding-inline:20px}
+.toc{position:sticky; top:env(safe-area-inset-top,0px); align-self:start; max-height:100vh; overflow:auto; padding-block:28px; font-size:13px}
+.toc .home{display:block; margin-bottom:16px; color:var(--accent); text-decoration:none; font-weight:700}
+.toc ol{list-style:none; margin:0; padding:0; border-left:1px solid var(--hair)}
+.toc li a{display:block; padding:3px 10px; color:var(--ink-2); text-decoration:none; line-height:1.45}
+.toc li.d3 a{padding-left:24px; color:var(--muted); font-size:12px}
+.toc li a:hover{color:var(--accent); background:var(--panel-2)}
+.doc{min-width:0; padding-block:28px 96px; max-width:900px}
+.doc h1{font-size:30px; font-weight:900; line-height:1.25; margin:0 0 20px; text-wrap:balance}
+.doc h2{font-size:22px; font-weight:900; margin:48px 0 14px; padding-top:14px; border-top:2px solid var(--ink); text-wrap:balance}
+.doc h3{font-size:17px; font-weight:700; margin:32px 0 10px}
+.doc h4{font-size:15px; font-weight:700; margin:24px 0 8px; color:var(--ink-2)}
+.doc h1,.doc h2,.doc h3,.doc h4{scroll-margin-top:16px; position:relative}
+.anchor{position:absolute; left:-1.1em; color:var(--hair); text-decoration:none; font-weight:400}
+h1:hover .anchor,h2:hover .anchor,h3:hover .anchor,h4:hover .anchor{color:var(--accent)}
+.doc p,.doc li{max-width:72ch}
+.doc a{color:var(--accent)}
+.doc strong{font-weight:700; color:var(--ink)}
+.doc blockquote{margin:16px 0; padding:10px 16px; background:var(--accent-soft); border-left:3px solid var(--accent); color:var(--ink-2)}
+.doc blockquote p{margin:6px 0}
+.doc hr{border:0; border-top:1px solid var(--hair); margin:32px 0}
+.doc code{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.86em; background:var(--panel-2); padding:1px 5px; border-radius:3px}
+.doc pre{background:var(--panel); border:1px solid var(--hair); padding:14px 16px; overflow-x:auto; line-height:1.5; font-size:13px}
+.doc pre code{background:none; padding:0}
+.tbl{overflow-x:auto; margin:14px 0 20px; border:1px solid var(--hair); background:var(--panel)}
+.doc table{border-collapse:collapse; width:100%; font-size:13.5px; font-variant-numeric:tabular-nums}
+.doc th,.doc td{padding:6px 10px; border-bottom:1px solid var(--hair-soft); text-align:left; vertical-align:top}
+.doc th{background:var(--panel-2); font-weight:700; white-space:nowrap; position:sticky; top:0}
+.doc tbody tr:hover{background:var(--panel-2)}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr; gap:0; padding-inline:16px}
+  .toc{position:static; max-height:none; padding-block:16px 0}
+  .toc ol{display:none}
+  .anchor{display:none}
+}

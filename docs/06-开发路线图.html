@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>06 开发路线图</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#总览">总览</a></li><li class="d2"><a href="#m0-—-资产可行性验证-✅">M0 — 资产可行性验证 ✅</a></li><li class="d3"><a href="#要回答的问题">要回答的问题</a></li><li class="d3"><a href="#任务">任务</a></li><li class="d3"><a href="#验收标准">验收标准</a></li><li class="d3"><a href="#顺带要验证的">顺带要验证的</a></li><li class="d3"><a href="#m0-实测">M0 实测</a></li><li class="d3"><a href="#m0-追加-改-q-版体素">M0 追加：改 Q 版体素</a></li><li class="d2"><a href="#m1-—-core-逻辑骨架-+-对账测试">M1 — <code>core/</code> 逻辑骨架 + 对账测试</a></li><li class="d3"><a href="#任务-1">任务</a></li><li class="d3"><a href="#验收标准-1">验收标准</a></li><li class="d3"><a href="#关于&quot;接近但不相同&quot;">关于&quot;接近但不相同&quot;</a></li><li class="d2"><a href="#m2-—-渲染与操控-可玩原型">M2 — 渲染与操控（可玩原型）</a></li><li class="d3"><a href="#任务-2">任务</a></li><li class="d3"><a href="#验收标准-2">验收标准</a></li><li class="d3"><a href="#这个里程碑结束时必须做的第一件事">这个里程碑结束时必须做的第一件事</a></li><li class="d2"><a href="#m3-—-完整关卡循环">M3 — 完整关卡循环</a></li><li class="d3"><a href="#任务-3">任务</a></li><li class="d3"><a href="#验收标准-3">验收标准</a></li><li class="d3"><a href="#这个里程碑要回答的核心问题">这个里程碑要回答的核心问题</a></li><li class="d2"><a href="#m4-—-元层-世界地图-存档-双成长线">M4 — 元层：世界地图 / 存档 / 双成长线</a></li><li class="d3"><a href="#任务-4">任务</a></li><li class="d3"><a href="#验收标准-4">验收标准</a></li><li class="d3"><a href="#这个里程碑要回答的核心问题-1">这个里程碑要回答的核心问题</a></li><li class="d2"><a href="#m5-—-内容铺满">M5 — 内容铺满</a></li><li class="d3"><a href="#任务-5">任务</a></li><li class="d3"><a href="#验收标准-5">验收标准</a></li><li class="d3"><a href="#这里有一条容易被忽略的验收项">这里有一条容易被忽略的验收项</a></li><li class="d2"><a href="#m6-—-打磨与发布准备">M6 — 打磨与发布准备</a></li><li class="d2"><a href="#关键路径">关键路径</a></li><li class="d2"><a href="#每完成一个里程碑要重跑的东西">每完成一个里程碑要重跑的东西</a></li><li class="d2"><a href="#现在处在哪一步">现在处在哪一步</a></li></ol></nav>
+<main class="doc">
+<h1 id="06-开发路线图"><a class="anchor" href="#06-开发路线图">#</a>06 开发路线图</h1>
+<blockquote>
+<p>拆成 7 个里程碑，每个都有<strong>可执行的验收标准</strong>——不是&quot;完成 XX 功能&quot;，
+是&quot;跑 XX 命令得到 XX 结果&quot;。</p>
+<p>排序原则：<strong>先做会推翻后面所有工作的那件事。</strong>
+所以 M0 是资产可行性验证，M1 是对账测试——它们都不产出玩家能看见的东西，
+但它们是唯一两个&quot;做错了要重来&quot;的关卡。</p>
+</blockquote>
+<hr>
+<h2 id="总览"><a class="anchor" href="#总览">#</a>总览</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>里程碑</th>
+<th>目标</th>
+<th>主要风险</th>
+<th>能不能跳过</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>M0</strong></td>
+<td>资产可行性验证</td>
+<td>动画方案不成立 → 换美术路线</td>
+<td>❌ 不能</td>
+</tr>
+<tr>
+<td><strong>M1</strong></td>
+<td><code>core/</code> 逻辑骨架 + 对账测试</td>
+<td>两份伤害实现漂移</td>
+<td>❌ 不能</td>
+</tr>
+<tr>
+<td><strong>M2</strong></td>
+<td>渲染与操控（可玩原型）</td>
+<td>同屏 300 僵尸性能</td>
+<td>❌ 不能</td>
+</tr>
+<tr>
+<td><strong>M3</strong></td>
+<td>完整关卡循环</td>
+<td>15 分钟体感</td>
+<td>可延后</td>
+</tr>
+<tr>
+<td><strong>M4</strong></td>
+<td><strong>元层：世界地图 / 存档 / 双成长线</strong>（本轮新增）</td>
+<td>解锁曲线与&quot;卡住只能换阵容&quot;冲突</td>
+<td>可延后</td>
+</tr>
+<tr>
+<td><strong>M5</strong></td>
+<td>内容铺满（12 角色 / 9 僵尸 / 6 场景）</td>
+<td>内容量</td>
+<td>可延后</td>
+</tr>
+<tr>
+<td><strong>M6</strong></td>
+<td>打磨与发布准备</td>
+<td>—</td>
+<td>最后做</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>M0 和 M1 是不可跳过的。</strong> 其余都可以按需要裁剪。</p>
+<blockquote>
+<p><strong>M4 是这一轮架构调整带来的新里程碑</strong>，插在 M3 与 M5 之间。
+它不能更早：世界地图要选子关卡，而子关卡的推导逻辑（<code>scenes.ts</code>）
+虽然已经写完了，但<strong>得先有一个能跑完的 run（M3）才谈得上&quot;进入下一关&quot;</strong>。
+也不能更晚：M5 的&quot;内容铺满&quot;按场景铺，铺之前得先知道玩家怎么在场景间移动。</p>
+</blockquote>
+<hr>
+<h2 id="m0-—-资产可行性验证-✅"><a class="anchor" href="#m0-—-资产可行性验证-✅">#</a>M0 — 资产可行性验证 ✅</h2>
+<p><strong>唯一的产出是一个能动的模型。</strong> 不写游戏代码。</p>
+<blockquote>
+<p><strong>已完成（2026-09-29）</strong>。结论：<strong>&quot;Rodin 生成外观 + 现成骨架驱动&quot;成立，武器可换成立</strong>，
+美术路线不用退。实测数字与剩下的坑见本节末尾的「M0 实测」。</p>
+</blockquote>
+<h3 id="要回答的问题"><a class="anchor" href="#要回答的问题">#</a>要回答的问题</h3>
+<p><code>05-资产清单.html</code> §1.1 提出的方案是&quot;Rodin 生成外观 + 现成骨架重定向&quot;。
+<strong>这条路没验证过，而它决定整个美术路线。</strong></p>
+<h3 id="任务"><a class="anchor" href="#任务">#</a>任务</h3>
+<ol>
+<li>用 §2.2 的模板生成 1 个角色（建议先做鹰眼·薇拉），<strong>空手</strong>（<code>05</code> §2.3）</li>
+<li>买/找一个带动画的 low-poly 人形包（含 idle / move / hit / death + 至少&quot;双手射击&quot;&quot;单手近战&quot;两种攻击）</li>
+<li>把生成的网格绑到买来的骨架上，做权重；在右手加 <code>socket_hand_r</code></li>
+<li>生成 2 把武器：狙击枪（双手射击）+ 剑（单手近战），原点放在握把</li>
+<li>导出 GLB，在 Three.js 里播放动画，运行时把武器挂到 <code>socket_hand_r</code>，按键切换武器与对应攻击动画</li>
+</ol>
+<h3 id="验收标准"><a class="anchor" href="#验收标准">#</a>验收标准</h3>
+<pre><code>□ 生成的角色能在浏览器里播放 idle 动画
+□ 动画播放时网格没有明显撕裂（权重正常）
+□ 单个角色 GLB（Draco + KTX2）&lt; 1.5 MB
+□ 渲染 5 个角色实例，GPU 帧时间 &lt; 2ms
+□ 运行时换武器：模型挂上手、朝向正确，不用逐把手调偏移
+□ 换武器后攻击动画随握持切换，idle / move / hit / death 不受影响
+□ 单把武器 GLB &lt; 200 KB
+</code></pre>
+<p><strong>如果换武器那两条不成立</strong> → 退回&quot;武器烘进角色网格&quot;，军械库只换数值不换外观
+（裁决 #1 的&quot;共享&quot;在视觉上会打折扣，要回头找用户确认）。</p>
+<p><strong>如果第 1、2 条不成立</strong> → 重定向方案失败，退回&quot;全部买现成包 + 换材质区分&quot;。
+这个决定必须在写任何游戏代码之前做完。</p>
+<h3 id="顺带要验证的"><a class="anchor" href="#顺带要验证的">#</a>顺带要验证的</h3>
+<ul>
+<li>Rodin 生成的网格<strong>面数</strong>是否在可接受范围（建议目标 &lt; 8k 三角面/角色）</li>
+<li>生成的贴图分辨率（俯视视角下 1024² 完全够，2048² 是浪费）</li>
+</ul>
+<h3 id="m0-实测"><a class="anchor" href="#m0-实测">#</a>M0 实测</h3>
+<p>产物在 <code>proto/m0/</code>：<code>index.html</code> 是验证台（仓库根目录 <code>python -m http.server</code>，打开 <code>/proto/m0/</code>），
+<code>tools/accept.py</code> 一条命令重跑全部截图与 GPU 计时。</p>
+<pre><code>✅ 生成的角色能在浏览器里播放 idle 动画          idle / run / walk / hit / death / 2 种攻击 / 持刀，共 8 条
+✅ 动画播放时网格没有明显撕裂                    修过三轮，见下方&quot;第一轮验收为什么漏了&quot;
+✅ 单个角色 GLB &lt; 1.5 MB                         559 KB（4,832 顶点 / 抽面目标 7,800 三角面，贴图 1024² WebP）
+✅ 渲染 5 个角色实例，GPU 帧时间 &lt; 2ms           0.09 ms（RTX 5080 / ANGLE D3D11，5 实例 + 武器约 58k 三角面）
+✅ 运行时换武器：挂上手、朝向正确、不逐把调偏移   两把武器共用一个常量 Rx(-90°)，零逐把偏移
+✅ 换武器后攻击动画随握持切换                    1 = 狙击枪 + attack_rifle，2 = 剑 + attack_melee1h
+✅ 单把武器 GLB &lt; 200 KB                         狙击枪 54 KB · 剑 38 KB
+</code></pre>
+<p><strong>第一轮验收为什么漏了</strong>：第一轮只看了 5 个实例的远景和俯视截图，用户近看发现站立就破面、
+右腿过粗、手部乱、跑步撕衣服、剑挂在剑尖上、枪过大。根因与修法：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>现象</th>
+<th>根因</th>
+<th>修法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>站立就破面、袖子拉成尖刺</td>
+<td>把 A-pose 网格&quot;反蒙皮&quot;回 T-pose，线性蒙皮的逆在远离骨骼的衣服上不成立</td>
+<td><strong>网格不动，把拟合出的 A-pose 应用成骨架的静止姿态</strong>；Xbot 动作在世界空间逐骨复制、烘焙到新静止姿态</td>
+</tr>
+<tr>
+<td>右腿过粗、抬手拉出长刺</td>
+<td>Rodin 把垂着的手和大腿长成一块，同一批顶点既跟手又跟腿</td>
+<td>手臂 / 腿臀按权重二选一；前臂·手与腿之间的粘连面直接删掉（86 面）</td>
+</tr>
+<tr>
+<td>跑步时两腿间拉膜</td>
+<td>裆下顶点借了对侧腿的权重</td>
+<td>裆下按左右砍掉对侧腿权重</td>
+</tr>
+<tr>
+<td>长风衣下摆被腿撕开</td>
+<td>过膝下摆离腿远，任何权重都不对</td>
+<td><strong>重新生成为短夹克</strong>（v6），不再修风衣</td>
+</tr>
+<tr>
+<td>夹克袖子贴图错、破面；挥砍 / 死亡时袖子粘在腰上</td>
+<td>v6 的手臂贴着衣身生成，袖子内侧和腰侧是同一片网格</td>
+<td><strong>重新生成为连体服</strong>（v8，手臂离身、手指并拢、戴手套）；手臂与腿臀之间的面整段切开，袖子内侧拿到臀部权重的改投手臂权重</td>
+</tr>
+<tr>
+<td>脸糊</td>
+<td>Rodin 纯文字生成的脸随机</td>
+<td>v7 抽到一张清楚的脸 → 左右镜像成对称参考图 → v8 用参考图 + 文字生成</td>
+</tr>
+<tr>
+<td>手乱、握不住</td>
+<td>Rodin 的手套手指和 Xbot 指骨对不上，逐指分权重一弯就撕</td>
+<td><strong>手按刚体处理</strong>（整只归 Hand 骨）；端枪时左手用两骨 IK 托到护木上</td>
+</tr>
+<tr>
+<td>持刀跑刀尖朝下</td>
+<td>跑步动作的右臂在甩</td>
+<td>运行时合成 <code>run_melee1h</code>：只把右臂钉在持刀姿态（刀尖朝前上），左臂照常摆</td>
+</tr>
+<tr>
+<td>剑挂在剑尖</td>
+<td>握点量错，把护手当成柄</td>
+<td>握点改到柄中段</td>
+</tr>
+<tr>
+<td>跑步端枪姿势不对</td>
+<td>跑步动作的手臂在甩</td>
+<td>运行时合成 <code>run_rifle</code>：腿用 run、胸以上钉在抵肩姿态</td>
+</tr>
+</tbody></table>
+</div>
+<p>验收方法同步改了：<code>/c/tmp</code> 下的拉伸检测脚本逐条动作数&quot;被拉长 3 倍以上的边&quot;，
+现在抬枪 7 条、跑步 14 条、挥砍 2 条、死亡 16 条，集中在腋下，是轻微拉伸，近看已无尖刺和破洞。
+袖子内侧切开后是开口的，验证台把角色材质设成双面，否则从背后看像碎片飘着。
+验证台加了<strong>右键拖动旋转 / 滚轮缩放 / 中键平移</strong>，近看验收。</p>
+<p>两条&quot;顺带&quot;的答案：Rodin Quad 模式 <code>quality=8000</code> 出约 16k 三角面，<strong>管线里自动减到 7.8k</strong>，
+俯视看不出损失；Rodin 给的是 3 张 2048² 贴图，<strong>压到 1024² WebP 后整只角色才 458 KB</strong>——2048² 确实是浪费。</p>
+<p><strong>实际走的路线与原计划的三处差异：</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>原计划</th>
+<th>实际</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>买带动画的人形包</td>
+<td>用 three.js 示例里的 Xbot（Mixamo 骨架 + idle/run/walk）当<strong>权重捐赠者</strong></td>
+<td>不用上传 Mixamo，整条管线可在 Blender 命令行里重跑</td>
+</tr>
+<tr>
+<td>包里自带攻击 / hit / death</td>
+<td><code>tools/poses.py</code> 程序化摆的关键帧</td>
+<td>Xbot 没有这几条；<strong>它们是占位</strong>，只证明&quot;按握持切攻击&quot;这条路通</td>
+</tr>
+<tr>
+<td>Draco + KTX2</td>
+<td>meshopt + WebP（<code>gltf-transform optimize</code>）</td>
+<td>体积已经远低于预算，少一个转码器依赖</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>绑骨管线</strong>（<code>tools/rig.py</code>，一条命令：<code>blender -b -P rig.py -- 角色.glb Xbot.glb 输出.glb</code>）：</p>
+<ol>
+<li>角色与捐赠者都归一到身高 1.8、减面到 7.8k</li>
+<li><strong>逐侧网格搜索肩 / 肘角度，让捐赠者的 T-pose 手臂贴到角色的 A-pose 手臂上</strong>（双向倒角距离打分）——
+Rodin 基本不给 T-pose，这一步不做，手臂权重会投到衣领上</li>
+<li>Data Transfer 按最近面投权重，按骨骼距离修正袖子 / 腰侧的错投，手整只归 Hand；切开手臂与腿臀之间的面后再平滑，平滑完按切分归属再砍一次，裆下左右腿分开</li>
+<li><strong>拟合姿态直接应用为静止姿态</strong>（网格一个顶点都不动），捐赠者动画按世界空间逐骨复制重定向</li>
+<li>加 <code>socket_hand_r / l</code>：骨骼 +Y = 手指方向 = 武器 +Z，骨骼 +Z 朝掌面</li>
+<li>武器（<code>tools/weapon.py</code>）：原点移到握把、+Z 朝枪口、按真实长度缩放（狙击枪 1.0 m，剑 0.9 m）</li>
+</ol>
+<p><strong>剩下的坑（都不阻塞 M1，记给 M5 批量跑时处理）：</strong></p>
+<ul>
+<li><strong>服装不能过膝</strong>：过膝下摆没有可用的权重解，薇拉已改短夹克。这是 12 个角色的硬约束，不再是&quot;优先&quot;</li>
+<li><strong>手指不会弯</strong>：手是刚体，握把是&quot;夹在手里&quot;而不是&quot;握在手里&quot;，近看能看出。要真握紧得换带指骨的手模（M3 美术替换）</li>
+<li><strong>跑步时腋下仍有少量碎边</strong>（背后近看可见），俯视下看不出</li>
+<li><strong>程序化攻击 / hit / death 只是占位</strong>，动作质量不够上线。M5 前要换成买的或动捕的动作包——
+动作包必须是 <strong>Mixamo 骨架</strong>，才能直接套进这条管线</li>
+<li>武器握点是按网格剖面估的（狙击枪手枪握把 / 剑柄中段），换武器时目检一次即可，不是逐把调偏移</li>
+</ul>
+<h3 id="m0-追加-改-q-版体素"><a class="anchor" href="#m0-追加-改-q-版体素">#</a>M0 追加：改 Q 版体素</h3>
+<p>Rodin 高精网格那条路能过验收，但每个角色都要修权重、修到第三轮仍有碎边——<strong>美术风格改为 Q 版体素、约 2.9 头身</strong>（<code>00</code> A3、<code>05</code> §1.2）。
+管线换成 <code>tools/voxel.py</code>（<code>blender -b -P voxel.py -- Xbot.glb 输出目录</code>）：</p>
+<ol>
+<li>部件表拼格子（5 cm），每块整块绑一根 Mixamo 骨，逐面顶点色、无贴图</li>
+<li>Xbot 骨架<strong>只挪关节位置</strong>到 Q 版比例，骨骼朝向不动，idle / run / walk 的旋转键原样用；臀部位移按臀高比例缩</li>
+<li><code>poses.py</code> 的程序化攻击 / hit / death、<code>socket_hand_r / l</code> 照旧；Q 版手臂短，护木托点改近（0.2 m）</li>
+<li>狙击枪、剑也拼格子（2 cm），原点握把、枪口朝前</li>
+</ol>
+<pre><code>✅ 8 条动作全在，零权重混合 → 无拉伸、无粘连、无碎片（近看正 / 侧 / 背 6 个动作）
+✅ vox_vera.glb 363 KB / 2,014 顶点 / 3,968 三角面（旧版 559 KB / 7.8k）
+✅ 5 实例 + 武器 26k 三角面，GPU 0.11 ms
+✅ 武器 vox_sniper 8 KB · vox_sword 6 KB，挂点与常量旋转不变
+✅ 0 次 Rodin 生成
+</code></pre>
+<p><strong>12 人全量</strong>（同一管线，改表不改代码）：</p>
+<pre><code>✅ 12 名角色 vox_&lt;id&gt;.glb，3,696–4,988 三角面，各 ≈420 KB（meshopt 后，多为 8 条动作的关键帧）
+✅ 11 把主武器 vox_&lt;武器&gt;.glb，4–10 KB；各持自己的武器，攻击按握持类分四组：
+   近战挥砍（剑 / 大剑 / 长枪）· 抵肩（狙击 / 喷火 / 冷冻 / 激光）· 单手平举（手枪 / 冲锋枪）· 投掷（手雷 / 回旋镖）
+✅ 12 实例 + 武器 64k 三角面，GPU 0.19–0.50 ms，60 FPS（RTX 5080）
+✅ 0 次 Rodin 生成
+</code></pre>
+<p>验证台（<code>proto/m0/index.html</code>）已换成 12 人阵列（「各自武器」为默认，也可全员换同一把）；旧的 <code>char_vera.glb</code> / <code>wpn_*.glb</code> 与 <code>rig.py</code> 留作对照。
+<strong>试看后第二轮</strong>（用户反馈：头太大、近战没力度、长枪应该捅不该砍）：</p>
+<ul>
+<li>头整组绕脖子缩到 0.8（<code>voxel.py</code> 的 <code>HEAD_K</code>），2.5 → 约 2.9 头身</li>
+<li>近战拆成三条：<code>attack_melee1h</code>（剑，斜劈）、<code>attack_heavy</code>（大剑，双手过顶下劈）、<code>attack_thrust</code>（长枪，直线捅刺）。
+力度来自四件事：蓄力时胸口反拧（<code>twist</code>）、出手只用 2 帧且线性插值、打到底过冲后定格、臀部前压 + 双腿前后分开（<code>lunge</code>）。
+长枪多钉一个中间帧，否则逐骨插值会让枪头在送出途中往下画弧</li>
+<li>顺手修了一个老 bug：Blender 场景缺省 24 fps，程序化关键帧按 30 fps 排，<strong>所有程序化动作都慢了 1.25 倍</strong>；
+现在导入 Xbot 前先把场景设成 30 fps</li>
+<li>死亡改成被打飞：中弹后仰 → 离地往后飞、腿踢起 → 加速砸地 → 弹一下 → 瘫平（一侧膝盖弯起，不对称），落点在原地身后约 0.8 m</li>
+<li>手雷 / 回旋镖出手后，手里的武器隐藏到收手时再出现（验证台按 <code>attack_throw</code> 的时间隐藏，不改 GLB）</li>
+</ul>
+<p>剩下的：手是一块方块，没有握把的&quot;握&quot;——Q 版里这是风格，不是缺陷；程序化动作仍是占位。</p>
+<p><strong>本轮 Rodin 消耗：11 次生成</strong>（角色 8 次：5 次才拿到空手版、1 次改短夹克、v7 抽脸、v8 连体服定稿；武器 2 次；1 次早期测试）。
+v7、v8 两次用的是 Gen-2.5-High 档，比默认档贵；M5 批量跑按默认档预算，只对脸不过关的角色升档。</p>
+<hr>
+<h2 id="m1-—-core-逻辑骨架-+-对账测试"><a class="anchor" href="#m1-—-core-逻辑骨架-+-对账测试">#</a>M1 — <code>core/</code> 逻辑骨架 + 对账测试</h2>
+<p><strong>产出：一个没有画面的、能跑完 15 分钟关卡的逻辑核心。</strong></p>
+<h3 id="任务-1"><a class="anchor" href="#任务-1">#</a>任务</h3>
+<pre><code>src/core/world.ts      世界状态：实体数组 + 网格哈希
+src/core/tick.ts       固定步长主循环
+src/core/combat.ts     伤害结算（与 sim/combat.ts 对账）+ 击退与控制判定（本轮新增）
+src/core/spawn.ts      威胁预算刷怪（读 expandScene() 的子关卡，见下）
+src/core/ai.ts         队员 AI 三层
+src/core/squad.ts      队长控制 + 软硬牵引
+src/core/terrain.ts    通行位掩码（本轮新增：4 位掩码，见 04-技术框架.html §2.3）
+tests/reconcile.test.ts ★
+</code></pre>
+<blockquote>
+<p><strong><code>combat.ts</code> 本轮多了一层（击退与控制判定）。</strong> 它读攻方击退力
+（武器 <code>knockback</code> × <code>knockMelee</code> / <code>knockRanged</code>）与守方稳固
+（英雄 <code>stab</code> / 僵尸表值），过一次饱和曲线，再问 <code>superArmor</code> 是否免位移。
+这条判定与伤害<strong>共用同一份输入</strong>，所以它也必须进对账测试——
+否则两边的击退命中率会各自漂移，而漂移只会在试玩时以&quot;手感不对&quot;的形式暴露。</p>
+<p><code>terrain.ts</code> 也在这一步落地，但<strong>只做掩码，不做摆放</strong>：
+位掩码的定义在 <code>src/data/scenes.ts</code> 的 <code>OBSTACLES</code>，
+M1 验证的是&quot;四个判定各读对了一位&quot;（<code>04-技术框架.html</code> §2.3）。</p>
+</blockquote>
+<blockquote>
+<p><strong><code>spawn.ts</code> 的输入变了（本轮）</strong>：旧版直接读 <code>run.ts</code> 的 <code>STAGES</code>，
+新版读 <code>expandScene(scene, difficulty)</code> 的输出——即<strong>某一个子关卡</strong>的
+<code>{ threatBudget, dimWeights, spawnTable }</code>。
+<code>run.ts</code> 仍是一局的<strong>时间结构</strong>（3 阶段 × 5 分钟），
+<code>scenes.ts</code> 决定<strong>这一局里刷什么</strong>。两者的分工见 <code>04-技术框架.html</code> §2.1。</p>
+</blockquote>
+<p><strong>寻路先不做</strong>（M2 再加）。M1 里用&quot;直线趋近&quot;临时替代——
+因为 M1 要验证的是<strong>公式</strong>，不是<strong>空间</strong>。</p>
+<h3 id="验收标准-1"><a class="anchor" href="#验收标准-1">#</a>验收标准</h3>
+<pre><code>□ node tests/reconcile.test.ts
+  → 324 个用例全部在 1e-6 内相等，0 失败
+  → 击退命中率同样在 1e-6 内相等（本轮新增的判定，与伤害共用输入）
+
+□ node src/core/headless-run.ts
+  → 能跑完 15 分钟，输出：击杀数 / 通关与否 / 三个 BOSS 的击杀秒数
+  → 这三个数字与 sim 的读数【接近但不相同】（差异来自二维空间，符合预期）
+  → 顺带打印击退命中率分布：霸体目标应为 0，高稳固目标应显著低于脆目标
+
+□ 通行位掩码自检
+  → 沙袋格：人能过 ✗ / 子弹能过 ✓；木墙格：四个判定全 ✗ 只有可破坏 ✓
+</code></pre>
+<h3 id="关于&quot;接近但不相同&quot;"><a class="anchor" href="#关于&quot;接近但不相同&quot;">#</a>关于&quot;接近但不相同&quot;</h3>
+<p><strong>M1 的验收不是&quot;core 和 sim 跑出一样的结果&quot;</strong>，那是错的期待。
+它们用的是不同的空间模型，结果必然不同。</p>
+<p>要验收的是：<strong>completion 级别的结论一致</strong>——
+sim 说&quot;通关&quot;，core 也该通关；sim 说&quot;BOSS 3 用了 53 秒&quot;，core 该在 40-70 秒之间。</p>
+<p>如果 core 跑出来 BOSS 3 要 200 秒，那说明<strong>二维空间让输出大幅度稀释了</strong>，
+这是个真实的设计发现，该回头改数值，而不是改 core 去迁就 sim。</p>
+<blockquote>
+<p>这正是 <code>02-数值表.html</code> §10 说的那条边界的延续：
+sim 回答&quot;自洽&quot;，core 第一次能回答&quot;在这套空间模型下还成不成立&quot;。</p>
+</blockquote>
+<hr>
+<h2 id="m2-—-渲染与操控-可玩原型"><a class="anchor" href="#m2-—-渲染与操控-可玩原型">#</a>M2 — 渲染与操控（可玩原型）</h2>
+<p><strong>产出：能玩的东西。</strong> 这是第一个能交给别人试玩的版本。</p>
+<h3 id="任务-2"><a class="anchor" href="#任务-2">#</a>任务</h3>
+<pre><code>src/core/path/flowfield.ts    流场寻路
+src/core/path/astar.ts        队长点地寻路
+src/core/terrain.ts           地形与通行性
+src/game/main.ts              bootstrap
+src/game/camera.ts            俯视可旋转相机
+src/game/renderer/chunks.ts   分块剔除
+src/game/renderer/instances.ts InstancedMesh 池
+src/game/input.ts             WASD + 鼠标
+src/ui/hud.ts  squadbar.ts
+</code></pre>
+<p><strong>只做 1 个子关卡</strong>（建议城市废墟的第 1 关——建筑能验证流场绕障）。</p>
+<blockquote>
+<p>注意是<strong>子关卡</strong>不是场景：M2 要验证的是&quot;一个 15 分钟的 run 能不能跑起来&quot;，
+而这与&quot;它在世界地图的哪个位置&quot;无关。场景层属于 M4。</p>
+</blockquote>
+<h3 id="验收标准-2"><a class="anchor" href="#验收标准-2">#</a>验收标准</h3>
+<pre><code>□ 同屏 300 只僵尸 @ 60fps（桌面端 GTX 1660 级别）
+  → 用调试面板手动刷 300 只，跑 60 秒，帧时间 P99 &lt; 16.6ms
+
+□ core.tick() 单帧 &lt; 6ms（含 300 僵尸的 AI + 流场查询）
+
+□ 相机可以：鼠标右键旋转 / 滚轮缩放 / 俯仰角限制在 35°-80°
+
+□ WASD 移动队长，4 名队员跟随且不穿墙
+
+□ Tab 切换队长，整队重心正确移动
+
+□ 僵尸能绕开建筑走到小队身边（流场生效，不是贴墙抖）
+</code></pre>
+<h3 id="这个里程碑结束时必须做的第一件事"><a class="anchor" href="#这个里程碑结束时必须做的第一件事">#</a>这个里程碑结束时必须做的第一件事</h3>
+<p><strong>找人试玩 10 分钟，专门验证 <code>00-决策清单.html</code> E1</strong>：</p>
+<blockquote>
+<p>玩家能否在混乱中看懂&quot;谁在打谁&quot;？</p>
+</blockquote>
+<p>这是整个设计里最高风险的一条假设——<strong>如果读不懂，游戏就不成立</strong>，
+而它没法靠数值或代码解决，只能靠 UI 和 AI 参数调。</p>
+<hr>
+<h2 id="m3-—-完整关卡循环"><a class="anchor" href="#m3-—-完整关卡循环">#</a>M3 — 完整关卡循环</h2>
+<p><strong>产出：一局完整的 15 分钟，含三个 BOSS、三档难度、结算。</strong></p>
+<h3 id="任务-3"><a class="anchor" href="#任务-3">#</a>任务</h3>
+<pre><code>src/core/boss.ts          BOSS 行为（含毒母的召唤、卡俄斯的混合刷新）
+src/core/buff.ts          增益道具生成与拾取
+src/core/quest.ts         任务 NPC（三种类型）
+src/ui/squadbar.ts        ★ 本轮：阵型栏（读 SQUAD_COMMANDS，见 04-技术框架.html §2.2）
+src/game/orders.ts        ★ 本轮：左键点地/拖拽朝向 → 阵型锚点 + 地面站位指示
+src/ui/result.ts          结算界面
+场景地形接入                （材质契约 §5 的方案，先接 2 个场景）
+</code></pre>
+<blockquote>
+<p><strong>阵型在这一步做，不在 M4。</strong> 它属于&quot;玩家能做什么&quot;，
+与元层无关；<code>SQUAD_COMMANDS</code> 是纯数据。M3 要做两件事：
+①把档位的 <code>overrides</code> 写进队员 <code>AIProfile</code>（一个循环）；
+②把档位的 <code>rings</code> 展开成每名队员的站位锚点（一个函数）。
+前者复用现成通路，后者是新代码——<code>orders.ts</code> 存在的理由就是它。
+押后到 M4 会有一个具体的代价：M3 的验收要靠试玩判断 15 分钟体感，
+而命令栏会改变这个体感——分开做就等于<strong>测了两次不同的东西</strong>。</p>
+</blockquote>
+<h3 id="验收标准-3"><a class="anchor" href="#验收标准-3">#</a>验收标准</h3>
+<pre><code>□ 完整跑完一局 15 分钟，中途无崩溃、无卡死
+□ 三个 BOSS 都能击杀，超时能正确判负
+□ 五个增益道具都能拾取并生效
+□ 队员死亡后永久损失，直到本局结束
+□ 至少 2 个场景能加载，地形机制生效（水/沼泽/冰面/可破坏）
+□ 三档难度跑出不同的刷怪表（对着 02-数值表.html §7.0.1 的丛林第 10 关核对）
+□ 局内拾取能临时换上一把未解锁的武器（C3）
+□ 结算界面正确显示：通关与否、击杀数、阵亡名单、用时
+□ ★ 鼠标点地能让整队移动，落点显示各队员的目的站位与阵型朝向标识
+□ ★ 三个阵型都能生效：普通防御收成前扇形、环形铺满外圈、推进放开近战前置距离
+□ ★ 按住左键拖能手动指定朝向；不拖时自动朝向取威胁最重的扇区
+□ ★ 点队长身后能保持原阵型与迎敌朝向边打边撤
+□ ★ 近战活动圈画在地面上，且队员真的不会超出它（硬约束，不是提示）
+□ ★ 队员卡住能自动绕障归位，不会因为地形掉队
+□ ★ 阵型的默认态是「普通防御」，且【不碰阵型栏也能通关】——
+  这是 A29 的验收项，见下
+□ ★ 三种可破坏障碍：沙袋挡人不挡弹、铁丝网打掉后不留残骸、木墙能炸开
+</code></pre>
+<p><strong>这两条是 A29 的验收项。</strong> 阵型栏的作用是让好玩家打得更好看，
+不是让普通玩家打得下去（<code>00-决策清单.html</code> A29）。验收方式是<strong>跑一遍全程不切阵型</strong>，
+看能不能通关——能，说明阵型是效率旋钮；不能，说明它已经变成了操作门槛，
+要往回砍（最省的一刀是把 <code>advance</code> 的覆盖值调得更温和，而不是删档位）。</p>
+<p><strong>&quot;近战不超出活动圈&quot;这条要单独验。</strong> 它是最容易做了但没生效的一条：
+参数写对了、圈也画出来了，但回位优先级没排在追击之前，近战照样会被僵尸带出去。
+跑一局记一下<strong>近战离锚点的最大距离</strong>，它不该超过 <code>rings</code> 里那一层的 <code>tether</code>。</p>
+<blockquote>
+<p><strong>同一件事的另一个信号</strong>：试玩时若玩家在<strong>战斗中频繁切命令</strong>，
+说明它越过了那条线。这条比&quot;能不能通关&quot;更早暴露问题，要专门盯。</p>
+</blockquote>
+<p><strong>三档难度在这一步就要验，不能留到后面。</strong> 它改的是刷怪表构成
+（<code>02-数值表.html</code> §7.0.1），如果 M3 结束时三档跑出来只差威胁速率，
+说明难度层被写成了数值旋钮而不是构成旋钮——那要回头改，越晚越贵。</p>
+<h3 id="这个里程碑要回答的核心问题"><a class="anchor" href="#这个里程碑要回答的核心问题">#</a>这个里程碑要回答的核心问题</h3>
+<p><strong>15 分钟是不是太长？</strong>（<code>00-决策清单.html</code> C1）</p>
+<p>C1 的结论是&quot;保留 15 分钟，但留给试玩判断&quot;。M3 是唯一能真正回答它的地方——
+看试玩的人在第 12 分钟时是在战斗，还是在等结算。</p>
+<p><strong>如果是在等结算</strong>，动作是<strong>降低 <code>LEVEL_COST</code></strong>（让成长更快），
+而不是砍时长。理由写在 C1 里。</p>
+<hr>
+<h2 id="m4-—-元层-世界地图-存档-双成长线"><a class="anchor" href="#m4-—-元层-世界地图-存档-双成长线">#</a>M4 — 元层：世界地图 / 存档 / 双成长线</h2>
+<p><strong>产出：从&quot;能打一局&quot;变成&quot;能一直打下去&quot;。这是本轮架构调整的核心交付。</strong></p>
+<h3 id="任务-4"><a class="anchor" href="#任务-4">#</a>任务</h3>
+<pre><code>src/meta/profile.ts       存档 schema + 读写（纯 TS，只 import data/）
+src/meta/unlock.ts        解锁判定：哪些场景/关卡/角色/武器可见
+src/ui/worldmap.ts        三层：世界地图 → 场景详情 → 出击前确认
+专精树 UI                 12 棵树的节点分配界面
+src/ui/armory.ts          ★ 本轮：局外商店（读 SHOP，买断、全队共享；canEquip 校验出战配置）
+技能点 / 军衔界面          ★ 本轮：点专精、买高级技能、看军衔进度
+</code></pre>
+<p><code>Profile</code> 的 schema 与三条持久化规则定在 <code>04-技术框架.html</code> §2.1.1，本节不重复。</p>
+<h3 id="验收标准-4"><a class="anchor" href="#验收标准-4">#</a>验收标准</h3>
+<pre><code>□ 世界地图上 6 个场景、82 个子关卡全部可见可进
+□ 出击前确认层显示该关的活跃维度提示（04-技术框架.html §2.1.3 第 3 层）
+□ 通关一个子关卡后写入 Profile，刷新页面进度还在
+□ 专精点能分配，且【分配后 computeDamage 的签名不变】——回归跑一遍
+  node tests/reconcile.test.ts → 324 用例仍全过
+□ 莉安顶层「战地复活」每局生效一次（C2 的唯一例外）
+□ ★ 商店只卖种类：买完一把武器后，它的【阶】在本局仍由等级决定
+□ ★ 军衔加身，属性表一个数不变——对着 §1 的六属性表逐项核对
+□ ★ 高级技能要两把钥匙：军衔 4 级时买不到，5 级 + 4 技能点才能买
+□ ★ 局内结算能把 money / honor 带出关卡，并入 Profile
+</code></pre>
+<p><strong>第四条是这个里程碑真正的验收项。</strong> 前三条是功能，第四条是架构约束：
+专精一旦能被写进伤害公式，<code>04-技术框架.html</code> §4 的对账测试就断了，
+而那是整个数值体系的安全网。这条测试必须在接入专精<strong>之前</strong>就接进 CI。</p>
+<p><strong>后四条是本轮新增的验收项，它们验的是同一件事：</strong>
+两条成长线给的是不是<strong>新答案</strong>而不是<strong>新数字</strong>。
+商店只卖种类、军衔不碰属性、高级技能要两把钥匙——三条合起来才构成
+&quot;金钱给选项、技能点给深度、时间给所有人&quot;这个分工
+（<code>00-决策清单.html</code> A25 / A26 / A27 / A28）。
+任何一条破了，&quot;卡住只能换阵容&quot;这个前提就会被&quot;打不过就回去刷&quot;顶替掉。</p>
+<h3 id="这个里程碑要回答的核心问题-1"><a class="anchor" href="#这个里程碑要回答的核心问题-1">#</a>这个里程碑要回答的核心问题</h3>
+<p><strong><code>00-决策清单.html</code> E8/E9/E11</strong>：专精点怎么给、解锁曲线怎么排、难度档怎么开。</p>
+<p>三条的正确答案都取决于试玩，而试玩只有在 M4 之后才拿得到完整循环。
+所以 M4 先按最保守的方案落地（通关给点、并列可选、难度独立可选），
+把三条留成可调参数，等试玩数据再定。</p>
+<blockquote>
+<p><strong>一条要提前知道的风险</strong>：M4 是唯一有可能<strong>破坏本轮设计目标</strong>的里程碑。
+只要局外存在可刷的数值，&quot;打不过就回去刷&quot;这条路就打开了，
+而整个设计的前提是&quot;卡住只能换阵容&quot;。守住它的不是文档，是 §2.1.2 的
+<code>SpecEffect</code> 联合类型——<strong>别为了省事给它加一个 <code>damageMul</code> 变体。</strong></p>
+</blockquote>
+<hr>
+<h2 id="m5-—-内容铺满"><a class="anchor" href="#m5-—-内容铺满">#</a>M5 — 内容铺满</h2>
+<p><strong>产出：全部 12 个角色、9 种僵尸、6 个场景、14 把武器都能实际使用。</strong></p>
+<h3 id="任务-5"><a class="anchor" href="#任务-5">#</a>任务</h3>
+<ul>
+<li>12 个角色的模型 + 动画接入（M0 验证过的管线批量跑）</li>
+<li>9 种僵尸 + 3 个 BOSS 的模型接入 + §5.1 的材质着色契约</li>
+<li>6 个场景的地表贴图与专属资产</li>
+<li>角色选择界面、武器升级界面</li>
+</ul>
+<h3 id="验收标准-5"><a class="anchor" href="#验收标准-5">#</a>验收标准</h3>
+<pre><code>□ 12 个角色全部可用，视觉上一眼能分辨（对着 05-资产清单.html §2.1 逐条核对）
+□ 9 种僵尸在 300 只同屏时仍然能分辨类型（这是行为可读性的底线）
+□ 6 个场景的材质契约生效，且【行为型僵尸的主色跨场景不变】
+□ 每把武器升到 +2 阶的外观/特效有变化
+</code></pre>
+<h3 id="这里有一条容易被忽略的验收项"><a class="anchor" href="#这里有一条容易被忽略的验收项">#</a>这里有一条容易被忽略的验收项</h3>
+<p><strong>9 种僵尸在 300 只同屏时仍然能分辨</strong>——
+单个模型好看不代表挤在一起还能读。
+<code>05-资产清单.html</code> §3 强调&quot;轮廓 &gt; 细节&quot;、并把&quot;轮廓唯一性&quot;升成硬约束，就是为这一条服务。</p>
+<blockquote>
+<p>注意这一条比上一版<strong>更难</strong>了：从 7 种涨到 9 种，而新增的两只
+（护盾 / 喷吐）行为是&quot;打不动&quot;和&quot;不靠近你&quot;，两者都无法靠颜色表达。
+所以这一项的验收要<strong>专门针对这两只做一次混战截图</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="m6-—-打磨与发布准备"><a class="anchor" href="#m6-—-打磨与发布准备">#</a>M6 — 打磨与发布准备</h2>
+<p><strong>产出：可以发布的东西。</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>音效接入</td>
+<td>按 <code>05-资产清单.html</code> §7 的优先级，先做&quot;必须听见的&quot;</td>
+</tr>
+<tr>
+<td>画面设置</td>
+<td>质量档位、僵尸数量上限（照顾低端机）</td>
+</tr>
+<tr>
+<td>存档迁移</td>
+<td><code>Profile.version</code> 的升级路径（改 schema 时老存档不能丢）</td>
+</tr>
+<tr>
+<td>难度档打磨</td>
+<td>三档的体验差距调优（结构已定在 M3，这里是手感）</td>
+</tr>
+<tr>
+<td>教程</td>
+<td>只需要教三件事：WASD、Tab 换队长、集火</td>
+</tr>
+<tr>
+<td>打包</td>
+<td>桌面端 / Web 二选一</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>教程只教三件事</strong>——这本身就是设计的自检：
+如果需要教第四件事，说明操作复杂度失控了。</p>
+<blockquote>
+<p><strong>教程里有一个第四件事的候选人：维度提示。</strong> 玩家第一次遇到&quot;迟滞&quot;
+时会不知道怎么应对。倾向不写进教程，而是<strong>让第 3 层界面自己解释</strong>
+（<code>04-技术框架.html</code> §2.1.3）——教程是&quot;操作&quot;，维度是&quot;战术&quot;，
+后者应该让玩家自己发现。若试玩显示没人发现，再加。</p>
+</blockquote>
+<hr>
+<h2 id="关键路径"><a class="anchor" href="#关键路径">#</a>关键路径</h2>
+<pre><code>M0 ──→ M1 ──→ M2 ──→ M3 ──→ M4 ──→ M5 ──→ M6
+ │      │      │      │      │
+ │      │      │      │      └─ 长期成长线闭合（也是第一次能验证 E8/E9/E11）
+ │      │      │      └─ 第一次能验证 C1（15 分钟体感）与 C4（三档难度）
+ │      │      └─ 第一个能试玩的版本（也是第一次能验证 E1）
+ │      └─ 对账测试建立（此后所有数值改动都有安全网）
+ └─ 美术路线的生死判定
+</code></pre>
+<p><strong>M0 → M1 是可以并行的</strong>：M0 验证美术时，M1 的逻辑骨架不依赖任何美术。
+如果人手够，这两条同时开始，M2 汇合。</p>
+<hr>
+<h2 id="每完成一个里程碑要重跑的东西"><a class="anchor" href="#每完成一个里程碑要重跑的东西">#</a>每完成一个里程碑要重跑的东西</h2>
+<pre><code>node src/sim/balance-check.ts     数值哨兵，确认配平没被改动破坏
+node tests/reconcile.test.ts      core 与 sim 的公式没漂移
+</code></pre>
+<p><strong>这两条命令要进 CI</strong>（哪怕只是一个 pre-commit hook）。
+它们的全部价值就在于&quot;跑得够快，所以每次都会跑&quot;——
+一旦变成&quot;改动大了才跑&quot;，就等于没有。</p>
+<hr>
+<h2 id="现在处在哪一步"><a class="anchor" href="#现在处在哪一步">#</a>现在处在哪一步</h2>
+<pre><code>✅ 创意阶段规划（docs/00-06 + 08/09）
+✅ 数值核心与模拟器（src/data + src/sim）—— 配平已闭环
+✅ 场景层数据（src/data/scenes.ts）—— 6 场景 / 82 子关卡由推导而来
+✅ M0 资产可行性验证        —— 武器可换成立；美术改 Q 版体素（见 M0 实测末尾）
+⬜ M1 core 逻辑骨架         ← 下一步
+</code></pre>
+<p><strong>下一步是 M1。</strong> M0 把美术改成了 Q 版体素，但资源接口没变，按 <code>05</code> §2.3 的约定写：
+角色 GLB 带 <code>socket_hand_r / l</code>，武器 GLB 原点在握把、+Z 朝前，挂点只有一个常量旋转。</p>
+<blockquote>
+<p><strong>回看这一轮</strong>：<code>scenes.ts</code> 与哨兵的两个新章节已经交付，
+但它们都还是<strong>静态分析</strong>——哨兵能证明&quot;维度没有死胡同&quot;，
+不能证明&quot;有难度&quot;也不能证明&quot;阵容够多&quot;（<code>00-决策清单.html</code> D0/D1）。
+这两个问题的答案都在真人试玩里，也就是 M2 之后。
+所以这一轮交付的是<strong>可验证的设计</strong>，不是已验证的设计。</p>
+</blockquote>
+</main>
+</div>
+</body>
+</html>

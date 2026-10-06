@@ -1,0 +1,3734 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>02 数值表</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#1.-属性换算系数-attributes.ts-的-k">1. 属性换算系数（<code>attributes.ts</code> 的 <code>K</code>）</a></li><li class="d3"><a href="#1.0-六属性的分工边界-改之前先读这一条">1.0 六属性的分工边界（改之前先读这一条）</a></li><li class="d3"><a href="#1.0.1-两层&quot;地板&quot;-抗暴击上限与控制抗性">1.0.1 两层&quot;地板&quot;：抗暴击上限与控制抗性</a></li><li class="d3"><a href="#1.1-两条容易算错的地方">1.1 两条容易算错的地方</a></li><li class="d2"><a href="#2.-伤害公式-damage.ts">2. 伤害公式（<code>damage.ts</code>）</a></li><li class="d3"><a href="#2.1-穿透的实际收益-这是设计的关键卖点">2.1 穿透的实际收益（这是设计的关键卖点）</a></li><li class="d3"><a href="#2.2-甲型克制矩阵-无任何一格为-0">2.2 甲型克制矩阵（无任何一格为 0）</a></li><li class="d2"><a href="#3.-武器表-14-种">3. 武器表（14 种）</a></li><li class="d3"><a href="#3.1-基础数值">3.1 基础数值</a></li><li class="d3"><a href="#3.1.1-击退-这一列-本轮新增">3.1.1 <code>击退</code> 这一列（本轮新增）</a></li><li class="d3"><a href="#3.2-武器阶-局内自动成长-不可购买">3.2 武器阶：局内自动成长，<strong>不可购买</strong></a></li><li class="d3"><a href="#3.3-一次真实的配平修正-留作教训">3.3 一次真实的配平修正（留作教训）</a></li><li class="d2"><a href="#4.-僵尸表-9-种">4. 僵尸表（9 种）</a></li><li class="d3"><a href="#4.0.1-僵尸-→-维度映射-dims-字段">4.0.1 僵尸 → 维度映射（<code>dims</code> 字段）</a></li><li class="d3"><a href="#4.0.2-控制对抗字段-本轮新增-判定见-§11">4.0.2 控制对抗字段（本轮新增，判定见 §11）</a></li><li class="d3"><a href="#4.1-阶段缩放">4.1 阶段缩放</a></li><li class="d3"><a href="#4.2-生存压力实测-§5-输出">4.2 生存压力实测（§5 输出）</a></li><li class="d2"><a href="#5.-角色表-12-名">5. 角色表（12 名）</a></li><li class="d3"><a href="#5.1-一级属性-六属性-每角色合计恰好-150-已校验">5.1 一级属性（六属性，每角色合计恰好 150，已校验）</a></li><li class="d3"><a href="#5.2-单角色基准-1-级-武器-0-阶-对普通僵尸">5.2 单角色基准（1 级 / 武器 0 阶 / 对普通僵尸）</a></li><li class="d3"><a href="#5.3-关于-control-的-1.65x">5.3 关于 control 的 1.65x</a></li><li class="d3"><a href="#5.4-技能与-ai-参数">5.4 技能与 AI 参数</a></li><li class="d2"><a href="#6.-boss-规格与反向校准">6. BOSS 规格与反向校准</a></li><li class="d3"><a href="#6.1-boss-数值">6.1 BOSS 数值</a></li><li class="d3"><a href="#6.2-反向校准表-解析式-vs-时间轴模拟">6.2 反向校准表（解析式 vs 时间轴模拟）</a></li><li class="d3"><a href="#6.3-小队-dps-曲线-vs-需求">6.3 小队 DPS 曲线 vs 需求</a></li><li class="d3"><a href="#6.4-配平锚点为什么是-boss-而不是僵尸">6.4 配平锚点为什么是 BOSS 而不是僵尸</a></li><li class="d2"><a href="#7.-关卡与经济">7. 关卡与经济</a></li><li class="d3"><a href="#7.0-场景层-82-个子关卡从哪来-本轮新增">7.0 场景层：82 个子关卡从哪来（本轮新增）</a></li><li class="d3"><a href="#7.0.1-三档难度-c4">7.0.1 三档难度（C4）</a></li><li class="d3"><a href="#7.0.2-维度与技能表在哪">7.0.2 维度与技能表在哪</a></li><li class="d3"><a href="#7.1-刷怪速率-威胁值-秒">7.1 刷怪速率（威胁值/秒）</a></li><li class="d3"><a href="#7.1.1-boss-战期间的刷怪乘数-分阶段">7.1.1 BOSS 战期间的刷怪乘数：<strong>分阶段</strong></a></li><li class="d3"><a href="#7.2-等级与武器-本轮改-局内零购买">7.2 等级与武器（本轮改：<strong>局内零购买</strong>）</a></li><li class="d3"><a href="#7.2.2-局外商店-progression.ts-的-shop">7.2.2 局外商店（<code>progression.ts</code> 的 <code>SHOP</code>）</a></li><li class="d3"><a href="#7.2.3-局外成长的两条线-长度刻意错开">7.2.3 局外成长的两条线（长度刻意错开）</a></li><li class="d3"><a href="#7.3-增益道具">7.3 增益道具</a></li><li class="d2"><a href="#8.-15-分钟全程模拟-§6-实测输出-均衡阵容">8. 15 分钟全程模拟（§6 实测输出，均衡阵容）</a></li><li class="d3"><a href="#8.1-这张表能说明什么">8.1 这张表<strong>能</strong>说明什么</a></li><li class="d3"><a href="#8.2-这张表不说明什么-必读">8.2 这张表<strong>不</strong>说明什么（必读）</a></li><li class="d2"><a href="#9.-多阵容-×-多种子鲁棒性测试">9. 多阵容 × 多种子鲁棒性测试</a></li><li class="d3"><a href="#9.1-阵容之间的区分度落在-最低血量-这一列">9.1 阵容之间的区分度落在「最低血量」这一列</a></li><li class="d3"><a href="#9.2-这张表不说明什么">9.2 这张表<strong>不</strong>说明什么</a></li><li class="d2"><a href="#10.-模拟器的能力边界-必读">10. 模拟器的能力边界（必读）</a></li><li class="d3"><a href="#10.1-实测-常规阶段僵尸贴身占比为-0%">10.1 实测：常规阶段僵尸贴身占比为 <strong>0%</strong></a></li><li class="d3"><a href="#10.2-为什么必然如此">10.2 为什么必然如此</a></li><li class="d3"><a href="#10.3-因此这个模拟器不能回答的问题">10.3 因此这个模拟器<strong>不能</strong>回答的问题</a></li><li class="d3"><a href="#10.4-但它确实回答了的问题">10.4 但它<strong>确实</strong>回答了的问题</a></li><li class="d3"><a href="#10.5-这段的由来">10.5 这段的由来</a></li><li class="d2"><a href="#11.-控制对抗矩阵">11. 控制对抗矩阵</a></li><li class="d3"><a href="#11.1-位移-全部-12-个英雄-×-9-只非召唤僵尸">11.1 位移：全部 12 个英雄 × 9 只非召唤僵尸</a></li><li class="d3"><a href="#11.2-僵尸控制抗性排序-综合评分-=-霸体-稳固-抗冻-狡诈-四项平均">11.2 僵尸控制抗性排序（综合评分 = 霸体 / 稳固 / 抗冻 / 狡诈 四项平均）</a></li><li class="d3"><a href="#11.3-冻结与嘲讽的对抗-另外两扇门">11.3 冻结与嘲讽的对抗（另外两扇门）</a></li><li class="d3"><a href="#11.4-第-13-维度-控制抗性-的两段判据">11.4 第 13 维度「控制抗性」的两段判据</a></li><li class="d3"><a href="#11.5-障碍语义自查-三种新障碍只该带来两类新语义">11.5 障碍语义自查（三种新障碍只该带来两类新语义）</a></li><li class="d2"><a href="#12.-军衔与成长-第三轮重写-25-级-00-§c7">12. 军衔与成长（第三轮重写：25 级，<code>00</code> §C7）</a></li><li class="d3"><a href="#12.1-荣誉-任务与通关每次都发-星级只发【新】星">12.1 荣誉：任务与通关每次都发，星级只发【新】星</a></li><li class="d3"><a href="#12.2-军衔表-25-级">12.2 军衔表（25 级）</a></li><li class="d3"><a href="#12.3-⚠-同级对位强度比-只记读数-先试玩">12.3 ⚠ 同级对位强度比（只记读数，先试玩）</a></li><li class="d3"><a href="#12.4-时间成本-一局-15-分钟">12.4 时间成本（一局 15 分钟）</a></li><li class="d3"><a href="#12.5-不变量自查-哨兵-§12d-全部-✓">12.5 不变量自查（哨兵 §12d，全部 ✓）</a></li><li class="d2"><a href="#13.-本文的复核办法">13. 本文的复核办法</a></li></ol></nav>
+<main class="doc">
+<h1 id="02-数值表"><a class="anchor" href="#02-数值表">#</a>02 数值表</h1>
+<blockquote>
+<p><strong>所有数字的来源</strong>：<code>node src/sim/balance-check.ts</code> 的实测输出。
+手填的表格会和代码漂移，所以本文的数字<strong>全部</strong>是从模拟器导出后抄进来的。
+原始输出留档在 <code>docs/.balance-raw.txt</code>，可随时重跑复核。</p>
+<p>真源文件：<code>src/data/attributes.ts</code> / <code>damage.ts</code> / <code>weapons.ts</code> / <code>zombies.ts</code> / <code>characters.ts</code> / <code>run.ts</code> / <code>scenes.ts</code></p>
+<p><strong>第三轮（职业制，<code>00</code> §C7）</strong>：§12 整节重写为 25 级军衔 + 属性成长 + 转职点；§7.2.3 技能点线删除。
+其余章节仍是第二轮读数（12 名英雄），P2 起逐节重写。</p>
+<p><strong>第二轮（六属性 / 控制对抗 / 局外经济）改动面很大，逐节标注在节内。</strong>
+一句话概括：一级属性 4 → 6（§1、§5.1）、新增控制对抗表（§11）、
+新增军衔与技能点表（§12）、经济由&quot;局内购买&quot;改为&quot;局外买装备、全队共享&quot;（§7.2）。</p>
+<p><strong>同时修正了五处与模拟器漂移的数字</strong>（§2.1 穿透表、§6、§7.2、§8、§9）——
+它们不是本轮改出来的，是早已腐坏、这轮才被逐条复核抓出来的。
+每一处都在原地标了「漂移修正」并写清原值、现值与原因。
+抓出它们的办法只有一条：<strong>每个数字都回到 <code>npm run sim</code> 重跑一遍</strong>，
+而不再从上一版文档里抄。</p>
+</blockquote>
+<hr>
+<h2 id="1.-属性换算系数-attributes.ts-的-k"><a class="anchor" href="#1.-属性换算系数-attributes.ts-的-k">#</a>1. 属性换算系数（<code>attributes.ts</code> 的 <code>K</code>）</h2>
+<p>改这张表 = 改整个游戏的属性手感。<strong>所有单位的所有数值都必须经过这里</strong>，
+禁止在别处硬编码血量/攻速/暴击。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>系数</th>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>strAtk</code></td>
+<td>0.02</td>
+<td>每点力量 +2% 攻击</td>
+</tr>
+<tr>
+<td><code>agiHaste</code></td>
+<td>0.01</td>
+<td>每点敏捷 +1% 攻速</td>
+</tr>
+<tr>
+<td><code>agiMove</code></td>
+<td>0.008</td>
+<td>每点敏捷 +0.8% 移速</td>
+</tr>
+<tr>
+<td><code>luckCrit</code></td>
+<td>0.004</td>
+<td>每点幸运 +0.4% 暴击率</td>
+</tr>
+<tr>
+<td><code>luckLoot</code></td>
+<td>0.006</td>
+<td>每点幸运 +0.6% 高级掉落权重</td>
+</tr>
+<tr>
+<td><code>hpBase</code></td>
+<td>2000</td>
+<td>基础生命</td>
+</tr>
+<tr>
+<td><code>hpPerCon</code></td>
+<td>180</td>
+<td>每点体质 +180 生命</td>
+</tr>
+<tr>
+<td><code>armorPerTgh</code></td>
+<td>2</td>
+<td>每点韧性 +2 护甲</td>
+</tr>
+<tr>
+<td><code>armorK</code></td>
+<td>100</td>
+<td>减伤 = 护甲/(护甲+100)</td>
+</tr>
+<tr>
+<td><code>tghAntiCrit</code></td>
+<td>0.003</td>
+<td>每点（已缩放）韧性 +0.3% 抗暴击，上限 <code>ANTI_CRIT_CAP</code> = 0.5</td>
+</tr>
+<tr>
+<td><code>tghStab</code></td>
+<td>1.0</td>
+<td>稳固 = 韧性 × 1.0，量纲与武器 <code>knockback</code> 对齐</td>
+</tr>
+<tr>
+<td><code>strKnock</code></td>
+<td>0.012</td>
+<td>每点（已缩放）力量 +1.2% 近战击退力</td>
+</tr>
+<tr>
+<td><code>agiKnock</code></td>
+<td>0.012</td>
+<td>每点（已缩放）敏捷 +1.2% 远程击退力</td>
+</tr>
+<tr>
+<td><code>energyBase</code></td>
+<td>50</td>
+<td>基础能量</td>
+</tr>
+<tr>
+<td><code>energyPerInt</code></td>
+<td>6</td>
+<td>每点智力 +6 能量</td>
+</tr>
+<tr>
+<td><code>intSkill</code></td>
+<td>0.02</td>
+<td>每点智力 +2% 技能强度</td>
+</tr>
+<tr>
+<td><code>intCdr</code></td>
+<td>0.005</td>
+<td>每点智力 +0.5% 冷却缩减（上限 80%）</td>
+</tr>
+<tr>
+<td><code>levelGrowth</code></td>
+<td>0.08</td>
+<td>每级 +8% 基础属性</td>
+</tr>
+<tr>
+<td><code>levelDmgPerLevel</code></td>
+<td>0.25</td>
+<td>每级 +25% 最终伤害</td>
+</tr>
+<tr>
+<td><code>maxLevel</code></td>
+<td>5</td>
+<td>关卡内最高等级</td>
+</tr>
+<tr>
+<td><code>CRIT_DMG_BASE</code></td>
+<td>1.5</td>
+<td>基础暴击伤害倍率</td>
+</tr>
+<tr>
+<td><code>ANTI_CRIT_CAP</code></td>
+<td>0.5</td>
+<td>抗暴击硬上限。<strong>不能到 1.0</strong>，理由见下</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p>漂移修正：旧表列的是 <code>agiCrit</code> 与 <code>hpPerTgh</code>，这一轮两条都被搬走了
+（暴击 敏捷 → 幸运，生命 韧性 → 体质），数值刻意不变，只是换了驱动属性。</p>
+</blockquote>
+<h3 id="1.0-六属性的分工边界-改之前先读这一条"><a class="anchor" href="#1.0-六属性的分工边界-改之前先读这一条">#</a>1.0 六属性的分工边界（改之前先读这一条）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>一级属性</th>
+<th>提供</th>
+<th>拿走</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>力量 STR</td>
+<td>近战伤害乘区、近战击退力</td>
+<td>—</td>
+</tr>
+<tr>
+<td>敏捷 AGI</td>
+<td>攻速、移速、远程击退力</td>
+<td><del>暴击率</del></td>
+</tr>
+<tr>
+<td>韧性 TGH</td>
+<td>护甲、抗暴击、稳固</td>
+<td><del>生命上限</del></td>
+</tr>
+<tr>
+<td>智力 INT</td>
+<td>能量、技能强度、冷却缩减</td>
+<td>—</td>
+</tr>
+<tr>
+<td>幸运 LUK</td>
+<td>暴击率、高级掉落概率</td>
+<td>—</td>
+</tr>
+<tr>
+<td>体质 CON</td>
+<td>生命上限</td>
+<td>—</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>规则：每个属性只管自己那一列，不许跨列。</strong> 旧版&quot;敏捷给暴击&quot;&quot;韧性给血&quot;
+就是跨列的典型，结果是堆敏捷的角色同时拿到攻速和暴击、堆韧性的同时拿到血和甲——
+两个属性各顶两条线，另外两个属性没有独立理由被堆。</p>
+<p>拆成&quot;四条攻击线、三条生存线互不重叠&quot;之后，&quot;这角色该堆什么&quot;才有唯一答案。
+这条规则与 §11 的控制对抗轴是同一条思路：<strong>每个系统里，每一项都要有独立的对抗面。</strong></p>
+<h3 id="1.0.1-两层&quot;地板&quot;-抗暴击上限与控制抗性"><a class="anchor" href="#1.0.1-两层&quot;地板&quot;-抗暴击上限与控制抗性">#</a>1.0.1 两层&quot;地板&quot;：抗暴击上限与控制抗性</h3>
+<p><code>ANTI_CRIT_CAP = 0.5</code> 与 §11 的&quot;减速不设对抗属性&quot;是同一条设计原则的两个实例：</p>
+<pre><code>控制与反制体系必须每层都留地板，否则整条成长轴会被一次堆满而作废。
+</code></pre>
+<ul>
+<li>抗暴击封顶 0.5：堆韧性能砍掉一半暴击收益，但永远砍不干净——
+留一半地板，幸运流才有活路。</li>
+<li>减速<strong>不设</strong>任何对抗属性：它是全游戏唯一不受抗性影响的控制手段，
+也就是第 13 维度上永远关不上的一格（见 §11.4）。</li>
+</ul>
+<h3 id="1.1-两条容易算错的地方"><a class="anchor" href="#1.1-两条容易算错的地方">#</a>1.1 两条容易算错的地方</h3>
+<p><strong>A. 敏捷的攻速必须作用在&quot;频率&quot;上，不能乘进单发伤害。</strong></p>
+<pre><code>攻击频率 = 武器射速 × (1 + 敏捷×0.01)
+</code></pre>
+<p>若把攻速乘区乘进单发伤害，换弹惩罚会按错误的弹匣周期计算，
+大弹匣武器的 DPS 会被系统性高估。</p>
+<p><strong>B. 等级伤害走独立乘区，不去缩放力量。</strong></p>
+<p><code>atkMul = 1 + 力量×0.02</code> 带一个 +1 基数。若让等级缩放力量，
+力量 34→45 只会让乘区从 1.68 到 1.90（+13%），完全跟不上关卡缩放。
+拆成 <code>levelDmgMul</code> 之后&quot;每级 +25%&quot;才是实数，玩家算得清。</p>
+<hr>
+<h2 id="2.-伤害公式-damage.ts"><a class="anchor" href="#2.-伤害公式-damage.ts">#</a>2. 伤害公式（<code>damage.ts</code>）</h2>
+<pre><code>最终伤害 = 基础 × atkMul × levelDmgMul × 技能乘区 × 暴击期望
+         × 护甲保留 × 甲型克制
+</code></pre>
+<pre><code>有效护甲  = 目标护甲 × (1 - 穿透/(穿透+60))        PIERCE_K = 60
+护甲保留  = 1 - 有效护甲/(有效护甲+100)
+暴击期望  = 1 + max(0, 暴击率 - 目标抗暴击) × (暴击伤害 - 1)
+技能乘区  = 1 + (持续时间/冷却) × (倍率 - 1)
+</code></pre>
+<p><strong>抗暴击扣的是暴击率，不是伤害。</strong> 这样&quot;抗暴击&quot;与&quot;暴击率&quot;共用一把 0-1 的尺子，
+而不是又多出一个伤害乘区——伤害乘区已经够多了。扣到负数时归零，不倒扣成负暴击。
+（<code>damage.ts</code> 的 <code>expectedDamage</code>；<code>computeDamage</code> 拿到的是&quot;这一下暴没暴&quot;的既成事实，不看抗暴击。）</p>
+<h3 id="2.1-穿透的实际收益-这是设计的关键卖点"><a class="anchor" href="#2.1-穿透的实际收益-这是设计的关键卖点">#</a>2.1 穿透的实际收益（这是设计的关键卖点）</h3>
+<p>穿透削弱<strong>目标</strong>护甲，所以对高护甲目标的收益是陡峭的：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>目标护甲</th>
+<th>穿透 0 保留</th>
+<th>穿透 30 保留</th>
+<th>穿透 60 保留</th>
+<th>穿透 80 保留</th>
+<th>80 / 0</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>30（普通僵尸）</td>
+<td>0.77</td>
+<td>0.83</td>
+<td>0.87</td>
+<td>0.89</td>
+<td>1.15×</td>
+</tr>
+<tr>
+<td>220（胖僵尸）</td>
+<td>0.31</td>
+<td>0.41</td>
+<td>0.48</td>
+<td>0.52</td>
+<td>1.65×</td>
+</tr>
+<tr>
+<td>480（关底 BOSS）</td>
+<td>0.17</td>
+<td>0.24</td>
+<td>0.29</td>
+<td>0.33</td>
+<td><strong>1.90×</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>打关底 BOSS 时，<strong>穿透 80 的伤害是穿透 0 的 1.90 倍</strong>，对普通僵尸只有 1.15 倍。
+收益随目标护甲单调变陡——这就是&quot;带穿刺武器&quot;成为有意义战术选择的原因，
+也是&quot;穿透&quot;能作为独立于攻击力的第三条成长轴的原因。</p>
+<blockquote>
+<p>漂移修正：旧表写的是 BOSS 列 0.26 / 0.35 / 0.41、结论&quot;2.4 倍&quot;。
+那组数字对应的是一个比现行 <code>PIERCE_K = 60</code> 更小的常数（约 34），
+表是改常数之前算的，改完没有重算。按本节自己写的公式，正确值是上表。
+结论方向不变（穿透对重甲收益更陡），但幅度被高估了约 25%。</p>
+</blockquote>
+<h3 id="2.2-甲型克制矩阵-无任何一格为-0"><a class="anchor" href="#2.2-甲型克制矩阵-无任何一格为-0">#</a>2.2 甲型克制矩阵（无任何一格为 0）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>伤害类型</th>
+<th>无甲</th>
+<th>轻甲</th>
+<th>中甲</th>
+<th>重甲</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>冲击 impact</td>
+<td>1.00</td>
+<td>1.10</td>
+<td>1.00</td>
+<td>0.85</td>
+</tr>
+<tr>
+<td>斩击 slash</td>
+<td>1.00</td>
+<td><strong>1.15</strong></td>
+<td>0.95</td>
+<td>0.80</td>
+</tr>
+<tr>
+<td>穿刺 pierce</td>
+<td>1.00</td>
+<td>1.00</td>
+<td><strong>1.10</strong></td>
+<td>1.05</td>
+</tr>
+<tr>
+<td>火焰 fire</td>
+<td>1.00</td>
+<td>0.95</td>
+<td>1.00</td>
+<td><strong>1.15</strong></td>
+</tr>
+<tr>
+<td>冰霜 frost</td>
+<td>1.00</td>
+<td>1.00</td>
+<td>1.00</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>爆炸 explosive</td>
+<td>1.00</td>
+<td>0.90</td>
+<td>1.10</td>
+<td><strong>1.20</strong></td>
+</tr>
+<tr>
+<td>毒 poison</td>
+<td>1.00</td>
+<td>1.05</td>
+<td>0.95</td>
+<td>0.90</td>
+</tr>
+</tbody></table>
+</div>
+<hr>
+<h2 id="3.-武器表-14-种"><a class="anchor" href="#3.-武器表-14-种">#</a>3. 武器表（14 种）</h2>
+<h3 id="3.1-基础数值"><a class="anchor" href="#3.1-基础数值">#</a>3.1 基础数值</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>武器</th>
+<th>类别</th>
+<th>伤害类型</th>
+<th>单发</th>
+<th>射速/s</th>
+<th>射程</th>
+<th>穿透</th>
+<th>命中数</th>
+<th>弹匣</th>
+<th>换弹</th>
+<th>AOE</th>
+<th>暴击+</th>
+<th>击退</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>大刀</td>
+<td>近战</td>
+<td>斩击</td>
+<td>190</td>
+<td>0.8</td>
+<td>2</td>
+<td>35</td>
+<td>3</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>0</td>
+<td><strong>45</strong></td>
+</tr>
+<tr>
+<td>剑</td>
+<td>近战</td>
+<td>斩击</td>
+<td>110</td>
+<td>1.6</td>
+<td>2.5</td>
+<td>25</td>
+<td>1</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>+5%</td>
+<td>15</td>
+</tr>
+<tr>
+<td>长枪</td>
+<td>近战</td>
+<td>穿刺</td>
+<td>150</td>
+<td>1.0</td>
+<td>4</td>
+<td>55</td>
+<td>2</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>0</td>
+<td>35</td>
+</tr>
+<tr>
+<td>弓箭</td>
+<td>远程</td>
+<td>穿刺</td>
+<td>260</td>
+<td>0.7</td>
+<td>30</td>
+<td>60</td>
+<td>1</td>
+<td>8</td>
+<td>1.6s</td>
+<td>0</td>
+<td>+10%</td>
+<td>20</td>
+</tr>
+<tr>
+<td>手枪</td>
+<td>远程</td>
+<td>冲击</td>
+<td>88</td>
+<td>2.0</td>
+<td>22</td>
+<td>20</td>
+<td>1</td>
+<td>12</td>
+<td>1.8s</td>
+<td>0</td>
+<td>0</td>
+<td>12</td>
+</tr>
+<tr>
+<td>冲锋枪</td>
+<td>远程</td>
+<td>冲击</td>
+<td>52</td>
+<td>5.0</td>
+<td>20</td>
+<td>10</td>
+<td>1</td>
+<td>30</td>
+<td>2.2s</td>
+<td>0</td>
+<td>0</td>
+<td><strong>6</strong></td>
+</tr>
+<tr>
+<td>突击步枪</td>
+<td>远程</td>
+<td>穿刺</td>
+<td>58</td>
+<td>3.0</td>
+<td>30</td>
+<td>40</td>
+<td>1</td>
+<td>30</td>
+<td>2.4s</td>
+<td>0</td>
+<td>+5%</td>
+<td>14</td>
+</tr>
+<tr>
+<td>狙击枪</td>
+<td>远程</td>
+<td>穿刺</td>
+<td>700</td>
+<td>0.35</td>
+<td>60</td>
+<td>80</td>
+<td>1</td>
+<td>5</td>
+<td>2.5s</td>
+<td>0</td>
+<td>+15%</td>
+<td>30</td>
+</tr>
+<tr>
+<td>手雷</td>
+<td>投掷</td>
+<td>爆炸</td>
+<td>420</td>
+<td>0.5</td>
+<td>25</td>
+<td>30</td>
+<td>6</td>
+<td>3</td>
+<td>3.0s</td>
+<td>4</td>
+<td>0</td>
+<td>40</td>
+</tr>
+<tr>
+<td>喷火器</td>
+<td>远程</td>
+<td>火焰</td>
+<td>23</td>
+<td>8.0</td>
+<td>8</td>
+<td>20</td>
+<td>4</td>
+<td>100</td>
+<td>3.0s</td>
+<td>0</td>
+<td>0</td>
+<td><strong>5</strong></td>
+</tr>
+<tr>
+<td>冷冻器</td>
+<td>远程</td>
+<td>冰霜</td>
+<td>62</td>
+<td>2.5</td>
+<td>10</td>
+<td>15</td>
+<td>2</td>
+<td>20</td>
+<td>2.0s</td>
+<td>0</td>
+<td>0</td>
+<td>10</td>
+</tr>
+<tr>
+<td>回旋镖</td>
+<td>投掷</td>
+<td>冲击</td>
+<td>180</td>
+<td>0.9</td>
+<td>18</td>
+<td>50</td>
+<td>2</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>+5%</td>
+<td>25</td>
+</tr>
+<tr>
+<td>火箭筒</td>
+<td>远程</td>
+<td>爆炸</td>
+<td>680</td>
+<td>0.35</td>
+<td>35</td>
+<td>65</td>
+<td>5</td>
+<td>2</td>
+<td>3.5s</td>
+<td>5</td>
+<td>0</td>
+<td><strong>70</strong></td>
+</tr>
+<tr>
+<td>激光枪</td>
+<td>远程</td>
+<td>冲击</td>
+<td>140</td>
+<td>1.2</td>
+<td>40</td>
+<td>70</td>
+<td>3</td>
+<td>8</td>
+<td>2.4s</td>
+<td>0</td>
+<td>+5%</td>
+<td>12</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="3.1.1-击退-这一列-本轮新增"><a class="anchor" href="#3.1.1-击退-这一列-本轮新增">#</a>3.1.1 <code>击退</code> 这一列（本轮新增）</h3>
+<p><strong>设计梯度：越慢越重的武器推得越开。</strong> 火箭筒 70 / 大刀 45 是两端，
+冲锋枪 6 几乎推不动——于是&quot;想要击退&quot;就必然要接受低射速，
+<strong>击退不是白拿的控场属性，是一份要花出去的选择</strong>。</p>
+<p>这一列是攻方的<strong>基础值</strong>，实际击退力还要乘属性乘区（近战 × 力量、远程 × 敏捷），
+见 §11.1。表里的裸值不直接参与判定——判断一把武器推不推得动，
+要看 §11.1 那张 12 人全表，而不是看这里。</p>
+<h3 id="3.2-武器阶-局内自动成长-不可购买"><a class="anchor" href="#3.2-武器阶-局内自动成长-不可购买">#</a>3.2 武器阶：局内自动成长，<strong>不可购买</strong></h3>
+<pre><code>阶加成 = 伤害 ×(1 + 0.35×阶)   穿透 ×(1 + 0.20×阶)
+升阶   = 等级自动带动：等级 1/3/5 → 阶 0/1/2
+</code></pre>
+<p><strong>阶不能买，只能涨。</strong> 这是本轮最要紧的一条边界，理由见 §7.2：
+买种类给的是<strong>新答案</strong>（新的维度解），买阶给的是<strong>新数字</strong>（同一套答案打得更疼），
+后者会直接架空&quot;卡住只能换阵容&quot;这个设计前提。</p>
+<blockquote>
+<p>漂移修正：旧版写的是&quot;价格 = [0 阶免费, 1 阶 700, 2 阶 1500]&quot;。
+<code>WEAPON_PRICE</code> 这一轮整条删掉了——局内不再有任何购买动作。</p>
+</blockquote>
+<h3 id="3.3-一次真实的配平修正-留作教训"><a class="anchor" href="#3.3-一次真实的配平修正-留作教训">#</a>3.3 一次真实的配平修正（留作教训）</h3>
+<p>初版狙击枪射速 0.45、冲锋枪单发 38 且暴击 -5%。结果：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>修前 DPS</th>
+<th>修后 DPS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>鹰眼·薇拉（狙击）</td>
+<td>596</td>
+<td>489</td>
+</tr>
+<tr>
+<td>弹幕·杰特（冲锋枪）</td>
+<td>236</td>
+<td>330</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>修前的问题</strong>：狙击枪在射程（60&gt;20）、穿透（80&gt;10）、单发（700&gt;38）、
+换弹惩罚、暴击加成上<strong>全面碾压</strong>冲锋枪，DPS 还是它的 2.5 倍。
+&quot;选武器&quot;变成了&quot;选最强的武器&quot;，阵容深度直接消失。</p>
+<p><strong>修后的取舍</strong>：狙击枪赢在<strong>单发爆发</strong>（对高护甲 BOSS 的关键），
+输在<strong>持续输出</strong>（打小怪海乏力）；冲锋枪反之。
+远程 DPS 定位内部的极差从 <strong>2.53x 收敛到 1.48x</strong>。</p>
+<blockquote>
+<p>原则：<strong>任何一把武器都不应该在所有维度上都赢。</strong>
+如果出现了，说明某个维度的代价没有被算进去。</p>
+</blockquote>
+<hr>
+<h2 id="4.-僵尸表-9-种"><a class="anchor" href="#4.-僵尸表-9-种">#</a>4. 僵尸表（9 种）</h2>
+<blockquote>
+<p><strong>本轮变化</strong>：7 种僵尸各补六个【控制对抗】字段
+（<code>stab</code> 稳固 / <code>superArmor</code> 霸体 / <code>freezeRes</code> 抗冻 / <code>cunning</code> 狡诈 / <code>knock</code> / <code>knockKind</code>）。
+<strong>僵尸与 BOSS 的旧数值一个未改</strong>——新增的是&quot;谁能被推动、谁推得动你&quot;这一层，
+不是又一轮调数值。判定表见 §11。</p>
+</blockquote>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>血</th>
+<th>速度</th>
+<th>护甲</th>
+<th>甲型</th>
+<th>攻击</th>
+<th>间隔</th>
+<th>半径</th>
+<th>积分</th>
+<th>金钱</th>
+<th>威胁</th>
+<th>行为动词</th>
+<th>贡献维度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通</td>
+<td>200</td>
+<td>2.2</td>
+<td>30</td>
+<td>无</td>
+<td>90</td>
+<td>1.2s</td>
+<td>0.45</td>
+<td>1</td>
+<td>3</td>
+<td>1.0</td>
+<td>数量</td>
+<td>swarm</td>
+</tr>
+<tr>
+<td>高速</td>
+<td>120</td>
+<td>5.0</td>
+<td>15</td>
+<td>无</td>
+<td>70</td>
+<td>0.8s</td>
+<td>0.40</td>
+<td>2</td>
+<td>4</td>
+<td>1.2</td>
+<td>冲刺</td>
+<td>rush · open</td>
+</tr>
+<tr>
+<td>高防胖</td>
+<td>1400</td>
+<td>1.2</td>
+<td>220</td>
+<td>重甲</td>
+<td>260</td>
+<td>2.0s</td>
+<td>0.90</td>
+<td>6</td>
+<td>12</td>
+<td>3.0</td>
+<td>阻挡</td>
+<td>armor · choke</td>
+</tr>
+<tr>
+<td>毒液</td>
+<td>350</td>
+<td>2.0</td>
+<td>60</td>
+<td>轻甲</td>
+<td>110</td>
+<td>1.5s</td>
+<td>0.50</td>
+<td>3</td>
+<td>6</td>
+<td>1.8</td>
+<td>区域封锁</td>
+<td>poison · choke</td>
+</tr>
+<tr>
+<td>爆炸</td>
+<td>400</td>
+<td>2.6</td>
+<td>100</td>
+<td>中甲</td>
+<td>550†</td>
+<td>99s</td>
+<td>0.60</td>
+<td>5</td>
+<td>8</td>
+<td>2.0</td>
+<td>逼迫走位</td>
+<td>suicide</td>
+</tr>
+<tr>
+<td>分裂</td>
+<td>300</td>
+<td>2.2</td>
+<td>40</td>
+<td>无</td>
+<td>100</td>
+<td>1.2s</td>
+<td>0.55</td>
+<td>4</td>
+<td>7</td>
+<td>2.0</td>
+<td>清场惩罚</td>
+<td>split</td>
+</tr>
+<tr>
+<td>跳跃</td>
+<td>250</td>
+<td>3.0</td>
+<td>45</td>
+<td>无</td>
+<td>140</td>
+<td>1.4s</td>
+<td>0.50</td>
+<td>4</td>
+<td>9</td>
+<td>2.0</td>
+<td>无视地形</td>
+<td>sluggish · open</td>
+</tr>
+<tr>
+<td>护盾</td>
+<td>900</td>
+<td>1.8</td>
+<td>160</td>
+<td>中甲</td>
+<td>180</td>
+<td>1.8s</td>
+<td>0.70</td>
+<td>7</td>
+<td>14</td>
+<td>3.5</td>
+<td>破防检查</td>
+<td>shielded · eliteHunt</td>
+</tr>
+<tr>
+<td>喷吐</td>
+<td>600</td>
+<td>1.6</td>
+<td>90</td>
+<td>轻甲</td>
+<td>200</td>
+<td>2.4s</td>
+<td>0.55</td>
+<td>8</td>
+<td>15</td>
+<td>3.0</td>
+<td>远程压制</td>
+<td>suppress · eliteHunt</td>
+</tr>
+<tr>
+<td>分裂小</td>
+<td>80</td>
+<td>3.2</td>
+<td>10</td>
+<td>无</td>
+<td>55</td>
+<td>1.0s</td>
+<td>0.30</td>
+<td>1</td>
+<td>1</td>
+<td>0‡</td>
+<td>由分裂产生</td>
+<td>swarm · split</td>
+</tr>
+</tbody></table>
+</div>
+<p>† 爆炸僵尸的 550 是<strong>自爆伤害</strong>，不是每秒攻击。<code>atkInterval = 99</code> 表示它不会常规攻击。
+‡ 分裂小僵尸不接受预算刷怪，只由分裂僵尸产生，威胁值无意义。</p>
+<p><strong>两只高威胁僵尸的威胁值（3.5 / 3.0）是全场最高的两个</strong>——
+它们是&quot;质量型&quot;出怪，靠行为施压而不是靠数量。这直接决定了 §7.1 里
+「阶段 3 威胁速率反而低于阶段 2」那条反直觉现象。</p>
+<h3 id="4.0.1-僵尸-→-维度映射-dims-字段"><a class="anchor" href="#4.0.1-僵尸-→-维度映射-dims-字段">#</a>4.0.1 僵尸 → 维度映射（<code>dims</code> 字段）</h3>
+<p>上表最后一列是刷怪表的<strong>推导依据</strong>：一个子关卡的维度权重直接决定
+它的刷怪表。改一个维度权重，所有下游关卡的刷怪表跟着变——
+<strong>不存在手写 82 张刷怪表这件事</strong>（<code>08-关卡方案.html</code> §5）。</p>
+<h3 id="4.0.2-控制对抗字段-本轮新增-判定见-§11"><a class="anchor" href="#4.0.2-控制对抗字段-本轮新增-判定见-§11">#</a>4.0.2 控制对抗字段（本轮新增，判定见 §11）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>稳固 <code>stab</code></th>
+<th>霸体</th>
+<th>抗冻</th>
+<th>狡诈</th>
+<th>施加击退</th>
+<th>击退类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通</td>
+<td>36</td>
+<td>—</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>25</td>
+<td>击退</td>
+</tr>
+<tr>
+<td>高速</td>
+<td>32</td>
+<td>—</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>18</td>
+<td>击退</td>
+</tr>
+<tr>
+<td>高防胖</td>
+<td><strong>90</strong></td>
+<td><strong>✓</strong></td>
+<td>0.20</td>
+<td>0.00</td>
+<td>60</td>
+<td>击倒</td>
+</tr>
+<tr>
+<td>毒液</td>
+<td>52</td>
+<td>—</td>
+<td><strong>0.60</strong></td>
+<td>0.00</td>
+<td>20</td>
+<td>击退</td>
+</tr>
+<tr>
+<td>爆炸</td>
+<td>40</td>
+<td>—</td>
+<td>0.15</td>
+<td>0.00</td>
+<td>30</td>
+<td>击退</td>
+</tr>
+<tr>
+<td>分裂</td>
+<td>34</td>
+<td>—</td>
+<td>0.10</td>
+<td>0.15</td>
+<td>15</td>
+<td>击退</td>
+</tr>
+<tr>
+<td>跳跃</td>
+<td>36</td>
+<td>—</td>
+<td>0.10</td>
+<td><strong>0.60</strong></td>
+<td>22</td>
+<td>击退</td>
+</tr>
+<tr>
+<td>护盾</td>
+<td><strong>120</strong></td>
+<td><strong>✓</strong></td>
+<td>0.35</td>
+<td>0.30</td>
+<td>45</td>
+<td>击倒</td>
+</tr>
+<tr>
+<td>喷吐</td>
+<td>48</td>
+<td>—</td>
+<td>0.20</td>
+<td>0.25</td>
+<td>35</td>
+<td>击退</td>
+</tr>
+<tr>
+<td>分裂小</td>
+<td>20</td>
+<td>—</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>8</td>
+<td>击退</td>
+</tr>
+</tbody></table>
+</div>
+<p>三条读法，<strong>这张表的价值全在这三条里</strong>：</p>
+<ol>
+<li><strong>稳固段定在 32-90，是咬住英雄击退力跨度定的</strong>（英雄实测跨度 7.7 ~ 96.8）。
+第一版照抄英雄端 <code>TGH×1.0</code> 的量纲定在 8-20，结果是<strong>任何一把像样的武器
+对任何一只非霸体僵尸都恒为 0.84</strong>——这一维根本没有咬合，玩家感觉不到稳固存在。
+数值轴要能被感觉到，两端的尺度必须先对齐。</li>
+<li><strong>霸体只免疫位移</strong>（击退 + 击倒），刻意不免疫冻结/嘲讽/减速——
+那三类各有独立的对抗属性。做成&quot;免一切控制&quot;是最省事也最糟的写法：
+它会让整个控制流一次性作废，玩家学到的教训就变成&quot;别带控制&quot;。</li>
+<li><strong>僵尸也反推英雄</strong>（<code>knock</code> 这一列）。只给英雄加稳固、僵尸这边没有对应值，
+那条属性就永远只在自己人之间比大小，没有战场意义。
+近战偏<strong>击倒</strong>（短暂失去行动，不位移），远程偏<strong>击退</strong>（位移，打乱阵型）。</li>
+</ol>
+<h3 id="4.1-阶段缩放"><a class="anchor" href="#4.1-阶段缩放">#</a>4.1 阶段缩放</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>血量倍率</th>
+<th>伤害倍率</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1 接触</td>
+<td>×1.0</td>
+<td>×1.0</td>
+</tr>
+<tr>
+<td>2 压制</td>
+<td>×1.7</td>
+<td>×1.5</td>
+</tr>
+<tr>
+<td>3 狂潮</td>
+<td>×2.8</td>
+<td>×2.2</td>
+</tr>
+</tbody></table>
+</div>
+<p>血量倍率<strong>必须略低于</strong>小队输出成长（等级 ×2.0 × 武器阶 ×1.7 = ×3.4），
+让玩家越打越轻松。初版用 4.5 → 阶段 3 堆到 80+ 只，前沿崩了。</p>
+<h3 id="4.2-生存压力实测-§5-输出"><a class="anchor" href="#4.2-生存压力实测-§5-输出">#</a>4.2 生存压力实测（§5 输出）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>阶段</th>
+<th>接触 DPS</th>
+<th>小队单只击杀 TTK</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通</td>
+<td>1</td>
+<td>75</td>
+<td>0.07s</td>
+</tr>
+<tr>
+<td>普通</td>
+<td>3</td>
+<td>165</td>
+<td>0.19s</td>
+</tr>
+<tr>
+<td>高速</td>
+<td>1</td>
+<td>88</td>
+<td>0.04s</td>
+</tr>
+<tr>
+<td>高速</td>
+<td>3</td>
+<td>193</td>
+<td>0.11s</td>
+</tr>
+<tr>
+<td>高防胖</td>
+<td>1</td>
+<td>130</td>
+<td>0.83s</td>
+</tr>
+<tr>
+<td>高防胖</td>
+<td>3</td>
+<td>286</td>
+<td><strong>2.31s</strong></td>
+</tr>
+<tr>
+<td>毒液</td>
+<td>1</td>
+<td>73</td>
+<td>0.13s</td>
+</tr>
+<tr>
+<td>毒液</td>
+<td>3</td>
+<td>161</td>
+<td>0.38s</td>
+</tr>
+<tr>
+<td>爆炸</td>
+<td>1</td>
+<td>6</td>
+<td>0.16s</td>
+</tr>
+<tr>
+<td>爆炸</td>
+<td>3</td>
+<td>12</td>
+<td>0.45s</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p>漂移修正：旧表缺了毒液/爆炸的阶段 1 两行，且高防胖 3 段写的是 2.28s（现 2.31s）、
+毒液 3 段 0.37s（现 0.38s）、爆炸 3 段 0.44s（现 0.45s）。
+差异来自本轮僵尸血量与英雄 DPS 的联动重算，逐行从 §5 输出重抄。</p>
+</blockquote>
+<p>高防胖僵尸在阶段 3 的 TTK 是 2.31 秒——<strong>这是全场最慢的一个数字</strong>，
+也正是它该有的位置：它不死，它只是占着你的输出时间。</p>
+<hr>
+<h2 id="5.-角色表-12-名"><a class="anchor" href="#5.-角色表-12-名">#</a>5. 角色表（12 名）</h2>
+<h3 id="5.1-一级属性-六属性-每角色合计恰好-150-已校验"><a class="anchor" href="#5.1-一级属性-六属性-每角色合计恰好-150-已校验">#</a>5.1 一级属性（六属性，每角色合计恰好 150，已校验）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>定位</th>
+<th>武器</th>
+<th>STR</th>
+<th>AGI</th>
+<th>TGH</th>
+<th>INT</th>
+<th>LUK</th>
+<th>CON</th>
+<th>合计</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>铁壁·罗恩</td>
+<td>tank</td>
+<td>大刀</td>
+<td>28</td>
+<td>8</td>
+<td>42</td>
+<td>14</td>
+<td>4</td>
+<td>54</td>
+<td>150</td>
+</tr>
+<tr>
+<td>磐石·格温</td>
+<td>tank</td>
+<td>长枪</td>
+<td>30</td>
+<td>12</td>
+<td>42</td>
+<td>10</td>
+<td>6</td>
+<td>50</td>
+<td>150</td>
+</tr>
+<tr>
+<td>疾风·凯</td>
+<td>meleeDps</td>
+<td>剑</td>
+<td>40</td>
+<td>28</td>
+<td>18</td>
+<td>10</td>
+<td>32</td>
+<td>22</td>
+<td>150</td>
+</tr>
+<tr>
+<td>断岳·铁牛</td>
+<td>meleeDps</td>
+<td>大刀</td>
+<td>50</td>
+<td>16</td>
+<td>26</td>
+<td>10</td>
+<td>20</td>
+<td>28</td>
+<td>150</td>
+</tr>
+<tr>
+<td>鹰眼·薇拉</td>
+<td>rangedDps</td>
+<td>狙击枪</td>
+<td>33</td>
+<td>34</td>
+<td>14</td>
+<td>16</td>
+<td>38</td>
+<td>15</td>
+<td>150</td>
+</tr>
+<tr>
+<td>弹幕·杰特</td>
+<td>rangedDps</td>
+<td>冲锋枪</td>
+<td>30</td>
+<td>38</td>
+<td>16</td>
+<td>14</td>
+<td>36</td>
+<td>16</td>
+<td>150</td>
+</tr>
+<tr>
+<td>霜语·艾拉</td>
+<td>control</td>
+<td>冷冻器</td>
+<td>14</td>
+<td>22</td>
+<td>18</td>
+<td>54</td>
+<td>22</td>
+<td>20</td>
+<td>150</td>
+</tr>
+<tr>
+<td>震地·博姆</td>
+<td>control</td>
+<td>手雷</td>
+<td>22</td>
+<td>20</td>
+<td>26</td>
+<td>34</td>
+<td>20</td>
+<td>28</td>
+<td>150</td>
+</tr>
+<tr>
+<td>圣手·莉安</td>
+<td>support</td>
+<td>手枪</td>
+<td>14</td>
+<td>20</td>
+<td>20</td>
+<td>52</td>
+<td>22</td>
+<td>22</td>
+<td>150</td>
+</tr>
+<tr>
+<td>烈焰·萨满</td>
+<td>support</td>
+<td>喷火器</td>
+<td>20</td>
+<td>18</td>
+<td>24</td>
+<td>44</td>
+<td>18</td>
+<td>26</td>
+<td>150</td>
+</tr>
+<tr>
+<td>傀儡师·诺克斯</td>
+<td>summoner</td>
+<td>回旋镖</td>
+<td>22</td>
+<td>18</td>
+<td>22</td>
+<td>46</td>
+<td>20</td>
+<td>22</td>
+<td>150</td>
+</tr>
+<tr>
+<td>蜂群·西芙</td>
+<td>summoner</td>
+<td>激光枪</td>
+<td>18</td>
+<td>22</td>
+<td>20</td>
+<td>44</td>
+<td>24</td>
+<td>22</td>
+<td>150</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>统一 150 点是硬约束。</strong> 否则&quot;哪个角色强&quot;就变成&quot;哪个角色点数多&quot;，
+阵容选择失去意义。角色差异靠<strong>分配方式</strong>体现，不靠数值膨胀。</p>
+<blockquote>
+<p><strong>100 → 150 是重新参数化，不是加强。</strong>
+总点数涨了 50%，但 §5.2 的 DPS 与有效生命相对旧值偏离全部 ≤10%
+（哨兵 §2 逐角色列出旧值/新值/Δ，基线取自 <code>c333b0d</code> 的四属性输出，最大 艾拉 +6.9%）——
+三个 BOSS 血量与 15 分钟曲线的锚点因此原封不动。
+涨出来的点数去买的是<strong>两个新属性的位置</strong>（幸运、体质），不是更高的总值。</p>
+<p>老四维的调整规律：每个角色的 STR/AGI/TGH/INT 各降一档，
+差额按定位分给 LUK 与 CON——
+输出型分给 LUK（暴击是它们的收益口），承伤型分给 CON（生命是它们的收益口），
+辅助型两边均分。所以&quot;谁该堆什么&quot;在新表里比旧表更清楚，而不是更模糊。</p>
+</blockquote>
+<h3 id="5.2-单角色基准-1-级-武器-0-阶-对普通僵尸"><a class="anchor" href="#5.2-单角色基准-1-级-武器-0-阶-对普通僵尸">#</a>5.2 单角色基准（1 级 / 武器 0 阶 / 对普通僵尸）</h3>
+<p>新增三列，因为它们现在是可读的：<strong>暴击</strong>（改由幸运驱动）、
+<strong>抗暴</strong>（韧性）、<strong>稳固</strong>（韧性）。DPS 与有效生命两列可直接对照旧表。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>武器</th>
+<th>暴击</th>
+<th>抗暴</th>
+<th>稳固</th>
+<th>DPS</th>
+<th>有效生命</th>
+<th>TTK(普通)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>鹰眼·薇拉</td>
+<td>狙击枪</td>
+<td>0.352</td>
+<td>0.042</td>
+<td>14</td>
+<td><strong>479</strong></td>
+<td>6,016</td>
+<td>0.47s</td>
+</tr>
+<tr>
+<td>疾风·凯</td>
+<td>剑</td>
+<td>0.228</td>
+<td>0.054</td>
+<td>18</td>
+<td>391</td>
+<td>8,106</td>
+<td>0.62s</td>
+</tr>
+<tr>
+<td>弹幕·杰特</td>
+<td>冲锋枪</td>
+<td>0.194</td>
+<td>0.048</td>
+<td>16</td>
+<td>324</td>
+<td>6,442</td>
+<td>0.78s</td>
+</tr>
+<tr>
+<td>断岳·铁牛</td>
+<td>大刀</td>
+<td>0.130</td>
+<td>0.078</td>
+<td>26</td>
+<td>304</td>
+<td>10,701</td>
+<td>0.78s</td>
+</tr>
+<tr>
+<td>傀儡师·诺克斯</td>
+<td>回旋镖</td>
+<td>0.180</td>
+<td>0.066</td>
+<td>22</td>
+<td>253</td>
+<td>8,582</td>
+<td>0.92s</td>
+</tr>
+<tr>
+<td>磐石·格温</td>
+<td>长枪</td>
+<td>0.074</td>
+<td>0.126</td>
+<td>42</td>
+<td>235</td>
+<td>20,240</td>
+<td>0.98s</td>
+</tr>
+<tr>
+<td>震地·博姆</td>
+<td>手雷</td>
+<td>0.130</td>
+<td>0.078</td>
+<td>26</td>
+<td>211</td>
+<td>10,701</td>
+<td>1.14s</td>
+</tr>
+<tr>
+<td>烈焰·萨满</td>
+<td>喷火器</td>
+<td>0.122</td>
+<td>0.072</td>
+<td>24</td>
+<td>190</td>
+<td>9,886</td>
+<td>1.29s</td>
+</tr>
+<tr>
+<td>蜂群·西芙</td>
+<td>激光枪</td>
+<td>0.196</td>
+<td>0.060</td>
+<td>20</td>
+<td>198</td>
+<td>8,344</td>
+<td>1.15s</td>
+</tr>
+<tr>
+<td>铁壁·罗恩</td>
+<td>大刀</td>
+<td>0.066</td>
+<td>0.126</td>
+<td>42</td>
+<td>187</td>
+<td><strong>21,565</strong></td>
+<td>1.27s</td>
+</tr>
+<tr>
+<td>圣手·莉安</td>
+<td>手枪</td>
+<td>0.138</td>
+<td>0.060</td>
+<td>20</td>
+<td>130</td>
+<td>8,344</td>
+<td>1.88s</td>
+</tr>
+<tr>
+<td>霜语·艾拉</td>
+<td>冷冻器</td>
+<td>0.138</td>
+<td>0.054</td>
+<td>18</td>
+<td>128</td>
+<td>7,616</td>
+<td>1.94s</td>
+</tr>
+</tbody></table>
+</div>
+<pre><code>DPS 区间 128 ~ 479    极差倍数 3.74x
+</code></pre>
+<blockquote>
+<p>漂移修正：旧表是四属性时代的读数（薇拉 489 / 艾拉 93 / 罗恩 22,000 有效生命）。
+六属性重配后全部重跑，<strong>极差倍数 5.26x → 5.15x</strong>，各角色相对旧值的偏离都在 ±10% 内。
+这一条不是文档里的声称，是哨兵 §2 第二张表逐角色算出来的。</p>
+<p>第二次修正（同类武器 ≤×1.3）：手枪 65→88、冷冻器 45→62、喷火器 32→23。
+这三把都是默认武器，所以莉安 96→130、艾拉 93→128、萨满 264→190，<strong>极差 5.15x → 3.74x</strong>。
+这三人的漂移基线按用户裁决重取，BOSS 锚点改由 §6.2 的 ±15% 校准守（仍全部达标）。</p>
+</blockquote>
+<p><strong>3.74x 是刻意保留的。</strong> 若把全角色 DPS 压到同一水平，
+&quot;选谁&quot;就只剩下外观差异。真正需要压平的是<strong>同定位内</strong>的极差：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>定位</th>
+<th>组内极差</th>
+<th>判定</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>tank</td>
+<td>1.26x</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>meleeDps</td>
+<td>1.29x</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>rangedDps</td>
+<td>1.48x</td>
+<td>✓（修正前 2.53x）</td>
+</tr>
+<tr>
+<td>summoner</td>
+<td>1.28x</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>control</td>
+<td>1.65x</td>
+<td>⚠ 见下</td>
+</tr>
+<tr>
+<td>support</td>
+<td>1.46x</td>
+<td>✓（上一版 2.75x）</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="5.3-关于-control-的-1.65x"><a class="anchor" href="#5.3-关于-control-的-1.65x">#</a>5.3 关于 control 的 1.65x</h3>
+<p><strong>这组的极差是设计意图，不是失衡。</strong> 上一版 control 2.27x、support 2.75x；
+同类武器拉平后冷冻器与手枪各抬了约 35%、萨满的喷火器降了约 28%，两组都收窄了。</p>
+<p>霜语·艾拉（冷冻器 DPS 128）和圣手·莉安（手枪 DPS 130）仍是全场输出最低的两个角色，
+但她们的技能是<strong>全场冻结 3 秒</strong>和<strong>全队持续治疗</strong>——
+这两个技能的价值不能用 DPS 衡量。她们的 DPS 低是<strong>代价</strong>，不是缺陷。</p>
+<p>如果给她们补 DPS，正确的做法是削弱她们的技能，而不是提升伤害——
+否则&quot;带控制/治疗&quot;就变成了没有代价的选择。</p>
+<h3 id="5.4-技能与-ai-参数"><a class="anchor" href="#5.4-技能与-ai-参数">#</a>5.4 技能与 AI 参数</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>技能</th>
+<th>冷却</th>
+<th>持续</th>
+<th>倍率</th>
+<th>索敌</th>
+<th>脱战</th>
+<th>交战×</th>
+<th>优先级</th>
+<th>后撤</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>铁壁·罗恩</td>
+<td>磐石壁垒（全队减伤50%）</td>
+<td>20</td>
+<td>6</td>
+<td>1.4</td>
+<td>14</td>
+<td>22</td>
+<td>1.2</td>
+<td>最近</td>
+<td>永不</td>
+</tr>
+<tr>
+<td>磐石·格温</td>
+<td>穿刺阵列（无视40%护甲）</td>
+<td>16</td>
+<td>4</td>
+<td>2.2</td>
+<td>16</td>
+<td>24</td>
+<td>1.0</td>
+<td>最近</td>
+<td>永不</td>
+</tr>
+<tr>
+<td>疾风·凯</td>
+<td>疾风连斩（攻速翻倍）</td>
+<td>12</td>
+<td>3</td>
+<td>2.6</td>
+<td>18</td>
+<td>26</td>
+<td>1.1</td>
+<td>最弱</td>
+<td>25%</td>
+</tr>
+<tr>
+<td>断岳·铁牛</td>
+<td>裂地斩（击退+撕裂）</td>
+<td>14</td>
+<td>2</td>
+<td>3.0</td>
+<td>15</td>
+<td>22</td>
+<td>1.2</td>
+<td>最强</td>
+<td>20%</td>
+</tr>
+<tr>
+<td>鹰眼·薇拉</td>
+<td>致命标记（全队+35%）</td>
+<td>18</td>
+<td>5</td>
+<td>2.4</td>
+<td>40</td>
+<td>55</td>
+<td>0.8</td>
+<td>最强</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>弹幕·杰特</td>
+<td>弹幕压制（换弹归零）</td>
+<td>15</td>
+<td>5</td>
+<td>1.9</td>
+<td>24</td>
+<td>32</td>
+<td>0.85</td>
+<td>最近</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>霜语·艾拉</td>
+<td>绝对零度（全场冻结3s）</td>
+<td>22</td>
+<td>3</td>
+<td>1.5</td>
+<td>20</td>
+<td>28</td>
+<td>0.8</td>
+<td>最近</td>
+<td>35%</td>
+</tr>
+<tr>
+<td>震地·博姆</td>
+<td>连环爆破（3枚+减速）</td>
+<td>18</td>
+<td>4</td>
+<td>2.8</td>
+<td>26</td>
+<td>34</td>
+<td>0.9</td>
+<td>最近</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>圣手·莉安</td>
+<td>生命涌流（全队治疗）</td>
+<td>20</td>
+<td>4</td>
+<td>1.0</td>
+<td>22</td>
+<td>30</td>
+<td>0.75</td>
+<td>最弱</td>
+<td>40%</td>
+</tr>
+<tr>
+<td>烈焰·萨满</td>
+<td>战意图腾（全队+30%攻）</td>
+<td>24</td>
+<td>8</td>
+<td>1.7</td>
+<td>18</td>
+<td>26</td>
+<td>1.0</td>
+<td>最近</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>傀儡师·诺克斯</td>
+<td>骸骨傀儡（召唤2只）</td>
+<td>26</td>
+<td>10</td>
+<td>1.8</td>
+<td>20</td>
+<td>28</td>
+<td>0.9</td>
+<td>最近</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>蜂群·西芙</td>
+<td>纳米蜂群（链式+5目标）</td>
+<td>16</td>
+<td>6</td>
+<td>2.1</td>
+<td>28</td>
+<td>36</td>
+<td>0.85</td>
+<td>最弱</td>
+<td>35%</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>这张表就是&quot;角色差异化的全部&quot;</strong>——12 个角色共用同一套 AI 代码，
+加一个新角色 = 加一行数据，不是加一个类。</p>
+<hr>
+<h2 id="6.-boss-规格与反向校准"><a class="anchor" href="#6.-boss-规格与反向校准">#</a>6. BOSS 规格与反向校准</h2>
+<h3 id="6.1-boss-数值"><a class="anchor" href="#6.1-boss-数值">#</a>6.1 BOSS 数值</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>BOSS</th>
+<th>时间</th>
+<th>血量</th>
+<th>护甲</th>
+<th>速度</th>
+<th>攻击</th>
+<th>半径</th>
+<th>目标击杀</th>
+<th>实测击杀</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>腐化重装兵</td>
+<td>5:00</td>
+<td>48,500</td>
+<td>200</td>
+<td>2.0</td>
+<td>260</td>
+<td>1.6</td>
+<td>30s</td>
+<td><strong>31.0s</strong></td>
+</tr>
+<tr>
+<td>毒母·薇丝</td>
+<td>10:00</td>
+<td>70,000</td>
+<td>320</td>
+<td>2.2</td>
+<td>380</td>
+<td>2.0</td>
+<td>45s</td>
+<td><strong>45.8s</strong></td>
+</tr>
+<tr>
+<td>尸潮之主·卡俄斯</td>
+<td>15:00</td>
+<td>94,000</td>
+<td>480</td>
+<td>2.4</td>
+<td>520</td>
+<td>2.6</td>
+<td>60s</td>
+<td><strong>51.2s</strong></td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="6.2-反向校准表-解析式-vs-时间轴模拟"><a class="anchor" href="#6.2-反向校准表-解析式-vs-时间轴模拟">#</a>6.2 反向校准表（解析式 vs 时间轴模拟）</h3>
+<p><strong>校准必须用【BOSS 登场那一刻】的真实等级与武器阶，不能手填。</strong></p>
+<p>这一条是被坑出来的：初版手填 <code>[2, 3, 5]</code> 级，而时间轴实测是 <code>[4, 5, 5]</code>。
+于是&quot;校准表全部通过 ±2%&quot;和&quot;模拟器里 BOSS 1 十八秒就死&quot;同时成立，两边对不上账，
+而错误被那张&quot;通过&quot;的表掩盖了整整一轮。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>登场等级</th>
+<th>武器阶</th>
+<th>解析式 DPS</th>
+<th>实测 DPS</th>
+<th>目标</th>
+<th>实测秒数</th>
+<th>血量</th>
+<th>判定</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>3</td>
+<td>1</td>
+<td>1,022</td>
+<td><strong>1,565</strong></td>
+<td>30s</td>
+<td>31.0s</td>
+<td>48,500</td>
+<td>✓ 达标</td>
+</tr>
+<tr>
+<td>2</td>
+<td>4</td>
+<td>1</td>
+<td>1,309</td>
+<td><strong>1,528</strong></td>
+<td>45s</td>
+<td>45.8s</td>
+<td>70,000</td>
+<td>✓ 达标</td>
+</tr>
+<tr>
+<td>3</td>
+<td>5</td>
+<td>2</td>
+<td>1,542</td>
+<td><strong>1,836</strong></td>
+<td>60s</td>
+<td>51.2s</td>
+<td>94,000</td>
+<td>✓ 达标</td>
+</tr>
+</tbody></table>
+</div>
+<pre><code>校准方法：BOSS 血量 = 实测 DPS × 目标秒数，容差 ±15%
+</code></pre>
+<blockquote>
+<p>漂移修正：旧表的登场等级写的是 <code>[4, 5, 5]</code>、实测秒数 <code>27.9 / 37.2 / 53.5</code>、
+阶段 2 判定&quot;偏易 83%&quot;。六属性重配与局内自动升阶之后，时间轴上的实际等级
+变成了 <code>[3, 4, 5]</code>（等级改由存活时长驱动，节奏与旧的&quot;买阶&quot;不同），
+三个 BOSS 的实测秒数也随之上移。<strong>现在三个阶段全部达标，不再有&quot;偏易&quot;的那一格</strong>——
+两个 DPS 之间不再需要解释&quot;为什么阶段 2 特别容易&quot;。</p>
+</blockquote>
+<p><strong>两个 DPS 都列出来，是因为它们的差本身有信息量：</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>情况</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>实测 &lt; 解析式</td>
+<td>BOSS 战被杂兵稀释了输出 → 这就是&quot;BOSS 登场清场&quot;的理由</td>
+</tr>
+<tr>
+<td>实测 &gt; 解析式</td>
+<td>溢出伤害被顺延打在了 BOSS 上 → AOE 武器的收益在这里体现</td>
+</tr>
+</tbody></table>
+</div>
+<p>三个阶段实测都高于解析式，因为清场后全队 5 人的溢出伤害全部灌在了 BOSS 身上
+（清场前它们会分散到杂兵上）。</p>
+<h3 id="6.3-小队-dps-曲线-vs-需求"><a class="anchor" href="#6.3-小队-dps-曲线-vs-需求">#</a>6.3 小队 DPS 曲线 vs 需求</h3>
+<p>按 BOSS 登场时刻（而非阶段开始时刻）计算：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>登场等级</th>
+<th>武器阶</th>
+<th>小队 DPS</th>
+<th>BOSS 需求</th>
+<th>比值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>3</td>
+<td>1</td>
+<td>1,565</td>
+<td>1,617</td>
+<td>0.97x ⚠</td>
+</tr>
+<tr>
+<td>2</td>
+<td>4</td>
+<td>1</td>
+<td>1,528</td>
+<td>1,556</td>
+<td>0.98x ⚠</td>
+</tr>
+<tr>
+<td>3</td>
+<td>5</td>
+<td>2</td>
+<td>1,836</td>
+<td>1,567</td>
+<td>1.17x ✓</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>这张表看着像&quot;打不动&quot;，但它与 §6.2 不矛盾，读懂这两条的差别很重要。</strong></p>
+<p>§6.3 的分子是<strong>只打 BOSS 那一刻的瞬时小队 DPS</strong>（31.0s 那一段的平均），
+分母是<strong>整场 BOSS 战需要的平均 DPS</strong>（血量 / 目标秒数）。
+0.97x 意味着&quot;光靠常驻输出打不死&quot;，而实际通关靠的是<strong>技能窗口</strong>：
+全队技能爆发叠在清场后的 10-20 秒里，把这段的 DPS 抬到需求线以上——
+所以实测秒数 31.0s 落在目标 30s 的 ±15% 容差内。</p>
+<blockquote>
+<p>旧版这一节写的是&quot;三个比值 1.07 / 1.21 / 1.12，余量 7%-21%，没有一个是刚好卡死的&quot;。
+那组数字是在旧登场等级下算的，且当时并把 6.2 的&quot;偏易&quot;判定当成正常。
+现在两个都修了：<strong>比值低于 1 是常态，它衡量的是&quot;常驻输出&quot;而不是&quot;通关能力&quot;</strong>，
+真正该看的判据是 §6.2 的实测秒数。把 6.3 当成通关判据会得出&quot;第一关打不动&quot;的假警报。</p>
+</blockquote>
+<h3 id="6.4-配平锚点为什么是-boss-而不是僵尸"><a class="anchor" href="#6.4-配平锚点为什么是-boss-而不是僵尸">#</a>6.4 配平锚点为什么是 BOSS 而不是僵尸</h3>
+<p>推导链条是<strong>反向</strong>的：</p>
+<pre><code>BOSS 血量 → 反推必须 N 秒内击杀 → 小队 DPS 目标
+         → 单角色 DPS → 武器伤害 → 僵尸血量
+</code></pre>
+<p><strong>修改规则：只在小队 DPS 公式或成长曲线变动后重跑校准，不要凭手感改。</strong>
+手填的第一版（6万/18万/48万）比实测需求高 3-6 倍，第 1 个 BOSS 就全灭。</p>
+<hr>
+<h2 id="7.-关卡与经济"><a class="anchor" href="#7.-关卡与经济">#</a>7. 关卡与经济</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>项</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>常规阶段总时长</td>
+<td>900s（3 × 300s）</td>
+</tr>
+<tr>
+<td>BOSS 战窗口</td>
+<td>90s</td>
+</tr>
+<tr>
+<td>循环总长 <code>RUN_END</code></td>
+<td>990s</td>
+</tr>
+<tr>
+<td>胜利条件</td>
+<td>三个 BOSS 全部击杀</td>
+</tr>
+<tr>
+<td>刷怪距离</td>
+<td>25 格（视口边缘）</td>
+</tr>
+<tr>
+<td>近战接触距离</td>
+<td>1.2 格</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>这一整节描述的是&quot;一次 run 之内&quot;的数值。</strong>
+关卡与关卡之间怎么变难，走的是完全另一条机制（威胁预算 + 维度权重），
+见 §7.0。</p>
+</blockquote>
+<h3 id="7.0-场景层-82-个子关卡从哪来-本轮新增"><a class="anchor" href="#7.0-场景层-82-个子关卡从哪来-本轮新增">#</a>7.0 场景层：82 个子关卡从哪来（本轮新增）</h3>
+<p><strong>旧版把这一层压成了一局。</strong> 新版外面套了「世界地图 → 6 场景 → 82 子关卡」，
+每个子关卡 = 一次 15 分钟 run（即上表）。这一层的数字全部来自
+<code>src/data/scenes.ts</code> 的 <code>expandScene()</code>，不是手填。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>子关卡</th>
+<th>首关威胁</th>
+<th>终关威胁</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>城市废墟</td>
+<td>15</td>
+<td>3.00</td>
+<td>6.05</td>
+</tr>
+<tr>
+<td>原始丛林</td>
+<td>15</td>
+<td>3.00</td>
+<td>6.16</td>
+</tr>
+<tr>
+<td>沼泽疫地</td>
+<td>13</td>
+<td>3.00</td>
+<td>5.54</td>
+</tr>
+<tr>
+<td>荒漠废土</td>
+<td>13</td>
+<td>3.00</td>
+<td>5.54</td>
+</tr>
+<tr>
+<td>雪原冻土</td>
+<td>13</td>
+<td>3.00</td>
+<td>5.54</td>
+</tr>
+<tr>
+<td>军事禁区</td>
+<td>13</td>
+<td>3.00</td>
+<td>5.54</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td><strong>82</strong></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>同场景内威胁预算只涨 ×2.05</strong>（丛林：3.00 → 6.16）。
+难度增长的另一半来自<strong>构成</strong>：活跃维度从 1 个变成 3 个，且权重全开。
+这就是&quot;不堆数值&quot;在数值层的具体实现——玩家卡住时需要换阵容，而不是刷数值。</p>
+<h3 id="7.0.1-三档难度-c4"><a class="anchor" href="#7.0.1-三档难度-c4">#</a>7.0.1 三档难度（C4）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>档</th>
+<th>威胁乘数</th>
+<th>权重上移</th>
+<th>环境修正</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通</td>
+<td>×1.0</td>
+<td>0 档</td>
+<td>无</td>
+</tr>
+<tr>
+<td>困难</td>
+<td>×1.25</td>
+<td>1 档</td>
+<td>无</td>
+</tr>
+<tr>
+<td>噩梦</td>
+<td>×1.5</td>
+<td>2 档</td>
+<td>毒池不消失 / 无补给箱 / BOSS 提前 60 秒登场（按场景取其一）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>权重上移改的是&quot;次级维度&quot;，不改主维度。</strong> 实测丛林第 10 关：</p>
+<pre><code>普通档  { swarm: 8,   poison: 7,   rush: 6   }
+困难档  { swarm: 8,   poison: 7.3, rush: 6.5 }   ← 主维度不动，配角抬升
+</code></pre>
+<p>于是同一关在三档下是<strong>不同的战场</strong>，而不是&quot;同一场战斗里更肉的同一种僵尸&quot;。
+噩梦档则几乎把三维拉平——&quot;集中资源解主维度、次要维度硬吃&quot;的策略在这里失效。</p>
+<p><strong>僵尸与 BOSS 的个体数值一个都没动</strong>，改的全是预算与维度权重。
+这是刻意的：一旦个体数值随难度变，§6 的 BOSS 血量锚点校准立刻全部失效。</p>
+<h3 id="7.0.2-维度与技能表在哪"><a class="anchor" href="#7.0.2-维度与技能表在哪">#</a>7.0.2 维度与技能表在哪</h3>
+<p>本节不重复它们，避免两处维护：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>内容</th>
+<th>位置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>13 个挑战维度的定义、判据、地形 × 僵尸构成</td>
+<td><code>08-关卡方案.html</code> §2</td>
+</tr>
+<tr>
+<td>15 个答案标签、13 个维度的覆盖矩阵</td>
+<td><code>09-角色与成长.html</code> §2 / §4</td>
+</tr>
+<tr>
+<td>技能机械字段（<code>piercePct</code> / <code>freezeDuration</code> / <code>summons</code> …）</td>
+<td><code>09-角色与成长.html</code> §1 / §3</td>
+</tr>
+<tr>
+<td>专精树 <code>SpecEffect</code> 与 12 棵树的节点</td>
+<td><code>09-角色与成长.html</code> §5</td>
+</tr>
+<tr>
+<td>阵容覆盖枚举结果</td>
+<td><code>09-角色与成长.html</code> §7</td>
+</tr>
+</tbody></table>
+</div>
+<p>不写进本文的原因是它们<strong>不是数值表</strong>——它们是&quot;能力的形状&quot;，
+判断它们的标准是&quot;这个形状能不能解这个维度&quot;，而不是&quot;这个数字比那个大&quot;。</p>
+<h3 id="7.1-刷怪速率-威胁值-秒"><a class="anchor" href="#7.1-刷怪速率-威胁值-秒">#</a>7.1 刷怪速率（威胁值/秒）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>起始</th>
+<th>结束</th>
+<th>出怪构成（权重）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1 接触</td>
+<td>3.0</td>
+<td>4.0</td>
+<td>普通 75 / 高速 25</td>
+</tr>
+<tr>
+<td>2 压制</td>
+<td>4.5</td>
+<td>6.0</td>
+<td>普通 45 / 高速 18 / 毒液 14 / 分裂 12 / 爆炸 11</td>
+</tr>
+<tr>
+<td>3 狂潮</td>
+<td>4.2</td>
+<td>4.8</td>
+<td>普通 32 / 高速 16 / 胖 14 / 毒液 12 / 分裂 10 / 爆炸 9 / 跳跃 7</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>阶段 3 的威胁速率低于阶段 2 的终值，这不是笔误。</strong>
+阶段 3 出怪表里胖僵尸（威胁 3.0）占比更高，同样的威胁值对应
+<strong>更少的只数、更高的单体质量</strong>。表上看速率降了，实际压力是升的。</p>
+<h3 id="7.1.1-boss-战期间的刷怪乘数-分阶段"><a class="anchor" href="#7.1.1-boss-战期间的刷怪乘数-分阶段">#</a>7.1.1 BOSS 战期间的刷怪乘数：<strong>分阶段</strong></h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>BOSS</th>
+<th>乘数</th>
+<th>目标场上只数</th>
+<th>实测</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>腐化重装兵</td>
+<td>0.18</td>
+<td>3</td>
+<td>3.0</td>
+</tr>
+<tr>
+<td>毒母·薇丝</td>
+<td>0.15</td>
+<td>4.5</td>
+<td>5.1</td>
+</tr>
+<tr>
+<td>尸潮之主·卡俄斯</td>
+<td><strong>0.70</strong></td>
+<td>6</td>
+<td>4.7</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>三个数差这么多，是因为它们必须差这么多。</strong>
+刷怪预算是按【威胁值】计的，而三个阶段的出怪表单位威胁对应的【身体数】完全不同：</p>
+<pre><code>阶段 2 是数量型（普通/高速，威胁 1.0-1.2）→ 同样预算堆出更多只
+阶段 3 是质量型（胖僵尸威胁 3.0）        → 同样预算只有一半的只数
+</code></pre>
+<p>阶段 3 的倍率是阶段 2 的 <strong>4.7 倍</strong>，但对应的只数只多 33%。
+<strong>倍数骗人，只数不骗人。</strong></p>
+<p>初版三个阶段都用 0.35，结果是关底战最低血量 96%、而第二场 BOSS 只有 55%——
+<strong>难度峰跑到了第二场，关底反而成了过场。</strong> 分阶段之后曲线才单调递增。</p>
+<h3 id="7.2-等级与武器-本轮改-局内零购买"><a class="anchor" href="#7.2-等级与武器-本轮改-局内零购买">#</a>7.2 等级与武器（本轮改：<strong>局内零购买</strong>）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>项</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>等级时间表 <code>LEVEL_TIME</code></td>
+<td>[0, 90, 240, 450, 660] 秒</td>
+</tr>
+<tr>
+<td>每级效果</td>
+<td>+8% 基础属性，+25% 最终伤害</td>
+</tr>
+<tr>
+<td>武器阶</td>
+<td>由等级自动带动：[1, 3, 5] 级 → 0 / 1 / 2 阶</td>
+</tr>
+<tr>
+<td>实测满级时刻</td>
+<td>第 11:00 分钟</td>
+</tr>
+<tr>
+<td>实测满武器阶</td>
+<td>第 11:00 分钟</td>
+</tr>
+<tr>
+<td>实测一局产出</td>
+<td>10,313 金钱（<strong>带出关卡</strong>，局内不使用）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>这一节是本轮改动最大的地方：局内不再有购买动作。</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>旧版</th>
+<th>本轮</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>等级</td>
+<td>花积分买</td>
+<td><strong>按存活时长自动涨</strong></td>
+</tr>
+<tr>
+<td>武器阶</td>
+<td>花金钱买（300/700/1500）</td>
+<td><strong>随等级自动涨</strong></td>
+</tr>
+<tr>
+<td>金钱</td>
+<td>局内花掉</td>
+<td><strong>只累积，结算带出</strong></td>
+</tr>
+<tr>
+<td>积分</td>
+<td>参与成长</td>
+<td>降级为<strong>结算得分</strong>，不参与任何成长计算</td>
+</tr>
+</tbody></table>
+</div>
+<p>于是&quot;打得轻不轻松&quot;不再决定&quot;你什么时候变强&quot;——<strong>变强只由时间驱动</strong>。
+节奏对齐旧版实测的 8-11 分钟曲线，满级定在 11:00，之后还有 4 分钟以上的&quot;完全体&quot;体验期。</p>
+<h4 id="7.2.1-金钱买到的是新答案-不是新数字"><a class="anchor" href="#7.2.1-金钱买到的是新答案-不是新数字">#</a>7.2.1 金钱买到的是新答案，不是新数字</h4>
+<p>这是本轮最要紧的一条边界，写在 <code>progression.ts</code> 的文件头：</p>
+<pre><code>买【种类】 → 给的是新答案：新武器意味着新的维度解（新的穿透/控制/清场手段）
+买【阶/等级/属性】 → 给的是新数字：同一套答案打得更疼
+</code></pre>
+<p>后者会直接架空本作的设计前提——<strong>卡住只能换阵容</strong>。
+所以打不过回去刷，打开的是<strong>选项</strong>，不是<strong>强度</strong>。</p>
+<h3 id="7.2.2-局外商店-progression.ts-的-shop"><a class="anchor" href="#7.2.2-局外商店-progression.ts-的-shop">#</a>7.2.2 局外商店（<code>progression.ts</code> 的 <code>SHOP</code>）</h3>
+<p>军械库卖的是<strong>装备本身</strong>（买断、全队共享）。14 把武器按&quot;能替代多少别的武器&quot;定价（不按阶），
+5 种道具是非消耗品，装备后每局按条件自动触发一次。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>件数</th>
+<th>价位区间</th>
+<th>合计</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>武器解锁</td>
+<td>14</td>
+<td>800 ~ 16,800</td>
+<td>126,000</td>
+</tr>
+<tr>
+<td>道具解锁</td>
+<td>5</td>
+<td>2,400 ~ 4,800</td>
+<td>16,800</td>
+</tr>
+<tr>
+<td><strong>全解锁</strong></td>
+<td><strong>19</strong></td>
+<td></td>
+<td><strong>142,800</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>按一局 10,313 金钱计：<strong>解锁全部内容 ≈ 14 局 ≈ 4 小时</strong>（<code>clearsToUnlockAll()</code>）。
+这个长度是<strong>刻意压短</strong>的：商店卖的是【选项】，选项必须来得早，
+否则玩家在没得选的时候就先被拖去做长期投入了。</p>
+<p>价位是对着<strong>实测产出</strong>定的，不是拍的：第一版对着 <code>MONEY_PER_CLEAR = 620</code> 定价，
+而那个常量是第一轮&quot;局内购买&quot;时代的遗留值，实测产出是它的 <strong>16 倍</strong>——
+于是 33,900 的总价三局就能买空。整表乘 4 之后才落在 14 局上下。</p>
+<blockquote>
+<p>常量 <code>MONEY_PER_CLEAR</code> 只是给文档引用的快照，<strong>真源永远是模拟器</strong>：
+<code>balance-check.ts</code> §12c 直接调 <code>simulate()</code> 取实时值，并在与常量不一致时打 ✗。
+这道自检是有来历的——数字一旦有了&quot;手抄&quot;的入口，就一定会腐坏。</p>
+</blockquote>
+<h3 id="7.2.3-局外成长的两条线-长度刻意错开"><a class="anchor" href="#7.2.3-局外成长的两条线-长度刻意错开">#</a>7.2.3 局外成长的两条线（长度刻意错开）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>线</th>
+<th>货币</th>
+<th>一局产出</th>
+<th>满线所需</th>
+<th>折合时长</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>军械库</td>
+<td>金钱</td>
+<td>10,313</td>
+<td>14 局</td>
+<td>≈ 4 小时</td>
+</tr>
+<tr>
+<td>军衔（五星上将）</td>
+<td>荣誉值</td>
+<td>11.2/人</td>
+<td>254 局</td>
+<td>≈ 63.5 小时</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>最短的是军械库，所以玩家最先到手的是选项，长期投入的是军衔。</strong>
+技能点线随 C7-3 删除。详细推导见 §12。</p>
+<h3 id="7.3-增益道具"><a class="anchor" href="#7.3-增益道具">#</a>7.3 增益道具</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>道具</th>
+<th>持续</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>防御盾</td>
+<td>15s</td>
+<td>受到伤害 -50%</td>
+</tr>
+<tr>
+<td>加速</td>
+<td>15s</td>
+<td>移动速度 +60%</td>
+</tr>
+<tr>
+<td>增伤</td>
+<td>15s</td>
+<td>造成伤害 +40%</td>
+</tr>
+<tr>
+<td>加血</td>
+<td>15s</td>
+<td>立即回复 40% 最大生命</td>
+</tr>
+<tr>
+<td>冷却缩减</td>
+<td>15s</td>
+<td>技能冷却 -40%</td>
+</tr>
+</tbody></table>
+</div>
+<hr>
+<h2 id="8.-15-分钟全程模拟-§6-实测输出-均衡阵容"><a class="anchor" href="#8.-15-分钟全程模拟-§6-实测输出-均衡阵容">#</a>8. 15 分钟全程模拟（§6 实测输出，均衡阵容）</h2>
+<pre><code>阵容：[铁壁·罗恩 · 疾风·凯 · 鹰眼·薇拉 · 霜语·艾拉 · 圣手·莉安]
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>时间</th>
+<th>场上</th>
+<th>存活</th>
+<th>队伍血量</th>
+<th>累计击杀</th>
+<th>等级</th>
+<th>DPS</th>
+<th>BOSS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0:00</td>
+<td>0</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>1:00</td>
+<td>5</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>175</td>
+<td>1</td>
+<td>614</td>
+<td></td>
+</tr>
+<tr>
+<td>2:00</td>
+<td>3</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>372</td>
+<td>2</td>
+<td>612</td>
+<td></td>
+</tr>
+<tr>
+<td>3:00</td>
+<td>4</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>576</td>
+<td>2</td>
+<td>734</td>
+<td></td>
+</tr>
+<tr>
+<td>4:00</td>
+<td>6</td>
+<td>5/5</td>
+<td><strong>95.2%</strong></td>
+<td>789</td>
+<td>3</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>5:00</td>
+<td>1</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>1021</td>
+<td>3</td>
+<td>764</td>
+<td>腐化重装兵 100%</td>
+</tr>
+<tr>
+<td>5:10</td>
+<td>8</td>
+<td>5/5</td>
+<td>99.6%</td>
+<td>1022</td>
+<td>3</td>
+<td>1464</td>
+<td>腐化重装兵 76%</td>
+</tr>
+<tr>
+<td>5:20</td>
+<td>15</td>
+<td>5/5</td>
+<td>99.0%</td>
+<td>1023</td>
+<td>3</td>
+<td>1716</td>
+<td>腐化重装兵 43%</td>
+</tr>
+<tr>
+<td>5:30</td>
+<td>18</td>
+<td>5/5</td>
+<td>95.5%</td>
+<td>1028</td>
+<td>3</td>
+<td>1716</td>
+<td>腐化重装兵 9%</td>
+</tr>
+<tr>
+<td>6:00</td>
+<td>0</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>1071</td>
+<td>3</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>7:00</td>
+<td>30</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>1206</td>
+<td>3</td>
+<td>1226</td>
+<td></td>
+</tr>
+<tr>
+<td>8:00</td>
+<td>34</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>1508</td>
+<td>4</td>
+<td>1920</td>
+<td></td>
+</tr>
+<tr>
+<td>9:00</td>
+<td>32</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>1813</td>
+<td>4</td>
+<td>1522</td>
+<td></td>
+</tr>
+<tr>
+<td>10:00</td>
+<td>7</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>2143</td>
+<td>4</td>
+<td>1410</td>
+<td>毒母·薇丝 100%</td>
+</tr>
+<tr>
+<td>10:10</td>
+<td>10</td>
+<td>5/5</td>
+<td>99.7%</td>
+<td>2149</td>
+<td>4</td>
+<td>1556</td>
+<td>毒母·薇丝 85%</td>
+</tr>
+<tr>
+<td>10:20</td>
+<td>14</td>
+<td>5/5</td>
+<td>98.1%</td>
+<td>2151</td>
+<td>4</td>
+<td>1556</td>
+<td>毒母·薇丝 63%</td>
+</tr>
+<tr>
+<td>10:30</td>
+<td>20</td>
+<td>5/5</td>
+<td><strong>86.7%</strong></td>
+<td>2152</td>
+<td>4</td>
+<td>1556</td>
+<td>毒母·薇丝 41%</td>
+</tr>
+<tr>
+<td>10:40</td>
+<td>22</td>
+<td>5/5</td>
+<td>95.3%</td>
+<td>2156</td>
+<td>4</td>
+<td>1556</td>
+<td>毒母·薇丝 19%</td>
+</tr>
+<tr>
+<td>11:00</td>
+<td>0</td>
+<td>5/5</td>
+<td><strong>80.8%</strong></td>
+<td>2191</td>
+<td>5</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>12:00</td>
+<td>5</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>2325</td>
+<td>5</td>
+<td>2281</td>
+<td></td>
+</tr>
+<tr>
+<td>13:00</td>
+<td>11</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>2558</td>
+<td>5</td>
+<td>1981</td>
+<td></td>
+</tr>
+<tr>
+<td>14:00</td>
+<td>24</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>2805</td>
+<td>5</td>
+<td>2159</td>
+<td></td>
+</tr>
+<tr>
+<td>15:00</td>
+<td>3</td>
+<td>5/5</td>
+<td>100.0%</td>
+<td>3064</td>
+<td>5</td>
+<td>868</td>
+<td>尸潮之主·卡俄斯 100%</td>
+</tr>
+<tr>
+<td>15:10</td>
+<td>3</td>
+<td>5/5</td>
+<td>96.1%</td>
+<td>3064</td>
+<td>5</td>
+<td>1825</td>
+<td>尸潮之主·卡俄斯 85%</td>
+</tr>
+<tr>
+<td>15:20</td>
+<td>3</td>
+<td>5/5</td>
+<td>99.4%</td>
+<td>3064</td>
+<td>5</td>
+<td>1825</td>
+<td>尸潮之主·卡俄斯 66%</td>
+</tr>
+<tr>
+<td>15:30</td>
+<td>3</td>
+<td>5/5</td>
+<td>94.5%</td>
+<td>3064</td>
+<td>5</td>
+<td>1825</td>
+<td>尸潮之主·卡俄斯 46%</td>
+</tr>
+<tr>
+<td>15:40</td>
+<td>3</td>
+<td>5/5</td>
+<td>96.4%</td>
+<td>3064</td>
+<td>5</td>
+<td>1825</td>
+<td>尸潮之主·卡俄斯 27%</td>
+</tr>
+<tr>
+<td>15:50</td>
+<td>3</td>
+<td>5/5</td>
+<td>99.1%</td>
+<td>3064</td>
+<td>5</td>
+<td>1825</td>
+<td>尸潮之主·卡俄斯 8%</td>
+</tr>
+<tr>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td><strong>✓ 通关</strong></td>
+</tr>
+</tbody></table>
+</div>
+<pre><code>最终：通关  总击杀 3,083  剩余金钱 10,313  总积分 4,168  阵亡：无
+BOSS：腐化重装兵 → 毒母·薇丝 → 尸潮之主·卡俄斯
+</code></pre>
+<blockquote>
+<p><strong>「等级」这一列是本轮改动最大的读数。</strong> 旧版等级是花积分买的，读数取决于
+玩家什么时候攒够钱；现在它由 <code>LEVEL_TIME = [0, 90, 240, 450, 660]</code> 直接决定，
+所以 1 级 → 2 级恒定在第 1:30，满级恒定在 11:00。<strong>等级不再是决策，是节拍。</strong></p>
+</blockquote>
+<h3 id="8.1-这张表能说明什么"><a class="anchor" href="#8.1-这张表能说明什么">#</a>8.1 这张表<strong>能</strong>说明什么</h3>
+<p>清怪速率始终高于刷怪速率：常规阶段场上在 0-34 只之间波动，从没出现过雪崩。
+三个 BOSS 分别在 31.0s / 45.8s / 51.2s 击杀，对目标 30/45/60 秒的偏离是
+<strong>+3.3% / +1.8% / -14.7%</strong>，全部落在 ±15% 容差内。<strong>配平成立。</strong></p>
+<blockquote>
+<p><strong>注意这是&quot;单场景 15 分钟基线&quot;</strong>，即 §7.0 里 82 个子关卡中
+<strong>同一套 threatBudget 曲线</strong>下的读数。场景层改的是刷怪表构成与维度权重，
+不改 §4 的僵尸数值与 §6 的 BOSS 血量——所以这张表对每一关都成立。
+唯一不成立的是噩梦档：威胁预算 ×1.5，读数会整体上移，需要 M2 才能量。</p>
+</blockquote>
+<h3 id="8.2-这张表不说明什么-必读"><a class="anchor" href="#8.2-这张表不说明什么-必读">#</a>8.2 这张表<strong>不</strong>说明什么（必读）</h3>
+<p>全程最低血量 87.0%，且只在 BOSS 窗口里掉——常规阶段基本挂在 100%。
+<strong>这不是因为小队太强，是因为模拟器结构上打不到人。</strong></p>
+<p>见 §10。<strong>这是本文最重要的一条，不要跳过。</strong></p>
+<h2 id="9.-多阵容-×-多种子鲁棒性测试"><a class="anchor" href="#9.-多阵容-×-多种子鲁棒性测试">#</a>9. 多阵容 × 多种子鲁棒性测试</h2>
+<pre><code>20 个随机种子 × 7 套阵容 = 140 次完整模拟
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阵容</th>
+<th>通关</th>
+<th>均阵亡</th>
+<th>最低血量</th>
+<th>BOSS 击杀（目标 30/45/60s）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>均衡（参考）</td>
+<td>20/20</td>
+<td>0.00</td>
+<td>62.8%</td>
+<td>31s 46s 51s</td>
+</tr>
+<tr>
+<td>双坦双输出</td>
+<td>20/20</td>
+<td>0.00</td>
+<td>74.3%</td>
+<td>27s 40s 44s</td>
+</tr>
+<tr>
+<td>无治疗</td>
+<td>20/20</td>
+<td>0.00</td>
+<td>79.9%</td>
+<td>24s 35s 43s</td>
+</tr>
+<tr>
+<td>召唤流</td>
+<td>20/20</td>
+<td>0.00</td>
+<td><strong>89.3%</strong></td>
+<td>24s 36s 60s</td>
+</tr>
+<tr>
+<td>全脆皮</td>
+<td>20/20</td>
+<td>0.00</td>
+<td>55.2%</td>
+<td>22s 35s 41s</td>
+</tr>
+<tr>
+<td>近战莽</td>
+<td>20/20</td>
+<td>0.00</td>
+<td>85.0%</td>
+<td>30s 40s 46s</td>
+</tr>
+<tr>
+<td>单坦四输出</td>
+<td>20/20</td>
+<td><strong>0.25</strong></td>
+<td><strong>40.5%</strong></td>
+<td>24s 34s 38s</td>
+</tr>
+</tbody></table>
+</div>
+<pre><code>合计 140/140 = 100%
+</code></pre>
+<p>阵容定义在 <code>balance-check.ts</code> §8，是改这张表的唯一入口。</p>
+<h3 id="9.1-阵容之间的区分度落在-最低血量-这一列"><a class="anchor" href="#9.1-阵容之间的区分度落在-最低血量-这一列">#</a>9.1 阵容之间的区分度落在「最低血量」这一列</h3>
+<p><strong>跨度 40.5% ~ 89.3%，49 个百分点。</strong> 有区分度，但没有任何一套是&quot;必然失败&quot;。</p>
+<p>这是刻意的：本作是肉鸽式单局体验，阵容应该影响<strong>余量</strong>，而不是决定<strong>成败</strong>。
+上一版均衡阵容在 20 个种子里失手过 1 次；本轮拉平后艾拉 / 莉安的输出上来，这一次也没了。
+种子的方差仍在&quot;最低血量&quot;一列里（均衡 62.8%，并非保险箱）。</p>
+<ul>
+<li><strong>最抗压</strong>：召唤流 89.3%——傀儡与蜂群是额外的承伤面</li>
+<li><strong>最吃力</strong>：单坦四输出 40.5%，且是全场唯一一个有阵亡的阵容（均 0.25 人）。
+它没有冗余：坦克倒了就没有第二个承伤面，这条读数与设计意图一致。</li>
+</ul>
+<p><strong>但有两处读数反直觉，而它们指向同一个原因：</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>读数</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>无治疗 79.9% 高于双坦双输出 74.3%</strong></td>
+<td>模拟器产生不了阵亡（§10），治疗也就无从体现价值；而少一个治疗位换来的输出让清怪更快</td>
+</tr>
+<tr>
+<td><strong>全脆皮 55.2% 远低于近战莽 85.0%</strong></td>
+<td>同样是&quot;清怪快&quot;，脆皮阵容的血量池薄，一旦被贴身就掉得快</td>
+</tr>
+</tbody></table>
+</div>
+<p>第一条不是配平问题，是<strong>模拟器只建模接触伤害</strong>的直接后果：
+&quot;清怪快&quot;永远优于&quot;扛得住&quot;，&quot;治疗&quot;永远接近零价值。
+真人试玩时这条大概率会反过来——<strong>留给原型验证。</strong></p>
+<h3 id="9.2-这张表不说明什么"><a class="anchor" href="#9.2-这张表不说明什么">#</a>9.2 这张表<strong>不</strong>说明什么</h3>
+<p><strong>140 次运行里只有 5 次阵亡，且全来自同一套阵容的同一类失手——
+这不是因为这游戏简单，是因为模拟器结构上几乎产生不了阵亡。</strong></p>
+<p>见下面的 §10 —— 那是唯一一张真正回答了&quot;有没有难度&quot;的表。</p>
+<hr>
+<h2 id="10.-模拟器的能力边界-必读"><a class="anchor" href="#10.-模拟器的能力边界-必读">#</a>10. 模拟器的能力边界（必读）</h2>
+<h3 id="10.1-实测-常规阶段僵尸贴身占比为-0%"><a class="anchor" href="#10.1-实测-常规阶段僵尸贴身占比为-0%">#</a>10.1 实测：常规阶段僵尸贴身占比为 <strong>0%</strong></h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>区间</th>
+<th>均场上</th>
+<th>均贴身</th>
+<th>贴身占比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>常规 0:00-5:00</td>
+<td>3.2</td>
+<td>0.0</td>
+<td><strong>0%</strong></td>
+</tr>
+<tr>
+<td>BOSS1 5:00-6:30</td>
+<td>4.7</td>
+<td>1.6</td>
+<td>33%</td>
+</tr>
+<tr>
+<td>常规 6:30-10:00</td>
+<td>26.0</td>
+<td>0.0</td>
+<td><strong>0%</strong></td>
+</tr>
+<tr>
+<td>BOSS2 10:00-11:30</td>
+<td>7.8</td>
+<td>4.3</td>
+<td>44%</td>
+</tr>
+<tr>
+<td>常规 11:30-15:00</td>
+<td>9.8</td>
+<td>0.0</td>
+<td><strong>0%</strong></td>
+</tr>
+<tr>
+<td>BOSS3 15:00-16:30</td>
+<td>4.2</td>
+<td>3.4</td>
+<td><strong>86%</strong></td>
+</tr>
+</tbody></table>
+</div>
+<pre><code>一局平均总承伤 54,438   vs   小队满级总有效生命 70,560
+</code></pre>
+<p>阶段 3 常规段场上平均有 <strong>9.8 只</strong>僵尸，但其中 <strong>0 只</strong>能走到攻击距离内。
+它们从 25 格（视口边缘）出发，在走近的路上就被打死了。</p>
+<p>注意贴身只发生在 <strong>BOSS 窗口</strong>里（33% / 44% / 86%），且逐次走高——
+因为 BOSS 血厚打不死，杂兵才有机会活着走到脸上。
+<strong>这一格差异本身有信息量</strong>：三个 BOSS 窗口的站位压力是递增的，与设计意图一致。</p>
+<h3 id="10.2-为什么必然如此"><a class="anchor" href="#10.2-为什么必然如此">#</a>10.2 为什么必然如此</h3>
+<p>模拟器的三个简化，单独看都合理，叠起来就抹掉了整个生存维度：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>简化</th>
+<th>后果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>地图抽象成<strong>一维距离</strong></td>
+<td>所有僵尸从同一个方向来，没有包围</td>
+</tr>
+<tr>
+<td>索敌是<strong>单点最近目标</strong></td>
+<td>5 个人不会分头堵不同方向</td>
+</tr>
+<tr>
+<td>队员<strong>完全不走位</strong></td>
+<td>等于假设玩家每一次走位决策都正确</td>
+</tr>
+</tbody></table>
+</div>
+<p>三条叠起来 → 小队输出 100% 集中在唯一来向上 → 前沿永不被压到脸上。</p>
+<h3 id="10.3-因此这个模拟器不能回答的问题"><a class="anchor" href="#10.3-因此这个模拟器不能回答的问题">#</a>10.3 因此这个模拟器<strong>不能</strong>回答的问题</h3>
+<ul>
+<li>会死几个人？（140 次里只有 5 次，且集中在同一套阵容——离真实难度差得远）</li>
+<li>难度手感对不对？</li>
+<li>站位、牵引、切换队长有没有意义？</li>
+</ul>
+<h3 id="10.4-但它确实回答了的问题"><a class="anchor" href="#10.4-但它确实回答了的问题">#</a>10.4 但它<strong>确实</strong>回答了的问题</h3>
+<ul>
+<li>清怪速率够不够（阶段 3 常规段均场上 9.8 只，不雪崩）→ <strong>够</strong></li>
+<li>BOSS 血量的锚点对不对（三个都在目标秒数 ±15% 内）→ <strong>对</strong></li>
+<li>阵容之间有没有区分度（最低血量 40.5%-89.3%）→ <strong>有</strong></li>
+<li>各种属性/武器的乘区有没有写错 → 逐条复核过</li>
+</ul>
+<h3 id="10.5-这段的由来"><a class="anchor" href="#10.5-这段的由来">#</a>10.5 这段的由来</h3>
+<p>初版 &quot;SPAWN_DISTANCE = 60&quot; 时，连&quot;清怪速率&quot;都测不准——
+僵尸在被看见之前就走完了全程，模拟器全程无压力。
+改成 25（视口边缘）后才出现了第一个真实读数。</p>
+<p><strong>当前版本的诚实结论</strong>：<code>src/sim/</code> 是<strong>数值哨兵</strong>，回答&quot;配平是否自洽&quot;（答：自洽），
+不回答&quot;是否有难度&quot;（回答不了）。后者必须靠真人原型试玩。</p>
+<hr>
+<h2 id="11.-控制对抗矩阵"><a class="anchor" href="#11.-控制对抗矩阵">#</a>11. 控制对抗矩阵</h2>
+<p><strong>这一节是本轮新增的第二大块。</strong> 上一轮的控制手段（击退、冻结、嘲讽）只存在于
+技能文案里，僵尸这边没有任何对应的抗性字段——于是&quot;这套阵容能不能破解这个挑战&quot;
+这类问题无法计算，只能靠嘴说。本轮把它做成一张<strong>两端对撞</strong>的判定表。</p>
+<p>一条判定，两端对撞，形状直接复用已有的 <code>PIERCE_K = 60</code> 饱和曲线，不引入新数学形式：</p>
+<pre><code>位移命中率 = clamp(0.85 × atk² / (atk² + stab²), 0, 0.85)
+                atk  = 武器击退 × 力量/敏捷乘区
+                stab = 目标稳固
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>在哪</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>击退力</strong></td>
+<td>武器 <code>knockback</code> × 近战 <code>1+STR×0.012</code> / 远程 <code>1+AGI×0.012</code></td>
+<td>攻方</td>
+</tr>
+<tr>
+<td><strong>稳固</strong></td>
+<td>英雄：<code>TGH×1.0</code> 派生；僵尸：表值 <code>stab</code></td>
+<td>守方</td>
+</tr>
+<tr>
+<td><strong>霸体</strong></td>
+<td>僵尸表布尔 <code>superArmor</code></td>
+<td><strong>只免位移</strong>（击退 + 击倒）。冻结/嘲讽/减速照常生效</td>
+</tr>
+<tr>
+<td><strong>抗冻</strong></td>
+<td>僵尸表 <code>freezeRes</code></td>
+<td>抵冻结的概率与削减冻结时长</td>
+</tr>
+<tr>
+<td><strong>狡诈</strong></td>
+<td>僵尸表 <code>cunning</code></td>
+<td>抵嘲讽</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>上限 <code>KNOCK_CAP = 0.85</code>，不是 1.0</strong> —— 理由与抗暴击上限同源：
+任何一条控制的顶端都要留一层地板，否则&quot;这套控制对这只怪无效&quot;会变成
+&quot;这套控制对所有怪都无效&quot;，玩家学到的教训是<strong>别带控制</strong>，而不是换一种控制。</p>
+<p><strong>减速是全游戏唯一不设对抗属性的控制</strong>，这是故意的，见 §1.0.1。
+它也是第 13 维度上永远关不上的那一格。</p>
+<h3 id="11.1-位移-全部-12-个英雄-×-9-只非召唤僵尸"><a class="anchor" href="#11.1-位移-全部-12-个英雄-×-9-只非召唤僵尸">#</a>11.1 位移：全部 12 个英雄 × 9 只非召唤僵尸</h3>
+<p><strong>扫全部 12 个英雄，不挑两个端点。</strong> 挑端点只能证明&quot;最强和最弱不一样&quot;，
+证明不了中间那十把武器各自站在哪一格。列头是每只僵尸的稳固值。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>英雄·武器</th>
+<th>击退力</th>
+<th>普通 36</th>
+<th>高速 32</th>
+<th>胖 90</th>
+<th>毒液 52</th>
+<th>爆炸 40</th>
+<th>分裂 34</th>
+<th>跳跃 36</th>
+<th>护盾 120</th>
+<th>喷吐 48</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>断岳·铁牛·大刀</td>
+<td>96.8</td>
+<td>0.75</td>
+<td>0.77</td>
+<td>霸体</td>
+<td>0.66</td>
+<td>0.73</td>
+<td>0.76</td>
+<td>0.75</td>
+<td>霸体</td>
+<td>0.68</td>
+</tr>
+<tr>
+<td>铁壁·罗恩·大刀</td>
+<td>78.0</td>
+<td>0.70</td>
+<td>0.73</td>
+<td>霸体</td>
+<td>0.59</td>
+<td>0.67</td>
+<td>0.71</td>
+<td>0.70</td>
+<td>霸体</td>
+<td>0.62</td>
+</tr>
+<tr>
+<td>震地·博姆·手雷</td>
+<td>63.2</td>
+<td>0.64</td>
+<td>0.68</td>
+<td>霸体</td>
+<td>0.51</td>
+<td>0.61</td>
+<td>0.66</td>
+<td>0.64</td>
+<td>霸体</td>
+<td>0.54</td>
+</tr>
+<tr>
+<td>磐石·格温·长枪</td>
+<td>62.0</td>
+<td>0.64</td>
+<td>0.67</td>
+<td>霸体</td>
+<td>0.50</td>
+<td>0.60</td>
+<td>0.65</td>
+<td>0.64</td>
+<td>霸体</td>
+<td>0.53</td>
+</tr>
+<tr>
+<td>鹰眼·薇拉·狙击枪</td>
+<td>55.4</td>
+<td>0.60</td>
+<td>0.64</td>
+<td>霸体</td>
+<td>0.45</td>
+<td>0.56</td>
+<td>0.62</td>
+<td>0.60</td>
+<td>霸体</td>
+<td>0.49</td>
+</tr>
+<tr>
+<td>傀儡师·诺克斯·回旋镖</td>
+<td>38.6</td>
+<td>0.45</td>
+<td>0.50</td>
+<td>霸体</td>
+<td>0.30</td>
+<td>0.41</td>
+<td>0.48</td>
+<td>0.45</td>
+<td>霸体</td>
+<td>0.33</td>
+</tr>
+<tr>
+<td>疾风·凯·剑</td>
+<td>29.4</td>
+<td>0.34</td>
+<td>0.39</td>
+<td>霸体</td>
+<td>0.21</td>
+<td>0.30</td>
+<td>0.36</td>
+<td>0.34</td>
+<td>霸体</td>
+<td>0.23</td>
+</tr>
+<tr>
+<td>蜂群·西芙·激光枪</td>
+<td>19.4</td>
+<td>0.19</td>
+<td>0.23</td>
+<td>霸体</td>
+<td>0.10</td>
+<td>0.16</td>
+<td>0.21</td>
+<td>0.19</td>
+<td>霸体</td>
+<td>0.12</td>
+</tr>
+<tr>
+<td>圣手·莉安·手枪</td>
+<td>19.0</td>
+<td>0.18</td>
+<td>0.22</td>
+<td>霸体</td>
+<td>0.10</td>
+<td>0.16</td>
+<td>0.20</td>
+<td>0.18</td>
+<td>霸体</td>
+<td>0.11</td>
+</tr>
+<tr>
+<td>霜语·艾拉·冷冻器</td>
+<td>16.2</td>
+<td>0.14</td>
+<td>0.17</td>
+<td>霸体</td>
+<td>0.08</td>
+<td>0.12</td>
+<td>0.16</td>
+<td>0.14</td>
+<td>霸体</td>
+<td>0.09</td>
+</tr>
+<tr>
+<td>弹幕·杰特·冲锋枪</td>
+<td>11.5</td>
+<td>0.08</td>
+<td>0.10</td>
+<td>霸体</td>
+<td>0.04</td>
+<td>0.07</td>
+<td>0.09</td>
+<td>0.08</td>
+<td>霸体</td>
+<td>0.05</td>
+</tr>
+<tr>
+<td>烈焰·萨满·喷火器</td>
+<td>7.7</td>
+<td>0.04</td>
+<td>0.05</td>
+<td>霸体</td>
+<td>0.02</td>
+<td>0.03</td>
+<td>0.04</td>
+<td>0.04</td>
+<td>霸体</td>
+<td>0.02</td>
+</tr>
+</tbody></table>
+</div>
+<p>两个读法，都要读：</p>
+<ul>
+<li><strong>对最普通的【普通僵尸】（稳固 36）</strong>：推得动（≥50%）的只有 5 人
+（铁牛·大刀 / 罗恩·大刀 / 博姆·手雷 / 格温·长枪 / 薇拉·狙击枪）；
+推不太动（&lt;20%）的也有 5 人（西芙·激光 / 莉安·手枪 / 艾拉·冷冻器 / 杰特·冲锋枪 / 萨满·喷火器）。</li>
+<li><strong>对硬目标【毒液僵尸】（稳固 52）</strong>：全队最高的铁牛·大刀（96.8）掉到 0.66，
+最低的萨满·喷火器（7.7）只剩 0.02。</li>
+</ul>
+<p><strong>这才是这条轴该有的手感：击退力是一份要花出去的选择，不是一句台词。</strong>
+喷火器永远推不动谁（4%），大刀能推开八成普通怪；
+但对着硬目标，全队最高的击退力也只能拿到一半。
+玩家于是学到<strong>换手段</strong>，而不是<strong>加力度</strong>——这正是第 13 维度的判据。</p>
+<blockquote>
+<p><strong>量纲为什么定在 32-90</strong>：英雄击退力实测跨度 7.7 ~ 96.8，
+所以僵尸的稳定段必须落在这个跨度<strong>之内</strong>，两端才都够得着。
+第一版照抄英雄端 <code>TGH×1.0</code> 的量纲定在 8-20，结果是
+<strong>任何一把像样的武器对任何一只非霸体僵尸都恒为 0.84</strong>——
+&quot;控制抗性&quot;这一维根本没有咬合，玩家感觉不到稳固的存在。
+数值轴要能被感觉到，两端的尺度必须先对齐。</p>
+</blockquote>
+<h3 id="11.2-僵尸控制抗性排序-综合评分-=-霸体-稳固-抗冻-狡诈-四项平均"><a class="anchor" href="#11.2-僵尸控制抗性排序-综合评分-=-霸体-稳固-抗冻-狡诈-四项平均">#</a>11.2 僵尸控制抗性排序（综合评分 = 霸体 / 稳固 / 抗冻 / 狡诈 四项平均）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>霸体</th>
+<th>稳固</th>
+<th>抗冻</th>
+<th>狡诈</th>
+<th>评分</th>
+<th>位移判定</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>护盾僵尸</td>
+<td>✓</td>
+<td>120</td>
+<td>0.35</td>
+<td>0.30</td>
+<td>0.58</td>
+<td>免疫</td>
+</tr>
+<tr>
+<td>高防胖僵尸</td>
+<td>✓</td>
+<td>90</td>
+<td>0.20</td>
+<td>0.00</td>
+<td>0.45</td>
+<td>免疫</td>
+</tr>
+<tr>
+<td>跳跃僵尸</td>
+<td>—</td>
+<td>36</td>
+<td>0.10</td>
+<td>0.60</td>
+<td>0.27</td>
+<td>概率</td>
+</tr>
+<tr>
+<td>毒液僵尸</td>
+<td>—</td>
+<td>52</td>
+<td>0.60</td>
+<td>0.00</td>
+<td>0.27</td>
+<td>概率</td>
+</tr>
+<tr>
+<td>喷吐僵尸</td>
+<td>—</td>
+<td>48</td>
+<td>0.20</td>
+<td>0.25</td>
+<td>0.22</td>
+<td>概率</td>
+</tr>
+<tr>
+<td>分裂僵尸</td>
+<td>—</td>
+<td>34</td>
+<td>0.10</td>
+<td>0.15</td>
+<td>0.15</td>
+<td>概率</td>
+</tr>
+<tr>
+<td>爆炸僵尸</td>
+<td>—</td>
+<td>40</td>
+<td>0.15</td>
+<td>0.00</td>
+<td>0.14</td>
+<td>概率</td>
+</tr>
+<tr>
+<td>普通僵尸</td>
+<td>—</td>
+<td>36</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.09</td>
+<td>概率</td>
+</tr>
+<tr>
+<td>高速僵尸</td>
+<td>—</td>
+<td>32</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.09</td>
+<td>概率</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>评分相同不代表挡住的是同一扇门——这才是这张表真正的读法：</strong></p>
+<ul>
+<li><strong>跳跃僵尸</strong>与<strong>毒液僵尸</strong>同样 0.27 分，但：
+跳跃僵尸挡的是<strong>嘲讽</strong>（狡诈 0.60，命中率只剩 0.40），推它并不难（稳固 36）；
+毒液僵尸挡的是<strong>冻结</strong>（抗冻 0.60，4 秒只剩 1.60 秒），嘲讽对它照样好使。</li>
+<li><strong>霸体只有两只</strong>（胖 / 护盾），都是&quot;推不动但你冻得住&quot;的近战肉盾。
+霸体刻意<strong>不</strong>免疫冻结与嘲讽——做成&quot;免一切控制&quot;是最省事也最糟的写法。</li>
+</ul>
+<p>所以&quot;控制抗性&quot;不是一个数字，是<strong>三扇各自上锁的门</strong>。
+玩家不能靠把某一种控制堆到极致通关，只能带上能开不同门的队友——
+这正是它作为第 13 个维度而不是第 5 个属性的理由。</p>
+<h3 id="11.3-冻结与嘲讽的对抗-另外两扇门"><a class="anchor" href="#11.3-冻结与嘲讽的对抗-另外两扇门">#</a>11.3 冻结与嘲讽的对抗（另外两扇门）</h3>
+<p>嘲讽命中率是<strong>在 0-1 上取 1000 个等距样本喂给 <code>tauntLands()</code> 数通过率</strong>——
+不写 <code>1 - cunning</code> 是有意的：那样这里是在复述实现，而不是验证它。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>冻结 4 秒实际时长</th>
+<th>嘲讽命中率</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通僵尸</td>
+<td>4.00s</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>高速僵尸</td>
+<td>4.00s</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>高防胖僵尸</td>
+<td>3.20s</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>毒液僵尸</td>
+<td>1.60s</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>爆炸僵尸</td>
+<td>3.40s</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>分裂僵尸</td>
+<td>3.60s</td>
+<td>0.85</td>
+</tr>
+<tr>
+<td>跳跃僵尸</td>
+<td>3.60s</td>
+<td>0.40</td>
+</tr>
+<tr>
+<td>护盾僵尸</td>
+<td>2.60s</td>
+<td>0.70</td>
+</tr>
+<tr>
+<td>喷吐僵尸</td>
+<td>3.20s</td>
+<td>0.75</td>
+</tr>
+</tbody></table>
+</div>
+<p>艾拉的寒霜新星基础冻结 4 秒：对普通僵尸满 4 秒，对毒液僵尸只剩 1.60 秒，
+对护盾僵尸 2.60 秒<strong>且它霸体</strong>——<strong>冻结这条路的收益随目标不同掉得很厉害</strong>，
+这就是它需要有替代解的数值证据。</p>
+<h3 id="11.4-第-13-维度-控制抗性-的两段判据"><a class="anchor" href="#11.4-第-13-维度-控制抗性-的两段判据">#</a>11.4 第 13 维度「控制抗性」的两段判据</h3>
+<blockquote>
+<p>维度：<strong>控制抗性</strong>（族 <code>resist</code>）——推不动、冻不住、嘲讽不灵，你最顺手的那一招突然不响了。
+破解需要：<strong>换一种控制手段</strong>，或者干脆放弃控制用点杀与续航硬吃。<strong>加大力度没有用。</strong></p>
+</blockquote>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>答案形状</th>
+<th>来自定位</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>taunt</code></td>
+<td>tank</td>
+</tr>
+<tr>
+<td><code>sustain</code></td>
+<td>tank support</td>
+</tr>
+<tr>
+<td><code>burst</code></td>
+<td>meleeDps rangedDps</td>
+</tr>
+<tr>
+<td><code>singleTarget</code></td>
+<td>meleeDps rangedDps support summoner</td>
+</tr>
+<tr>
+<td><code>control</code></td>
+<td>meleeDps rangedDps control summoner</td>
+</tr>
+<tr>
+<td><code>armorShred</code></td>
+<td>meleeDps control summoner</td>
+</tr>
+</tbody></table>
+</div>
+<pre><code>答案 6 个（门槛 3）✓   定位 6 种（门槛 2）✓
+[tank support meleeDps rangedDps summoner control]
+</code></pre>
+<p><strong>✓ 达标。</strong> 6 个答案里，<code>control</code>（减速）自成一路——它是唯一不受抗性影响的那扇门，
+也就是这条轴上<strong>永远关不上的一格</strong>。</p>
+<blockquote>
+<p><strong>诚实边界</strong>：覆盖矩阵里这一维是 <strong>12/12 全员可答</strong>，也就是说它零约束力
+（见 §7.0.2 的矩阵）。维度达标 ≠ 维度有区分度。这一条属于&quot;可玩性下限&quot;，
+不属于&quot;深度证明&quot;，别把它读成后者。</p>
+</blockquote>
+<h3 id="11.5-障碍语义自查-三种新障碍只该带来两类新语义"><a class="anchor" href="#11.5-障碍语义自查-三种新障碍只该带来两类新语义">#</a>11.5 障碍语义自查（三种新障碍只该带来两类新语义）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>障碍</th>
+<th>可破坏</th>
+<th>挡人</th>
+<th>挡弹</th>
+<th>挡视线</th>
+<th>耐久</th>
+<th>残留</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>沙袋</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>320</td>
+<td>rubble</td>
+</tr>
+<tr>
+<td>铁丝网</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>180</td>
+<td>none</td>
+</tr>
+<tr>
+<td>木墙</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>900</td>
+<td>rubble</td>
+</tr>
+<tr>
+<td>建筑</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>0</td>
+<td>none</td>
+</tr>
+</tbody></table>
+</div>
+<p>四种代表障碍的<strong>通行位掩码</strong>只有 2 种组合（<code>true false false</code> / <code>true true true</code>）——
+<strong>新障碍没有引入第四种通行语义。</strong></p>
+<p>新的语义只有两条：<strong>子弹能穿但人不能穿</strong>（沙袋 / 铁丝网）、<strong>木墙可炸开</strong>。
+木墙与建筑的区别只在 <code>destructible</code>，这是刻意的：让&quot;绕开&quot;与&quot;打开&quot;成为两种可学的反应，
+而不是同一堵墙的两种血量。</p>
+<p><code>TerrainMods</code> 只增 <code>blockerDensity</code>（木墙）——沙袋与铁丝网归已有的 <code>coverDensity</code>，
+不另开字段。实际摆放归 M2 的 <code>core/terrain.ts</code>，本文只出表与密度。</p>
+<hr>
+<h2 id="12.-军衔与成长-第三轮重写-25-级-00-§c7"><a class="anchor" href="#12.-军衔与成长-第三轮重写-25-级-00-§c7">#</a>12. 军衔与成长（第三轮重写：25 级，<code>00</code> §C7）</h2>
+<p>局外数值线只剩<strong>军衔</strong>一条：荣誉 → 军衔 → <strong>属性成长</strong>（最终生命 / 最终伤害）+ <strong>转职点</strong>。
+技能点、专精树、军衔给的行为、&quot;高级技能两把钥匙&quot;全部删除（C7-3 / C7-4）。
+防刷靠两件事：敌人按<strong>关卡军衔上限</strong>加成；出战队员都不能超上限，全队超了 = 这关毕业。</p>
+<blockquote>
+<p>本节数字全部来自 <code>balance-check.ts</code> §12。曲线与成长率都是起点，不是配平结论：
+荣誉曲线<strong>等 P6 关卡线定了再回调</strong>；成长率的滚雪球<strong>先试玩再说</strong>（C7-4c）；金钱线先按当前设计，P2 重做军械库时一起动。</p>
+</blockquote>
+<h3 id="12.1-荣誉-任务与通关每次都发-星级只发【新】星"><a class="anchor" href="#12.1-荣誉-任务与通关每次都发-星级只发【新】星">#</a>12.1 荣誉：任务与通关每次都发，星级只发【新】星</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>星</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>★</td>
+<td>通关</td>
+</tr>
+<tr>
+<td>★★</td>
+<td>通关，且<strong>最终全员存活</strong>（被复活技能拉回来的算活着）</td>
+</tr>
+<tr>
+<td>★★★</td>
+<td>★★，且<strong>完成本局全部局内任务</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>任务 12/个 · 通关 20 · 新星 30/颗（<code>runHonor</code>）。荣誉<strong>平均分给出战队员</strong>——少带人每人分得多，这是&quot;可以少带&quot;的回报。</p>
+<pre><code>首通三星            146 荣誉 → 5 人各 29.2 · 3 人各 48.7
+首通一星             62 荣誉 → 5 人各 12.4 · 3 人各 20.7
+重打补到三星          116 荣誉 → 5 人各 23.2 · 3 人各 38.7
+重打（已三星）          56 荣誉 → 5 人各 11.2 · 3 人各 18.7
+失败，做了 2 个任务      24 荣誉 → 5 人各 4.8 · 3 人各 8.0
+</code></pre>
+<h3 id="12.2-军衔表-25-级"><a class="anchor" href="#12.2-军衔表-25-级">#</a>12.2 军衔表（25 级）</h3>
+<p>升级荣誉 = 24 × 1.12^(级−2)，几何曲线：前段一两局一级，后段十几局一级。◆ = 发 1 个转职点并解锁该层职业。
+英雄乘区 = (1+成长)^(级−1)，敌人乘区 = 1.05^(关卡上限−1)，都同时乘最终生命与最终伤害。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>级</th>
+<th>代码</th>
+<th>军衔</th>
+<th>本级</th>
+<th>累计</th>
+<th>转职</th>
+<th>英雄 5%</th>
+<th>英雄 7.5%</th>
+<th>英雄 10%</th>
+<th>敌人 5%</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>E-1</td>
+<td>新兵</td>
+<td>0</td>
+<td>0</td>
+<td></td>
+<td>1.00</td>
+<td>1.00</td>
+<td>1.00</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>2</td>
+<td>E-2</td>
+<td>二等兵</td>
+<td>24</td>
+<td>24</td>
+<td></td>
+<td>1.05</td>
+<td>1.07</td>
+<td>1.10</td>
+<td>1.05</td>
+</tr>
+<tr>
+<td>3</td>
+<td>E-3</td>
+<td>一等兵</td>
+<td>27</td>
+<td>51</td>
+<td></td>
+<td>1.10</td>
+<td>1.16</td>
+<td>1.21</td>
+<td>1.10</td>
+</tr>
+<tr>
+<td>4</td>
+<td>E-4</td>
+<td>下士</td>
+<td>30</td>
+<td>81</td>
+<td>◆1</td>
+<td>1.16</td>
+<td>1.24</td>
+<td>1.33</td>
+<td>1.16</td>
+</tr>
+<tr>
+<td>5</td>
+<td>E-5</td>
+<td>中士</td>
+<td>34</td>
+<td>115</td>
+<td></td>
+<td>1.22</td>
+<td>1.34</td>
+<td>1.46</td>
+<td>1.22</td>
+</tr>
+<tr>
+<td>6</td>
+<td>E-6</td>
+<td>上士</td>
+<td>38</td>
+<td>153</td>
+<td></td>
+<td>1.28</td>
+<td>1.44</td>
+<td>1.61</td>
+<td>1.28</td>
+</tr>
+<tr>
+<td>7</td>
+<td>E-7</td>
+<td>一级军士长</td>
+<td>42</td>
+<td>195</td>
+<td>◆2</td>
+<td>1.34</td>
+<td>1.54</td>
+<td>1.77</td>
+<td>1.34</td>
+</tr>
+<tr>
+<td>8</td>
+<td>E-8</td>
+<td>军士长</td>
+<td>47</td>
+<td>242</td>
+<td></td>
+<td>1.41</td>
+<td>1.66</td>
+<td>1.95</td>
+<td>1.41</td>
+</tr>
+<tr>
+<td>9</td>
+<td>E-9</td>
+<td>总军士长</td>
+<td>53</td>
+<td>295</td>
+<td></td>
+<td>1.48</td>
+<td>1.78</td>
+<td>2.14</td>
+<td>1.48</td>
+</tr>
+<tr>
+<td>10</td>
+<td>W-1</td>
+<td>准尉</td>
+<td>59</td>
+<td>354</td>
+<td>◆3</td>
+<td>1.55</td>
+<td>1.92</td>
+<td>2.36</td>
+<td>1.55</td>
+</tr>
+<tr>
+<td>11</td>
+<td>W-2</td>
+<td>二级准尉</td>
+<td>67</td>
+<td>421</td>
+<td></td>
+<td>1.63</td>
+<td>2.06</td>
+<td>2.59</td>
+<td>1.63</td>
+</tr>
+<tr>
+<td>12</td>
+<td>W-3</td>
+<td>三级准尉</td>
+<td>75</td>
+<td>496</td>
+<td></td>
+<td>1.71</td>
+<td>2.22</td>
+<td>2.85</td>
+<td>1.71</td>
+</tr>
+<tr>
+<td>13</td>
+<td>W-4</td>
+<td>四级准尉</td>
+<td>83</td>
+<td>579</td>
+<td></td>
+<td>1.80</td>
+<td>2.38</td>
+<td>3.14</td>
+<td>1.80</td>
+</tr>
+<tr>
+<td>14</td>
+<td>W-5</td>
+<td>五级准尉</td>
+<td>94</td>
+<td>673</td>
+<td></td>
+<td>1.89</td>
+<td>2.56</td>
+<td>3.45</td>
+<td>1.89</td>
+</tr>
+<tr>
+<td>15</td>
+<td>O-1</td>
+<td>少尉</td>
+<td>105</td>
+<td>778</td>
+<td>◆4</td>
+<td>1.98</td>
+<td>2.75</td>
+<td>3.80</td>
+<td>1.98</td>
+</tr>
+<tr>
+<td>16</td>
+<td>O-2</td>
+<td>中尉</td>
+<td>117</td>
+<td>895</td>
+<td></td>
+<td>2.08</td>
+<td>2.96</td>
+<td>4.18</td>
+<td>2.08</td>
+</tr>
+<tr>
+<td>17</td>
+<td>O-3</td>
+<td>上尉</td>
+<td>131</td>
+<td>1,026</td>
+<td></td>
+<td>2.18</td>
+<td>3.18</td>
+<td>4.59</td>
+<td>2.18</td>
+</tr>
+<tr>
+<td>18</td>
+<td>O-4</td>
+<td>少校</td>
+<td>147</td>
+<td>1,173</td>
+<td>◆5</td>
+<td>2.29</td>
+<td>3.42</td>
+<td>5.05</td>
+<td>2.29</td>
+</tr>
+<tr>
+<td>19</td>
+<td>O-5</td>
+<td>中校</td>
+<td>165</td>
+<td>1,338</td>
+<td></td>
+<td>2.41</td>
+<td>3.68</td>
+<td>5.56</td>
+<td>2.41</td>
+</tr>
+<tr>
+<td>20</td>
+<td>O-6</td>
+<td>上校</td>
+<td>185</td>
+<td>1,523</td>
+<td></td>
+<td>2.53</td>
+<td>3.95</td>
+<td>6.12</td>
+<td>2.53</td>
+</tr>
+<tr>
+<td>21</td>
+<td>O-7</td>
+<td>准将</td>
+<td>207</td>
+<td>1,730</td>
+<td>◆6</td>
+<td>2.65</td>
+<td>4.25</td>
+<td>6.73</td>
+<td>2.65</td>
+</tr>
+<tr>
+<td>22</td>
+<td>O-8</td>
+<td>少将</td>
+<td>232</td>
+<td>1,962</td>
+<td></td>
+<td>2.79</td>
+<td>4.57</td>
+<td>7.40</td>
+<td>2.79</td>
+</tr>
+<tr>
+<td>23</td>
+<td>O-9</td>
+<td>中将</td>
+<td>259</td>
+<td>2,221</td>
+<td></td>
+<td>2.93</td>
+<td>4.91</td>
+<td>8.14</td>
+<td>2.93</td>
+</tr>
+<tr>
+<td>24</td>
+<td>O-10</td>
+<td>上将</td>
+<td>290</td>
+<td>2,511</td>
+<td></td>
+<td>3.07</td>
+<td>5.28</td>
+<td>8.95</td>
+<td>3.07</td>
+</tr>
+<tr>
+<td>25</td>
+<td>★5</td>
+<td>五星上将</td>
+<td>325</td>
+<td>2,836</td>
+<td>◆7</td>
+<td>3.23</td>
+<td>5.67</td>
+<td>9.85</td>
+<td>3.23</td>
+</tr>
+</tbody></table>
+</div>
+<p>转职点可以攒着不用；点数按顺序消耗，第 7 点（五星终极）自然要求先用完前 6 点。</p>
+<h3 id="12.3-⚠-同级对位强度比-只记读数-先试玩"><a class="anchor" href="#12.3-⚠-同级对位强度比-只记读数-先试玩">#</a>12.3 ⚠ 同级对位强度比（只记读数，先试玩）</h3>
+<p>英雄乘区同时乘生命与伤害，敌人同理，所以对位强度比 = (英雄乘区 / 敌人乘区)²：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>成长</th>
+<th>E-4</th>
+<th>W-1</th>
+<th>O-4</th>
+<th>五星</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5%</td>
+<td>×1.00</td>
+<td>×1.00</td>
+<td>×1.00</td>
+<td>×1.00</td>
+</tr>
+<tr>
+<td>7.5%</td>
+<td>×1.15</td>
+<td>×1.53</td>
+<td>×2.23</td>
+<td>×3.09</td>
+</tr>
+<tr>
+<td>10%</td>
+<td>×1.32</td>
+<td>×2.31</td>
+<td>×4.86</td>
+<td><strong>×9.33</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>成长 &gt;5% 的职业在高军衔会显著碾压同级关卡。<strong>用户裁决：先试玩再说。</strong>
+若要收：压低成长上限，或让敌人成长跟英雄成长区间的中值走。</p>
+<h3 id="12.4-时间成本-一局-15-分钟"><a class="anchor" href="#12.4-时间成本-一局-15-分钟">#</a>12.4 时间成本（一局 15 分钟）</h3>
+<p>稳态按&quot;重打已三星的关&quot;算：56 荣誉/局 ÷ 5 人 = 每人 11.2/局（不含一次性的新星荣誉，偏保守）。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>转职</th>
+<th>军衔</th>
+<th>局数</th>
+<th>小时</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 1 转</td>
+<td>E-4 下士</td>
+<td>8</td>
+<td>2.0</td>
+</tr>
+<tr>
+<td>第 2 转</td>
+<td>E-7 一级军士长</td>
+<td>18</td>
+<td>4.5</td>
+</tr>
+<tr>
+<td>第 3 转</td>
+<td>W-1 准尉</td>
+<td>32</td>
+<td>8.0</td>
+</tr>
+<tr>
+<td>第 4 转</td>
+<td>O-1 少尉</td>
+<td>70</td>
+<td>17.5</td>
+</tr>
+<tr>
+<td>第 5 转</td>
+<td>O-4 少校</td>
+<td>105</td>
+<td>26.3</td>
+</tr>
+<tr>
+<td>第 6 转</td>
+<td>O-7 准将</td>
+<td>155</td>
+<td>38.8</td>
+</tr>
+<tr>
+<td>终极</td>
+<td>★5 五星上将</td>
+<td>254</td>
+<td><strong>63.5</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>✓ 第一支队满五星 64 小时，目标 40–100 小时。全游戏约 100 小时，毕业机制会逼玩家练第二、第三支队。</p>
+<p>金钱 10,313/局；买齐军械库 142,800 = 14 局 ≈ 4 小时（⚠ 仍是第二轮的 14 把武器，P2 重做，招募刷新花费那时加入）。</p>
+<h3 id="12.5-不变量自查-哨兵-§12d-全部-✓"><a class="anchor" href="#12.5-不变量自查-哨兵-§12d-全部-✓">#</a>12.5 不变量自查（哨兵 §12d，全部 ✓）</h3>
+<ul>
+<li>军衔 25 级，五星上将在顶；累计荣誉严格递增</li>
+<li>转职点 7 个（6 可选 + 五星）；E-3 不能转、E-4 能转第 1 次</li>
+<li>点数可累积：O-1 未转过的人可连转 4 次</li>
+<li>五星要先补完前 6 转</li>
+<li>出战：超人数 / 有人超军衔上限都不能出</li>
+<li>敌人加成只看军衔上限（上限 1 = ×1）</li>
+<li>重打已三星的关不再给星级荣誉</li>
+</ul>
+<p>军械库仍是 19 件（武器 14 + 道具 5），买断、全队共享、不卖强度，见 §7.2。</p>
+<hr>
+<h2 id="13.-本文的复核办法"><a class="anchor" href="#13.-本文的复核办法">#</a>13. 本文的复核办法</h2>
+<p>这份文档里的每一个数字都能追到 <code>src/data/*.ts</code>，方法是：</p>
+<pre><code class="language-bash">npm run sim &gt; docs/.balance-raw.txt
+</code></pre>
+<p><strong>本轮抓出并修正了五处与模拟器漂移的数字</strong>（§2.1 穿透表、§6、§7.2、§8、§9），
+每一处都在原地标了「漂移修正」并写清原值、现值与原因。</p>
+<p>它们不是本轮改出来的，是<strong>早已腐坏、这轮才被逐条复核抓出来的</strong>——
+成因全部相同：数字一旦有了&quot;手抄&quot;的入口，就一定会腐坏。
+所以抓它们的办法也只有一条：<strong>每个数字都回到 <code>npm run sim</code> 重跑一遍</strong>，
+而不再从上一版文档里抄。</p>
+<p>哨兵仍回答不了&quot;会不会死人、难度对不对&quot;（见 §10），
+这条边界记在 <code>00-决策清单</code> D0，本文不拿数字当背书。</p>
+</main>
+</div>
+</body>
+</html>

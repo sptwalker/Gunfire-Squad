@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>03 计算演示</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#0.-演示的设定">0. 演示的设定</a></li><li class="d2"><a href="#1.-第一步-一级属性-→-派生属性">1. 第一步：一级属性 → 派生属性</a></li><li class="d2"><a href="#2.-第二步-武器与武器阶">2. 第二步：武器与武器阶</a></li><li class="d2"><a href="#3.-第三步-穿透-→-有效护甲-→-护甲保留">3. 第三步：穿透 → 有效护甲 → 护甲保留</a></li><li class="d3"><a href="#3.1-一个被写错过的方向">3.1 一个被写错过的方向</a></li><li class="d2"><a href="#4.-第四步-单发期望伤害">4. 第四步：单发期望伤害</a></li><li class="d2"><a href="#5.-第五步-攻速与换弹惩罚">5. 第五步：攻速与换弹惩罚</a></li><li class="d2"><a href="#6.-第六步-单目标-dps">6. 第六步：单目标 DPS</a></li><li class="d3"><a href="#6.1-ai-效率系数-0.75">6.1 AI 效率系数 0.75</a></li><li class="d3"><a href="#6.2-换成时间读一遍">6.2 换成时间读一遍</a></li><li class="d2"><a href="#7.-反向验证-从实测倒推回公式">7. 反向验证：从实测倒推回公式</a></li><li class="d2"><a href="#8.-这个演示验证了什么">8. 这个演示验证了什么</a></li></ol></nav>
+<main class="doc">
+<h1 id="03-计算演示"><a class="anchor" href="#03-计算演示">#</a>03 计算演示</h1>
+<blockquote>
+<p>本文把<strong>一个角色从一级属性算到实战 DPS</strong>的全过程展开，每一步都能用计算器复核。
+目的不是展示算术，是证明 <code>src/data/*.ts</code> 里的公式是<strong>可解释</strong>的——
+任何一个数字，玩家问&quot;凭什么&quot;，都能沿这条链走回属性表。</p>
+<p>复算脚本：<code>src/sim/_calc03.ts</code>（临时演示文件，可随时重建）。
+所有中间值都由 <code>src/data/*.ts</code> 与 <code>src/sim/combat.ts</code> 的真实实现产出，不是手抄的。</p>
+<p><strong>第二轮修订（2026-09）</strong>：一级属性从四维扩到<strong>六维</strong>（+幸运 +体质），
+暴击率与生命上限换了主人——本文第 1 节与整条 DPS 链因此<strong>全部重算</strong>。
+挑战维度、场景关卡、专精树仍然不进这条公式：专精只能改公式的<strong>输入</strong>
+（属性/武器阶/技能参数），不能新增乘区，所以这条链对 82 个子关卡逐一成立
+（<code>04-技术框架.html</code> §2.1.2 说明这条约束为什么由编译器执行）。</p>
+<p>另一处细节变化：<strong>三个 BOSS 的登场顺序按场景轮换</strong>
+（<code>scenes.ts</code> 的 <code>bossStages</code>，例如军事禁区是卡俄斯先来）。
+本文用卡俄斯演示，是因为它护甲最高（480），对穿透的检验最严格——
+它在城市废墟与原始丛林仍然压轴，在军事禁区则会第一个登场，
+那时队伍等级更低、穿透更低，是更硬的关。</p>
+</blockquote>
+<hr>
+<h2 id="0.-演示的设定"><a class="anchor" href="#0.-演示的设定">#</a>0. 演示的设定</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>项</th>
+<th>值</th>
+<th>为什么选这个</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>角色</td>
+<td>鹰眼·薇拉</td>
+<td>狙击手，穿透型，最能体现&quot;第三条成长轴&quot;</td>
+</tr>
+<tr>
+<td>等级</td>
+<td>5（满级）</td>
+<td>关底 BOSS 登场时的实际等级</td>
+</tr>
+<tr>
+<td>武器阶</td>
+<td>+2（满阶）</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>目标</td>
+<td>尸潮之主·卡俄斯</td>
+<td>关底 BOSS，480 护甲 / 重甲</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>选最难的组合做演示</strong>：如果穿透机制对 480 护甲的目标成立，对其他目标自然也成立。</p>
+<hr>
+<h2 id="1.-第一步-一级属性-→-派生属性"><a class="anchor" href="#1.-第一步-一级属性-→-派生属性">#</a>1. 第一步：一级属性 → 派生属性</h2>
+<p>薇拉的一级属性（<code>src/data/characters.ts</code>）：</p>
+<pre><code>STR 33    AGI 34    TGH 14    INT 16    LUK 38    CON 15      合计 150
+</code></pre>
+<p><strong>六属性每角色合计恰好 150</strong>，这是硬约束（<code>00-决策清单.html</code> A8 的 100 → 150）。
+薇拉是远程输出，所以点数压在 <strong>幸运</strong>（暴击，输出的收益口）与 <strong>力量/敏捷</strong> 上，
+<strong>体质</strong>只留 15——她的生存靠站位，不靠血条。</p>
+<p>等级成长系数：</p>
+<pre><code>g = 1 + 0.08 × (5 - 1) = 1.32
+</code></pre>
+<p><strong>注意这里有一处容易算错的地方</strong>——<code>atkMul</code> 用的是<strong>未缩放</strong>的力量：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>派生</th>
+<th>公式</th>
+<th>代入</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>atkMul</code></td>
+<td><code>1 + STR × 0.02</code></td>
+<td><code>1 + 33 × 0.02</code></td>
+<td><strong>1.660</strong></td>
+</tr>
+<tr>
+<td><code>levelDmgMul</code></td>
+<td><code>1 + 0.25 × (L-1)</code></td>
+<td><code>1 + 0.25 × 4</code></td>
+<td><strong>2.00</strong></td>
+</tr>
+<tr>
+<td><code>hasteMul</code></td>
+<td><code>1 + AGI×g × 0.01</code></td>
+<td><code>1 + 44.88 × 0.01</code></td>
+<td><strong>1.4488</strong></td>
+</tr>
+<tr>
+<td><code>critRate</code></td>
+<td><code>0.05 + LUK×g × 0.004</code></td>
+<td><code>0.05 + 50.16 × 0.004</code></td>
+<td><strong>0.25064</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>为什么 <code>atkMul</code> 不用缩放后的力量？</strong></p>
+<p>因为 <code>atkMul</code> 带一个 <code>+1</code> 基数。若让等级去缩放力量，
+<code>STR</code> 从 33 涨到 43.56 只会让乘区从 1.66 到 1.87（<strong>+13%</strong>），
+完全跟不上关卡的缩放需求。所以等级收益拆成独立的 <code>levelDmgMul</code>（<strong>每级 +25%</strong>），
+玩家看得见、算得清。<strong>同一个等级成长，两条路径差 4 倍。</strong></p>
+<blockquote>
+<p>敏捷与幸运则相反：它们进的是 <code>hasteMul</code> / <code>moveMul</code> / <code>critRate</code>，
+这些乘区<strong>没有 <code>+1</code> 基数</strong>，所以<strong>必须</strong>用缩放后的值，否则这两条线就不成长了。</p>
+</blockquote>
+<p><strong>幸运接手了暴击率，这是本轮最大的一次搬家。</strong> 旧版暴击由敏捷驱动，
+于是&quot;堆敏捷&quot;同时拿到攻速和暴击——一个属性顶两条线。现在分工是：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>一级属性</th>
+<th>只管自己那一列</th>
+<th>换算</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>力量 STR</td>
+<td>攻击乘区 · <strong>近战击退力</strong></td>
+<td><code>knockMelee = 1 + STR×g × 0.012</code> = <strong>1.5227</strong></td>
+</tr>
+<tr>
+<td>敏捷 AGI</td>
+<td>攻速 · 移速 · <strong>远程击退力</strong></td>
+<td><code>knockRanged = 1 + AGI×g × 0.012</code> = <strong>1.5386</strong></td>
+</tr>
+<tr>
+<td>韧性 TGH</td>
+<td>护甲 · 抗暴击 · <strong>稳固</strong></td>
+<td><code>antiCrit = 18.48×0.003</code> = <strong>0.0554</strong>；<code>stab = 18.48</code></td>
+</tr>
+<tr>
+<td>幸运 LUK</td>
+<td><strong>暴击率</strong> · 高级掉落</td>
+<td><code>lootTier = 50.16×0.006</code> = <strong>0.301</strong></td>
+</tr>
+<tr>
+<td>体质 CON</td>
+<td><strong>生命上限</strong></td>
+<td><code>maxHp = 2000 + CON×g × 180</code> = <strong>5,564</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>四条攻击线、三条生存线<strong>互不重叠</strong>，所以&quot;这角色该堆什么&quot;有唯一答案。
+后四个派生不在这条 DPS 链上（它们进的是控制对抗与掉落系统，
+见 <code>02-数值表.html</code> §11），本文只列出来，说明幸运与韧性的其余产出去了哪里。</p>
+<hr>
+<h2 id="2.-第二步-武器与武器阶"><a class="anchor" href="#2.-第二步-武器与武器阶">#</a>2. 第二步：武器与武器阶</h2>
+<pre><code>狙击枪：基础伤害 700   射速 0.35/s   弹匣 5   换弹 2.5s   穿透 80   暴击 +15%   击退 30
+</code></pre>
+<p>武器阶加成（<code>src/data/weapons.ts</code>）：</p>
+<pre><code>伤害 × (1 + 0.35 × 阶)      穿透 × (1 + 0.20 × 阶)
+</code></pre>
+<p>+2 阶：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>项</th>
+<th>计算</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>伤害倍率</td>
+<td><code>1 + 0.35×2</code></td>
+<td>1.70</td>
+</tr>
+<tr>
+<td>单发基础</td>
+<td><code>700 × 1.70</code></td>
+<td><strong>1,190.0</strong></td>
+</tr>
+<tr>
+<td>穿透</td>
+<td><code>80 × (1 + 0.20×2)</code></td>
+<td><strong>112.0</strong></td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>阶是自动涨的，不花钱。</strong> 本轮起 <code>tierForLevel</code> 按等级给阶（1-2 级 → 0 阶、
+3-4 级 → 1 阶、5 级 → 2 阶），局内没有任何购买动作（<code>00-决策清单.html</code> A25）。
+下面这行 <code>+2 阶</code> 不是&quot;买了两次&quot;，是&quot;活到了 5 级&quot;。</p>
+</blockquote>
+<hr>
+<h2 id="3.-第三步-穿透-→-有效护甲-→-护甲保留"><a class="anchor" href="#3.-第三步-穿透-→-有效护甲-→-护甲保留">#</a>3. 第三步：穿透 → 有效护甲 → 护甲保留</h2>
+<p><strong>这是本作伤害体系的核心机制，也是最容易写错的一步。</strong></p>
+<p>穿透<strong>削弱目标护甲</strong>，不是给自己增伤：</p>
+<pre><code>有效护甲 = 目标护甲 × (1 - 穿透/(穿透 + 60))          PIERCE_K = 60
+护甲保留 = 1 - 有效护甲 / (有效护甲 + 100)
+</code></pre>
+<p>代入 480 护甲、112 穿透：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>步</th>
+<th>计算</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>穿透削减比例</td>
+<td><code>112 / (112 + 60)</code></td>
+<td>0.6512</td>
+</tr>
+<tr>
+<td>有效护甲</td>
+<td><code>480 × (1 - 0.6512)</code></td>
+<td><strong>167.44</strong></td>
+</tr>
+<tr>
+<td>护甲保留</td>
+<td><code>1 - 167.44/(167.44+100)</code></td>
+<td><strong>0.3739</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>480 护甲被砍到 167</strong>——穿透 112 把 BOSS 的护甲削掉了 65%。</p>
+<p>对照一下同样条件下&quot;穿透 0&quot;会怎样：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>穿透</th>
+<th>有效护甲</th>
+<th>护甲保留</th>
+<th>相对收益</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>480.0</td>
+<td>0.172</td>
+<td>1.00x</td>
+</tr>
+<tr>
+<td>60</td>
+<td>240.0</td>
+<td>0.294</td>
+<td>1.71x</td>
+</tr>
+<tr>
+<td><strong>112</strong></td>
+<td><strong>167.4</strong></td>
+<td><strong>0.374</strong></td>
+<td><strong>2.17x</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>穿透从 0 到 112，伤害翻了一倍多。</strong> 这就是&quot;带穿刺武器&quot;成为独立战术选择的原因，
+也是穿透能作为第三条成长轴的依据。</p>
+<h3 id="3.1-一个被写错过的方向"><a class="anchor" href="#3.1-一个被写错过的方向">#</a>3.1 一个被写错过的方向</h3>
+<p>初版设计稿把穿透写成&quot;伤害再乘一个 <code>(1 - pierce/(pierce+40))</code> 的减伤&quot;——
+方向反了，那会让<strong>穿透越高伤害越低</strong>。见 <code>00-决策清单.html</code> A6。</p>
+<hr>
+<h2 id="4.-第四步-单发期望伤害"><a class="anchor" href="#4.-第四步-单发期望伤害">#</a>4. 第四步：单发期望伤害</h2>
+<pre><code>最终伤害 = 基础 × atkMul × levelDmgMul × 技能乘区 × 暴击期望 × 护甲保留 × 甲型克制
+</code></pre>
+<p>逐个算：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>乘区</th>
+<th>计算</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>基础</td>
+<td>见第 2 步</td>
+<td>1,190.0</td>
+</tr>
+<tr>
+<td><code>atkMul</code></td>
+<td>见第 1 步</td>
+<td>1.660</td>
+</tr>
+<tr>
+<td><code>levelDmgMul</code></td>
+<td>见第 1 步</td>
+<td>2.00</td>
+</tr>
+<tr>
+<td>技能乘区（致命标记）</td>
+<td><code>1 + (5/18)×(2.4-1)</code></td>
+<td><strong>1.3889</strong></td>
+</tr>
+<tr>
+<td>暴击期望</td>
+<td><code>1 + (0.25064+0.15)×(1.5-1)</code></td>
+<td><strong>1.2003</strong></td>
+</tr>
+<tr>
+<td>护甲保留</td>
+<td>见第 3 步</td>
+<td>0.3739</td>
+</tr>
+<tr>
+<td>甲型克制（穿刺 vs 重甲）</td>
+<td>矩阵查表</td>
+<td>1.05</td>
+</tr>
+</tbody></table>
+</div>
+<p>技能乘区是<strong>期望值折算</strong>：致命标记冷却 18 秒、持续 5 秒、倍率 2.4，
+所以平均收益是 <code>1 + (5/18) × 1.4 = 1.3889</code>，不是 2.4。</p>
+<p><strong>暴击期望里的 <code>0.15</code> 是武器自带的 <code>critBonus</code></strong>（狙击枪的弱点是额外 15% 暴击率），
+它和薇拉自己的 <code>0.25064</code> 相加，再乘暴伤超出 1 的那部分。</p>
+<p>相乘：</p>
+<pre><code>1190.0 × 1.660 × 2.00 × 1.3889 × 1.2003 × 0.3739 × 1.05
+= 1190.0 × 4.6112 × 1.2003 × 0.3739 × 1.05
+= 2,585.9
+</code></pre>
+<p><strong>单发 2,585.9 伤害。</strong></p>
+<hr>
+<h2 id="5.-第五步-攻速与换弹惩罚"><a class="anchor" href="#5.-第五步-攻速与换弹惩罚">#</a>5. 第五步：攻速与换弹惩罚</h2>
+<p><strong>攻速必须作用在&quot;频率&quot;上，不能乘进单发伤害。</strong></p>
+<pre><code>攻击频率 = 武器射速 × hasteMul = 0.35 × 1.4488 = 0.50708 /s
+单发周期 = 1 / 0.50708 = 1.9721 s
+</code></pre>
+<p>弹匣 5 发、换弹 2.5 秒：</p>
+<pre><code>弹匣周期 = 5 × 1.9721 = 9.8604 s
+换弹惩罚 = 9.8604 / (9.8604 + 2.5) = 0.7977
+</code></pre>
+<p><strong>为什么不能把 <code>hasteMul</code> 乘进单发伤害？</strong></p>
+<p>如果乘进单发，<code>perHit × hasteMul</code>，然后换弹惩罚再按<strong>未缩放</strong>的射速算弹匣周期，
+大弹匣武器的 DPS 会被系统性高估。攻击频率必须单独作为一个乘区。</p>
+<p>薇拉的对 BOSS 单发周期是 1.97 秒——<strong>一次换弹要吃 2.5 秒</strong>，
+占整个弹匣周期的 20.2%。这是狙击枪的隐性代价。</p>
+<hr>
+<h2 id="6.-第六步-单目标-dps"><a class="anchor" href="#6.-第六步-单目标-dps">#</a>6. 第六步：单目标 DPS</h2>
+<pre><code>DPS = 单发伤害 × 攻击频率 × 换弹惩罚 × AI 效率
+    = 2585.9 × 0.50708 × 0.7977 × 0.75
+    = 784.5
+</code></pre>
+<p><strong>薇拉单独一人对关底 BOSS 的 DPS 是 784.5。</strong></p>
+<h3 id="6.1-ai-效率系数-0.75"><a class="anchor" href="#6.1-ai-效率系数-0.75">#</a>6.1 AI 效率系数 0.75</h3>
+<p>最后那个 <code>0.75</code> 不是修正项，是<strong>前提</strong>（<code>src/sim/combat.ts</code> 的 <code>AI_EFFICIENCY</code>）。
+走位、切换目标、技能前摇、被击退都会损失输出。
+所有 BOSS 血量都建立在这个值之上——<strong>若原型实测发现队员空转更多，
+必须下调这个值并重跑 BOSS 血量的反向校准</strong>，不能只改一个。</p>
+<h3 id="6.2-换成时间读一遍"><a class="anchor" href="#6.2-换成时间读一遍">#</a>6.2 换成时间读一遍</h3>
+<pre><code>关底 BOSS 血量 94,000 ÷ 单角色 DPS 784.5 = 119.8 秒
+</code></pre>
+<p><strong>一个人打要将近两分钟，而目标击杀时间是 60 秒。</strong></p>
+<p>这条除法就是&quot;为什么必须是 5 人小队&quot;的数值证明——
+也解释了为什么&quot;带谁都行&quot;不成立：少一个输出位，关底就打不完。</p>
+<p>实测全队 5 人击杀关底 BOSS 用了 <strong>54.0 秒</strong>（见 <code>02-数值表.html</code> §6.2）。</p>
+<hr>
+<h2 id="7.-反向验证-从实测倒推回公式"><a class="anchor" href="#7.-反向验证-从实测倒推回公式">#</a>7. 反向验证：从实测倒推回公式</h2>
+<p>前面是&quot;从属性推到 DPS&quot;，这里反过来验一遍——<strong>用模拟器的实测结果倒推，
+看能不能回到同一组数字</strong>。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>登场等级</th>
+<th>武器阶</th>
+<th>BOSS 血量</th>
+<th>实测击杀</th>
+<th>倒推小队 DPS</th>
+<th>解析式 DPS</th>
+<th>差</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>3</td>
+<td>1</td>
+<td>48,500</td>
+<td>31.0s</td>
+<td>1,565</td>
+<td>1,022</td>
+<td>+53%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>4</td>
+<td>1</td>
+<td>70,000</td>
+<td>45.8s</td>
+<td>1,528</td>
+<td>1,309</td>
+<td>+17%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>5</td>
+<td>2</td>
+<td>94,000</td>
+<td>51.2s</td>
+<td>1,836</td>
+<td>1,542</td>
+<td>+19%</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>实测 DPS 高于解析式，是预期内的</strong>：解析式算的是&quot;五个人的单体 DPS 相加&quot;，
+而模拟器里溢出伤害会顺延到下一个目标（<code>run-sim.ts</code> 的伤害结算循环），
+加上近战武器的 <code>hitsPerAttack &gt; 1</code> 在清场后的收益，实际输出必然更高。</p>
+<p><strong>阶段 1 差得最多（+51%），因为那一场清场最彻底</strong>——杂兵被移干净，
+全队 5 人的溢出伤害全部灌在一个目标上，AOE 武器的收益最大化。
+（注：这里&quot;解析式 DPS&quot;是<strong>五人合计</strong>，不是薇拉一个人的 784.5——
+两者的差别正是&quot;队伍构成&quot;的价值，见 <code>02-数值表.html</code> §5.2 的 DPS 区间 128 ~ 479。）</p>
+<blockquote>
+<p>这条差值本身是有用的信号：<strong>差值突然变小，说明 BOSS 战被杂兵稀释了</strong>，
+该去看 <code>BOSS_PHASE_SPAWN_MUL</code> 是不是配错了。</p>
+</blockquote>
+<hr>
+<h2 id="8.-这个演示验证了什么"><a class="anchor" href="#8.-这个演示验证了什么">#</a>8. 这个演示验证了什么</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>手算能复现代码输出</td>
+<td>✓ 六步全部逐步对上</td>
+</tr>
+<tr>
+<td>六属性各自只管一列</td>
+<td>✓ 暴击在幸运、生命在体质，无跨列</td>
+</tr>
+<tr>
+<td>穿透是独立成长轴</td>
+<td>✓ 0→112 让伤害翻 2.17 倍</td>
+</tr>
+<tr>
+<td>攻速必须作用在频率上</td>
+<td>✓ 否则换弹惩罚算错弹匣周期</td>
+</tr>
+<tr>
+<td>等级收益走独立乘区</td>
+<td>✓ 走力量只有 +13%，走独立乘区 +100%</td>
+</tr>
+<tr>
+<td>单角色打不穿关底</td>
+<td>✓ 119.8s vs 目标 60s</td>
+</tr>
+<tr>
+<td>全队 5 人能打穿</td>
+<td>✓ 实测 51.2s</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>没验证的</strong>：这个 784.5 在真实战斗里手感对不对。
+公式能证明&quot;打得动&quot;，不能证明&quot;打得爽&quot;——后者要原型试玩。
+见 <code>02-数值表.html</code> §10 对模拟器边界的说明。</p>
+</main>
+</div>
+</body>
+</html>

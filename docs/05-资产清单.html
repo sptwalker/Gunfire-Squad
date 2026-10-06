@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>05 资产清单</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#1.-先说要紧的-rodin-的边界">1. 先说要紧的：Rodin 的边界</a></li><li class="d3"><a href="#1.1-关键决策-用&quot;带动画的资源包&quot;而不是&quot;给-rodin-模型绑骨&quot;">1.1 关键决策：用&quot;带动画的资源包&quot;而不是&quot;给 Rodin 模型绑骨&quot;</a></li><li class="d3"><a href="#1.2-现行路线-q-版体素-+-刚体部件-m0-后修订">1.2 现行路线：Q 版体素 + 刚体部件（M0 后修订）</a></li><li class="d2"><a href="#2.-角色-12-名">2. 角色（12 名）</a></li><li class="d3"><a href="#2.1-12-名角色的视觉区分方案">2.1 12 名角色的视觉区分方案</a></li><li class="d3"><a href="#2.3-武器-独立模型-+-手部挂点">2.3 武器：独立模型 + 手部挂点</a></li><li class="d3"><a href="#2.2-rodin-提示词模板-角色">2.2 Rodin 提示词模板（角色）</a></li><li class="d2"><a href="#3.-僵尸-9-种-+-1-变体">3. 僵尸（9 种 + 1 变体）</a></li><li class="d3"><a href="#3.1-rodin-提示词模板-僵尸">3.1 Rodin 提示词模板（僵尸）</a></li><li class="d2"><a href="#4.-地形与道具-rodin-的主场">4. 地形与道具（Rodin 的主场）</a></li><li class="d3"><a href="#4.1-增益道具的视觉设计-唯一需要&quot;抢眼&quot;的道具">4.1 增益道具的视觉设计（唯一需要&quot;抢眼&quot;的道具）</a></li><li class="d3"><a href="#4.3-三种可破坏障碍-只做一套几何-新增-1-次生成">4.3 三种可破坏障碍：<strong>只做一套几何，新增 1 次生成</strong></a></li><li class="d3"><a href="#4.2-rodin-提示词模板-道具-建筑">4.2 Rodin 提示词模板（道具/建筑）</a></li><li class="d2"><a href="#5.-6-个场景的资产复用-材质着色契约">5. 6 个场景的资产复用（材质着色契约）</a></li><li class="d3"><a href="#5.1-僵尸-同网格-换材质">5.1 僵尸：同网格，换材质</a></li><li class="d3"><a href="#5.2-地形-专属资产只有-2-3-个">5.2 地形：专属资产只有 2-3 个</a></li><li class="d2"><a href="#6.-特效-vfx">6. 特效（VFX）</a></li><li class="d2"><a href="#7.-音频-占位-原型阶段再定">7. 音频（占位，原型阶段再定）</a></li><li class="d2"><a href="#8.-资产生成的工作流">8. 资产生成的工作流</a></li><li class="d3"><a href="#8.1-命名规范-现在不定-后面会返工">8.1 命名规范（现在不定，后面会返工）</a></li><li class="d3"><a href="#8.2-一次性生成的预算估计">8.2 一次性生成的预算估计</a></li></ol></nav>
+<main class="doc">
+<h1 id="05-资产清单"><a class="anchor" href="#05-资产清单">#</a>05 资产清单</h1>
+<blockquote>
+<p><strong>美术风格已改为 Q 版体素（约 2.9 头身），见 §1.2 与 <code>00</code> A3。</strong>
+下文 §2.2 / §3.1 的 Rodin 提示词与&quot;low-poly 人形&quot;规矩是旧路线的记录，
+角色与僵尸不再按它们生成；地形道具（§4）仍可用 Rodin 出参考后体素化。</p>
+</blockquote>
+<blockquote>
+<p>本文解决一个问题：<strong>哪些资产用 Rodin 生成，哪些必须买/外包。</strong>
+结论是明确的——Rodin 能覆盖静态资产的大部分，但有两类它做不了，
+而这两类恰好是&quot;做错了整个项目就瘸了&quot;的两类。</p>
+</blockquote>
+<hr>
+<h2 id="1.-先说要紧的-rodin-的边界"><a class="anchor" href="#1.-先说要紧的-rodin-的边界">#</a>1. 先说要紧的：Rodin 的边界</h2>
+<p><strong>Rodin 产出的是静态网格（static mesh），不带骨骼、不带动画。</strong></p>
+<p>这不是 Rodin 的限制，是 AI 生成 3D 模型的通用现状。所以资产分成三类：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>能不能用 Rodin</th>
+<th>数量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>静态道具 / 地形</strong></td>
+<td>✅ 完全可以</td>
+<td>大头</td>
+<td>建筑、树木、岩石、油桶、掩体、道具</td>
+</tr>
+<tr>
+<td><strong>角色与僵尸本体</strong></td>
+<td>✅ 建模可以</td>
+<td>21 个</td>
+<td>但<strong>动画要另做</strong>（见下）</td>
+</tr>
+<tr>
+<td><strong>动画</strong></td>
+<td>❌ 做不了</td>
+<td>—</td>
+<td>必须买带动画的资源包，或外包绑定</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p>角色 12 + 僵尸 9 = <strong>21 个</strong>。（上一版写 20，是僵尸 7 + 角色 12 + BOSS 1 的旧算法。）</p>
+</blockquote>
+<h3 id="1.1-关键决策-用&quot;带动画的资源包&quot;而不是&quot;给-rodin-模型绑骨&quot;"><a class="anchor" href="#1.1-关键决策-用&quot;带动画的资源包&quot;而不是&quot;给-rodin-模型绑骨&quot;">#</a>1.1 关键决策：用&quot;带动画的资源包&quot;而不是&quot;给 Rodin 模型绑骨&quot;</h3>
+<p>给 Rodin 生成的网格绑骨 + 做动画，成本远高于买一套现成的。
+本作 21 个角色/僵尸的真实需求是：</p>
+<pre><code>每个单位需要： idle / move / attack / hit / death    5 个动作
+21 个单位 × 5 动作 = 105 个动作
+</code></pre>
+<p>手工做 105 个动作不现实。（角色这一侧因为武器可换，实际降到 10 个，见 §2.3。）<strong>推荐路径</strong>：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>单位</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>12 名可玩角色</td>
+<td>买带动画的 low-poly 人形包（Mixamo / Synty 风格），换材质区分</td>
+</tr>
+<tr>
+<td>BOSS ×3</td>
+<td>Rodin 生成模型 + 用现成人形骨架重定向</td>
+</tr>
+<tr>
+<td>普通僵尸 ×9</td>
+<td>买带动画的僵尸包，<strong>或</strong> Rodin 生成 + 重定向</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>重定向（retargeting）是这里的关键技术</strong>：把标准的 Mixamo 骨架
+套到任意人形网格上，动作自动适配。这条路径让&quot;Rodin 生成外观 + 现成骨架驱动&quot;
+成为可行方案——<strong>外观可以完全定制，动作复用。</strong></p>
+<blockquote>
+<p><strong>已验证（M0 ✅）</strong>：Rodin 网格能干净地绑到 Mixamo 骨架上，管线在 <code>proto/m0/tools/rig.py</code>，
+实测数字见 <code>06-开发路线图.html</code> 的「M0 实测」。所以 12 名角色也可以走&quot;Rodin 生成 + 绑骨&quot;，
+不必买角色包——<strong>要买的只剩一套 Mixamo 骨架的动作包</strong>（攻击 / hit / death，M0 用的是程序化占位）。</p>
+</blockquote>
+<h3 id="1.2-现行路线-q-版体素-+-刚体部件-m0-后修订"><a class="anchor" href="#1.2-现行路线-q-版体素-+-刚体部件-m0-后修订">#</a>1.2 现行路线：Q 版体素 + 刚体部件（M0 后修订）</h3>
+<p>M0 证明了&quot;Rodin 高精网格 + Mixamo 骨架&quot;能跑，也证明了它<strong>每个角色都要修一轮权重</strong>：
+袖子粘腰、腋下碎边、手指分不到指骨——修了三轮还剩碎边。21 个单位各来一遍不现实。</p>
+<p>改成 Q 版体素后，问题从根上消失：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>旧：Rodin 高精网格</th>
+<th>新：体素部件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>网格来源</td>
+<td>Rodin 生成，一次 1 个，随机性大</td>
+<td>按部件表拼格子（<code>tools/voxel.py</code>），改一格重跑一次</td>
+</tr>
+<tr>
+<td>绑骨</td>
+<td>权重投射 + 7 步修正</td>
+<td><strong>每块 100% 绑一根骨</strong>，零混合——没有拉丝、粘连、撕裂</td>
+</tr>
+<tr>
+<td>动作</td>
+<td>世界空间重定向到 A-pose</td>
+<td>Xbot 骨架只挪关节位置、不改骨骼朝向，<strong>旋转关键帧原样可用</strong></td>
+</tr>
+<tr>
+<td>贴图</td>
+<td>3 张 2048² → 压 1024² WebP</td>
+<td><strong>没有贴图</strong>，逐面顶点色</td>
+</tr>
+<tr>
+<td>薇拉体积</td>
+<td>559 KB / 7.8k 三角面</td>
+<td><strong>≈420 KB / 4.0k 三角面</strong>（12 人 3.7k–5.0k）</td>
+</tr>
+<tr>
+<td>武器</td>
+<td>Rodin 生成 + 归一</td>
+<td>同样拼格子（2 cm），11 把 4–10 KB</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>规格</strong>（与 <code>voxel.py</code> 一致）：</p>
+<ul>
+<li>格子 5 cm；头按 12 格画（脸 12×12 格，60 像素俯视下眼睛、刘海可读），出网格时绕脖子等比缩到 0.8 → 头高 0.48 m、身高 1.38 m，约 2.9 头身。缩放而不是重画 10 格，是因为 10 格的脸排不开眼睛 / 高光 / 腮红</li>
+<li>部件：头（含头发、五官）/ 胸 / 臀腰 / 上臂 / 前臂 / 手 / 大腿 / 小腿 / 脚，各一根骨</li>
+<li>同一部件内相邻格子的面剔掉，部件之间不剔（关节一弯不露洞）</li>
+<li>挂点约定不变（§2.3）：<code>socket_hand_r / l</code>，武器原点在握把，运行时一个常量旋转</li>
+<li>角色区分靠 §2.1 的<strong>主色 + 轮廓件</strong>（肩甲、兜帽、背罐……），都是加几块格子。
+12 人全在 <code>voxel.py</code> 的 <code>CHARS</code> 表里：肤 / 发 / 发型 / 上衣 / 裤 / 手套 / 体形（瘦 · 常 · 壮）+ 轮廓件列表，
+身体骨架与关节 12 人共用，差异只在表里</li>
+</ul>
+<p><strong>Rodin 的新位置</strong>：出参考图或粗模，给人看着拼部件；地形道具这种静态件可以直接 Remesh（Blocks）体素化。
+僵尸同样走部件拼装——&quot;九种轮廓两两可分&quot;（§3）在格子里比在高精网格里更好控。</p>
+<hr>
+<h2 id="2.-角色-12-名"><a class="anchor" href="#2.-角色-12-名">#</a>2. 角色（12 名）</h2>
+<p>俯视视角下，<strong>角色只需要上半身的辨识度</strong>——玩家看到的是一个 60 像素高的东西。
+所以资产优先级是：<strong>轮廓 &gt; 主色 &gt; 武器 &gt; 细节</strong>。</p>
+<h3 id="2.1-12-名角色的视觉区分方案"><a class="anchor" href="#2.1-12-名角色的视觉区分方案">#</a>2.1 12 名角色的视觉区分方案</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>定位</th>
+<th>武器</th>
+<th>主色</th>
+<th>轮廓特征</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>铁壁·罗恩</td>
+<td>坦克</td>
+<td>大刀</td>
+<td>钢灰</td>
+<td>全队最宽的肩甲 + 盾</td>
+</tr>
+<tr>
+<td>磐石·格温</td>
+<td>坦克</td>
+<td>长枪</td>
+<td>深蓝</td>
+<td>长枪竖持，高瘦</td>
+</tr>
+<tr>
+<td>疾风·凯</td>
+<td>近战</td>
+<td>剑</td>
+<td>亮红</td>
+<td>轻装，无披风</td>
+</tr>
+<tr>
+<td>断岳·铁牛</td>
+<td>近战</td>
+<td>大刀</td>
+<td>橙褐</td>
+<td>最壮，赤膊</td>
+</tr>
+<tr>
+<td>鹰眼·薇拉</td>
+<td>远程</td>
+<td>狙击枪</td>
+<td>墨绿</td>
+<td>长枪管 + 风衣下摆</td>
+</tr>
+<tr>
+<td>弹幕·杰特</td>
+<td>远程</td>
+<td>冲锋枪</td>
+<td>亮黄</td>
+<td>弹链斜跨</td>
+</tr>
+<tr>
+<td>霜语·艾拉</td>
+<td>控制</td>
+<td>冷冻器</td>
+<td>冰蓝</td>
+<td>兜帽 + 背包罐</td>
+</tr>
+<tr>
+<td>震地·博姆</td>
+<td>控制</td>
+<td>手雷</td>
+<td>土黄</td>
+<td>矮胖 + 腰挂雷</td>
+</tr>
+<tr>
+<td>圣手·莉安</td>
+<td>辅助</td>
+<td>手枪</td>
+<td>纯白</td>
+<td>医疗包 + 十字</td>
+</tr>
+<tr>
+<td>烈焰·萨满</td>
+<td>辅助</td>
+<td>喷火器</td>
+<td>焦橙</td>
+<td>双燃料罐后背</td>
+</tr>
+<tr>
+<td>傀儡师·诺克斯</td>
+<td>召唤</td>
+<td>回旋镖</td>
+<td>紫黑</td>
+<td>长袍，无甲</td>
+</tr>
+<tr>
+<td>蜂群·西芙</td>
+<td>召唤</td>
+<td>激光枪</td>
+<td>青绿</td>
+<td>无人机悬浮在肩</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>这张表就是&quot;12 个角色&quot;的全部定义。</strong> 只要主色和轮廓对得上，
+玩家在俯视视角下就能一眼分辨——这比堆细节有效得多。</p>
+<blockquote>
+<p>表里的&quot;武器&quot;列是<strong>默认武器</strong>，不是烘进角色网格的部件。见 §2.3。</p>
+</blockquote>
+<h3 id="2.3-武器-独立模型-+-手部挂点"><a class="anchor" href="#2.3-武器-独立模型-+-手部挂点">#</a>2.3 武器：独立模型 + 手部挂点</h3>
+<p>军械库让武器可换、可共享（用户裁决 #1），局内还能捡临时武器（#2），
+所以<strong>武器不能画在角色身上</strong>，必须是独立的 GLB，运行时挂到手上。</p>
+<p><strong>角色网格一律空手生成</strong>（§2.2 的模板；光写 <code>empty hands, no weapon</code> 压不住，M0 实测），
+骨架上加两个挂点骨骼：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>挂点</th>
+<th>父骨骼</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>socket_hand_r</code></td>
+<td>右手</td>
+<td>所有武器的主握点</td>
+</tr>
+<tr>
+<td><code>socket_hand_l</code></td>
+<td>左手</td>
+<td>双手武器的副握点（IK 目标，不挂模型）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>每把武器的原点就是握把</strong>，朝向 +Z 为枪口/刃尖，这样挂上去不用逐把调偏移。
+尺寸按角色身高 1.8 单位归一化，生成后在 <code>weapons.ts</code> 里只记一个 <code>gripOffset</code>（默认 0）。</p>
+<p>14 把武器按<strong>握持方式</strong>分 6 类，动画按握持方式复用，不按武器：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>握持</th>
+<th>武器</th>
+<th>攻击动画</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单手近战</td>
+<td>剑</td>
+<td>单手挥砍</td>
+</tr>
+<tr>
+<td>双手近战</td>
+<td>大刀 · 长枪</td>
+<td>双手横扫 / 前刺</td>
+</tr>
+<tr>
+<td>单手射击</td>
+<td>手枪 · 冲锋枪</td>
+<td>单手射击</td>
+</tr>
+<tr>
+<td>双手射击</td>
+<td>突击步枪 · 狙击枪 · 喷火器 · 冷冻器 · 激光枪</td>
+<td>抵肩射击</td>
+</tr>
+<tr>
+<td>肩扛</td>
+<td>火箭筒</td>
+<td>肩扛发射</td>
+</tr>
+<tr>
+<td>投掷 / 弓</td>
+<td>手雷 · 回旋镖 · 弓箭</td>
+<td>投掷 / 拉弓（弓共用投掷的上半身节奏）</td>
+</tr>
+</tbody></table>
+</div>
+<pre><code>每个单位的动作：idle / move / hit / death      4 个，全员共享
+攻击动作：      6 种握持 × 1                    6 个，按当前武器切换
+</code></pre>
+<p>所以换武器 = <strong>换挂点上的模型 + 换攻击动画那一条</strong>，其余动作不动。
+§1.1 的&quot;105 个动作&quot;对角色而言变成 4 + 6 = <strong>10 个</strong>——武器可换反而让动作更少了，
+因为角色不再各自绑死一套攻击。</p>
+<p><strong>僵尸与 BOSS 不走这套</strong>：它们的&quot;武器&quot;是身体，照旧烘进网格。</p>
+<h3 id="2.2-rodin-提示词模板-角色"><a class="anchor" href="#2.2-rodin-提示词模板-角色">#</a>2.2 Rodin 提示词模板（角色）</h3>
+<p><strong>M0 验证过的模板</strong>（Quad 模式，<code>quality_override: 8000</code>）：</p>
+<pre><code>3D figurine of &lt;subject&gt; in A-pose, both arms angled down and away from the body,
+bare open hands with visible spread fingers, palms facing the thighs, hands completely empty.
+&lt;He/She&gt; wears &lt;clothing, 2-3 colors&gt;, &lt;hair&gt;.
+Unarmed civilian mannequin pose, stylized low-poly, full body, symmetric,
+clean silhouette, flat lighting, plain background
+</code></pre>
+<p><strong>实际用上的一版（鹰眼·薇拉，第 8 次生成，图 + 文字）：</strong></p>
+<p>先纯文字抽一张脸清楚的（v7），把它的正面渲染图<strong>左半边镜像成左右对称</strong>，作为参考图和下面的文字一起传：</p>
+<pre><code>young woman soldier in exactly this symmetric A-pose, both arms straight down and away from the body
+with a clear gap to the torso and thighs, black gloved hands empty with fingers together,
+fitted olive green jumpsuit with slim sleeves, belt, thigh holsters, black boots,
+long auburn hair behind the shoulders, face fully visible, clean stylized face with clear eyes,
+neutral expression, stylized low-poly game character, flat lighting
+</code></pre>
+<p>有参考图时 <code>soldier</code> 不会再塞枪进手里——姿态由图锁住了。</p>
+<p><strong>M0 踩出来的规矩</strong>（前 4 次生成失败的原因）：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>规矩</th>
+<th>违反的后果（实测）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>不写职业 / 武器词</strong>（sniper、soldier、tactical）</td>
+<td>只要出现，Rodin 就会塞一把枪进手里——写了 <code>empty hands, no weapon</code> 也没用（v1、v2、v4 都拿着枪）</td>
+</tr>
+<tr>
+<td><strong>把手写具体</strong>：<code>bare open hands with visible spread fingers ... hands completely empty</code> + <code>unarmed civilian mannequin</code></td>
+<td>只写 <code>empty hands</code> 压不住；描述手指形状才压得住</td>
+</tr>
+<tr>
+<td><strong>要 A-pose，别要 T-pose</strong></td>
+<td>Rodin 几乎不出 T-pose，写了也是 A-pose 且左右不对称；管线（<code>rig.py</code> 第 2 步）会自动拟合手臂角度，所以 A-pose 反而最稳</td>
+</tr>
+<tr>
+<td><strong>服装不过膝，写 <code>hip-length fitted</code></strong></td>
+<td>过膝长下摆跑步时被两条腿撕开，没有可用的权重解（v5 风衣实测）；v6 改短夹克后解决</td>
+</tr>
+<tr>
+<td><strong>手臂和衣身之间要有缝</strong>：<code>clear gap to the torso and thighs</code>、<code>slim sleeves</code></td>
+<td>袖子贴着衣身生成就是同一片网格，挥砍 / 死亡时袖子粘在腰上（v6 实测）；绑骨管线会切开手臂与腿臀之间的面，没缝就切出洞</td>
+</tr>
+<tr>
+<td><strong>手套 + 手指并拢</strong>：<code>black gloved hands ... fingers together</code></td>
+<td>张开的手指比 Xbot 的手长、会分到大腿权重；手指在管线里是刚体，并拢的手套最不容易穿帮</td>
+</tr>
+<tr>
+<td><strong>脸靠参考图</strong>：先抽一张好脸，镜像成对称图再做图生模</td>
+<td>纯文字的脸每次随机，左右还不对称</td>
+</tr>
+<tr>
+<td><strong>头发写 <code>tucked behind the ears, face fully visible</code></strong></td>
+<td>头发盖脸时贴图会把发丝和脸糊在一起</td>
+</tr>
+<tr>
+<td><code>plain background</code></td>
+<td>生成带场景的图，抠模型要额外一轮</td>
+</tr>
+<tr>
+<td><code>stylized low-poly</code></td>
+<td>生成高细节模型，缩到 60 像素后是一团糊</td>
+</tr>
+</tbody></table>
+</div>
+<blockquote>
+<p>角色的<strong>职业感全部交给武器和配色</strong>：武器挂在手上（§2.3），配色在 §2.1 的表里。
+网格本身只是一个穿着对的衣服、空着手的人。</p>
+</blockquote>
+<p><strong>武器提示词</strong>：单独生成、<code>isolated weapon, side view, plain background</code>，
+生成后跑 <code>proto/m0/tools/weapon.py</code> 把原点移到握把、+Z 朝前、按真实长度缩放。</p>
+<hr>
+<h2 id="3.-僵尸-9-种-+-1-变体"><a class="anchor" href="#3.-僵尸-9-种-+-1-变体">#</a>3. 僵尸（9 种 + 1 变体）</h2>
+<p><strong>僵尸的资产优先级和角色不同</strong>：它们同屏 300 只，且玩家不需要分辨个体。
+所以优先级是：<strong>行为可读性 &gt; 外观多样性</strong>。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>主色</th>
+<th>轮廓特征</th>
+<th>从轮廓就能读出的行为</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通</td>
+<td>灰绿</td>
+<td>标准人形</td>
+<td>数量</td>
+</tr>
+<tr>
+<td>高速</td>
+<td>亮红</td>
+<td>前倾，手臂后甩</td>
+<td>冲刺</td>
+</tr>
+<tr>
+<td>高防胖</td>
+<td>暗黄</td>
+<td>体积是普通僵尸 2 倍</td>
+<td>阻挡</td>
+</tr>
+<tr>
+<td>毒液</td>
+<td>紫绿</td>
+<td>腹部鼓胀发光</td>
+<td>区域封锁</td>
+</tr>
+<tr>
+<td>爆炸</td>
+<td>橙红</td>
+<td>身体有裂纹发光</td>
+<td>逼迫走位</td>
+</tr>
+<tr>
+<td>分裂</td>
+<td>灰白</td>
+<td>半透明，能看到内部有 3 个团块</td>
+<td>清场惩罚</td>
+</tr>
+<tr>
+<td>跳跃</td>
+<td>深蓝</td>
+<td>腿部细长，蹲伏姿态</td>
+<td>无视地形</td>
+</tr>
+<tr>
+<td><strong>护盾</strong>（新）</td>
+<td>银白</td>
+<td><strong>全场唯一带硬直角的人形</strong>——正面一块弧形盾板 + 肩甲加宽</td>
+<td>破防检查</td>
+</tr>
+<tr>
+<td><strong>喷吐</strong>（新）</td>
+<td>黄褐</td>
+<td>颈部前伸、背部一个鼓起的囊袋，<strong>唯一不朝你走的人形</strong></td>
+<td>远程压制</td>
+</tr>
+<tr>
+<td>分裂小</td>
+<td>灰白</td>
+<td>分裂僵尸的 40% 缩放</td>
+<td>（不需要独立资产——<strong>复用分裂僵尸的网格做缩放</strong>）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>&quot;轮廓唯一性&quot;在这一轮变成硬约束了。</strong> 旧版 7 种靠主色就能分开，
+新版 9 种不行——其中两只（护盾 / 喷吐）的行为是&quot;不靠近你&quot;和&quot;打不动&quot;，
+两者都不能靠颜色表达。所以 §7.1 那条&quot;九种动词互不重叠&quot;在资产层的对应物是：
+<strong>九种轮廓在 60 像素高时必须两两可分</strong>（<code>护盾</code> 的直角盾板与
+<code>喷吐</code> 的前伸颈部就是为此加的）。</p>
+<p><strong>分裂小僵尸不单独生成资产</strong>——它是分裂僵尸的 0.4 倍缩放。
+省一次生成，也天然保证了视觉血缘。</p>
+<h3 id="3.1-rodin-提示词模板-僵尸"><a class="anchor" href="#3.1-rodin-提示词模板-僵尸">#</a>3.1 Rodin 提示词模板（僵尸）</h3>
+<pre><code>zombie &lt;type&gt;, top-down game character, full body, standing T-pose,
+clean silhouette, readable at small scale,
+&lt;color&gt; color scheme, &lt;distinctive feature&gt;,
+low-poly stylized, game-ready asset, slightly hunched posture,
+flat lighting, no shadows baked,
+single isolated object, plain background
+
+Negative: gore, blood splatter, realistic wounds, photorealistic
+</code></pre>
+<blockquote>
+<p><strong><code>Negative: gore</code> 是有意的。</strong> 血腥过度的僵尸资产在多数分发渠道会被打回，
+而&quot;恐怖&quot;不靠血堆——靠轮廓和颜色。俯视视角下也看不到细节。</p>
+</blockquote>
+<hr>
+<h2 id="4.-地形与道具-rodin-的主场"><a class="anchor" href="#4.-地形与道具-rodin-的主场">#</a>4. 地形与道具（Rodin 的主场）</h2>
+<p>这一类是 Rodin 最划算的用途：<strong>静态、无动画、数量多、俯视视角细节要求低。</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>资产</th>
+<th>数量</th>
+<th>尺寸（格）</th>
+<th>主要场景</th>
+<th>对应地形要素</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>建筑</td>
+<td>6 种</td>
+<td>4×4 ~ 12×12</td>
+<td>城市废墟 / 军事禁区</td>
+<td><code>building</code> 绝对阻挡</td>
+</tr>
+<tr>
+<td>走廊隔断</td>
+<td>3 种</td>
+<td>1×N</td>
+<td>城市废墟</td>
+<td><code>corridor</code> 强制单线</td>
+</tr>
+<tr>
+<td>树木</td>
+<td>4 种</td>
+<td>1×1（<strong>3 个尺寸靠缩放，不单独生成</strong>）</td>
+<td>原始丛林 / 雪原冻土</td>
+<td><code>openField</code> 的反面</td>
+</tr>
+<tr>
+<td>岩石</td>
+<td>3 种</td>
+<td>1×1 ~ 2×2</td>
+<td>荒漠废土 / 雪原冻土</td>
+<td>掩体</td>
+</tr>
+<tr>
+<td>掩体工事</td>
+<td>3 种</td>
+<td>1×2 / 2×2</td>
+<td>军事禁区</td>
+<td><code>coverDensity</code> 的实现物</td>
+</tr>
+<tr>
+<td>栅栏/沙袋</td>
+<td>3 种</td>
+<td>1×N</td>
+<td>全部</td>
+<td>同上</td>
+</tr>
+<tr>
+<td><strong>铁丝网</strong>（本轮新增）</td>
+<td>1 种</td>
+<td>1×N</td>
+<td>军事禁区 / 雪原冻土</td>
+<td><code>wire</code> 挡人不挡弹，见 §4.3</td>
+</tr>
+<tr>
+<td><strong>木墙</strong>（本轮新增）</td>
+<td>2 种</td>
+<td>1×N / 2×N</td>
+<td>城市废墟 / 军事禁区</td>
+<td><code>woodwall</code> 可炸开，见 §4.3</td>
+</tr>
+<tr>
+<td>油桶</td>
+<td>1 种</td>
+<td>1×1</td>
+<td>城市废墟 / 军事禁区</td>
+<td><code>barrel</code> 可引爆</td>
+</tr>
+<tr>
+<td>补给箱</td>
+<td>2 种</td>
+<td>1×1</td>
+<td>全部</td>
+<td><code>crate</code> 可破坏，掉落增益</td>
+</tr>
+<tr>
+<td>增益道具</td>
+<td>5 种</td>
+<td>0.5×0.5</td>
+<td>全部</td>
+<td>需要一眼分辨（见 §4.1）</td>
+</tr>
+<tr>
+<td>毒洼 / 冰面 / 水洼</td>
+<td>3 种</td>
+<td>圆形</td>
+<td>丛林 / 沼泽 / 雪原</td>
+<td><code>pool</code> <code>ice</code> <code>water</code>——<strong>全部贴地贴图，不用模型</strong></td>
+</tr>
+<tr>
+<td>残骸</td>
+<td>1 种</td>
+<td>1×1</td>
+<td>全部</td>
+<td>可破坏物被打掉后的共享碎石堆，见 §4.3</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>树木的&quot;3 个尺寸&quot;不单独生成</strong>——和分裂小僵尸一样，靠统一缩放。
+生成 4 个模型比生成 12 个便宜，而且缩放出来的树天然共享同一套 LOD。</p>
+<h3 id="4.1-增益道具的视觉设计-唯一需要&quot;抢眼&quot;的道具"><a class="anchor" href="#4.1-增益道具的视觉设计-唯一需要&quot;抢眼&quot;的道具">#</a>4.1 增益道具的视觉设计（唯一需要&quot;抢眼&quot;的道具）</h3>
+<p>5 种道具在战场上必须<strong>在余光里就能分辨</strong>：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>道具</th>
+<th>颜色</th>
+<th>图标形状</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>防御盾</td>
+<td>蓝</td>
+<td>盾牌</td>
+</tr>
+<tr>
+<td>加速</td>
+<td>黄</td>
+<td>双箭头</td>
+</tr>
+<tr>
+<td>增伤</td>
+<td>红</td>
+<td>剑</td>
+</tr>
+<tr>
+<td>加血</td>
+<td>绿</td>
+<td>十字</td>
+</tr>
+<tr>
+<td>冷却缩减</td>
+<td>紫</td>
+<td>时钟</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>颜色 + 形状双编码</strong>，因为色盲玩家占比约 8%，只靠颜色会有一批人分不清。
+道具本身用一个共享的底座模型（旋转发光的水晶），
+上面挂不同颜色的<strong>扁平图标贴片</strong>——省 5 次生成，且图标永远面向相机。</p>
+<h3 id="4.3-三种可破坏障碍-只做一套几何-新增-1-次生成"><a class="anchor" href="#4.3-三种可破坏障碍-只做一套几何-新增-1-次生成">#</a>4.3 三种可破坏障碍：<strong>只做一套几何，新增 1 次生成</strong></h3>
+<p>本轮新增沙袋 / 铁丝网 / 木墙（<code>src/data/scenes.ts</code> 的 <code>OBSTACLES</code>）。
+它们<strong>复用已有的掩体几何</strong>，改的是材质与破坏表现：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>障碍</th>
+<th>几何来源</th>
+<th>打掉后</th>
+<th>新增生成</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>沙袋</td>
+<td>复用 <code>栅栏/沙袋</code> 已有模型</td>
+<td>切残骸态（<code>residue: &#39;rubble&#39;</code>）</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>铁丝网</td>
+<td>复用栅栏几何，换铁丝材质</td>
+<td>直接隐藏（<code>residue: &#39;none&#39;</code>）</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>木墙</td>
+<td>复用走廊隔断几何，换木板材质</td>
+<td>切残骸态</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>残骸（共享）</td>
+<td>碎石堆，贴被打掉那个资产的材质</td>
+<td>—</td>
+<td><strong>1</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>&quot;可破坏&quot;要的不是新模型，是每个资产多一个残骸态</strong>，
+而残骸态可以全障碍共享一个网格。所以三种障碍的资产成本是
+<strong>一次材质 + 一次残骸生成</strong>，不是三次。</p>
+<p>这条与 <code>04-技术框架.html</code> §2.3 的位掩码是同一件事的两面：
+<strong>掩码里 <code>DESTRUCTIBLE</code> 那一位置上的对象，在美术上就是&quot;可切到残骸态&quot;的那个。</strong>
+判定侧只多了一个位，渲染侧只多了一次实例切换，两边都没有新增一类东西。</p>
+<h3 id="4.2-rodin-提示词模板-道具-建筑"><a class="anchor" href="#4.2-rodin-提示词模板-道具-建筑">#</a>4.2 Rodin 提示词模板（道具/建筑）</h3>
+<pre><code>&lt;object&gt;, isometric game asset, clean geometry,
+low-poly stylized, game-ready,
+&lt;color&gt; and &lt;material&gt;,
+top-down view readable,
+flat lighting, no shadows baked,
+single isolated object, plain background
+
+Negative: photorealistic, complex ornamentation, interior detail
+</code></pre>
+<p><strong>示例：</strong></p>
+<pre><code>wooden supply crate with metal corners, isometric game asset, clean geometry,
+low-poly stylized, game-ready, brown and grey,
+top-down view readable, flat lighting, no shadows baked,
+single isolated object, plain background
+</code></pre>
+<hr>
+<h2 id="5.-6-个场景的资产复用-材质着色契约"><a class="anchor" href="#5.-6-个场景的资产复用-材质着色契约">#</a>5. 6 个场景的资产复用（材质着色契约）</h2>
+<p><strong>核心原则：6 个场景共用同一批网格，靠材质换色 + 2-3 个专属元素区分。</strong></p>
+<p>这不是&quot;省钱的妥协&quot;，是本轮架构的直接要求。场景的区别在于
+<strong>它要什么阵容</strong>（<code>08-关卡方案.html</code> §3），不在于它长什么样——
+如果每个场景各生成一套僵尸，那么同一个&quot;高速僵尸&quot;在丛林和雪原会是两个模型，
+玩家要学会认两遍，而学到的东西一模一样。</p>
+<h3 id="5.1-僵尸-同网格-换材质"><a class="anchor" href="#5.1-僵尸-同网格-换材质">#</a>5.1 僵尸：同网格，换材质</h3>
+<p><strong>每只僵尸只有一个网格。</strong> 场景变体通过 <code>MeshStandardMaterial</code> 的
+<code>color</code> / <code>roughness</code> / <code>emissive</code> 三个参数偏移得到，不重新生成。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>基础主色</th>
+<th>丛林（潮湿）</th>
+<th>雪原（冻伤）</th>
+<th>荒漠（干枯）</th>
+<th>沼泽（腐蚀）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通</td>
+<td>灰绿</td>
+<td>偏青 +8% 饱和</td>
+<td>偏白 +20% 亮</td>
+<td>偏黄 +5% 亮</td>
+<td>偏褐 +10% 暗</td>
+</tr>
+<tr>
+<td>高速</td>
+<td>亮红</td>
+<td>不变</td>
+<td>不变</td>
+<td>不变</td>
+<td>+15% 暗</td>
+</tr>
+<tr>
+<td>…</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>&quot;高速僵尸的红色在任何场景都不变&quot;是刻意的。</strong> 行为可读性（§3）高于场景氛围：
+玩家在雪原里也必须一眼认出冲刺型。所以只有&quot;数量型&quot;僵尸参与换色，
+<strong>&quot;行为型&quot;僵尸保持全局同一主色</strong>。</p>
+<blockquote>
+<p>契约落在 <code>assets/materials/zombie_tint.json</code>，一格场景 × 一种僵尸 = 一组材质参数。
+换场景 = 换一张 tint 表，不动网格。这条也让&quot;场景配色&quot;变成可调的，
+而不是钉死在生成时。</p>
+</blockquote>
+<h3 id="5.2-地形-专属资产只有-2-3-个"><a class="anchor" href="#5.2-地形-专属资产只有-2-3-个">#</a>5.2 地形：专属资产只有 2-3 个</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>专属资产</th>
+<th>复用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>城市废墟</td>
+<td>建筑 ×6、车辆残骸</td>
+<td>通用道具、栅栏、油桶</td>
+</tr>
+<tr>
+<td>原始丛林</td>
+<td>草丛 ×3、干草堆</td>
+<td>树木 ×4、毒洼贴图</td>
+</tr>
+<tr>
+<td>沼泽疫地</td>
+<td>枯树 ×2、水洼贴图</td>
+<td>毒洼、岩石</td>
+</tr>
+<tr>
+<td>荒漠废土</td>
+<td>仙人掌 ×2</td>
+<td>岩石 ×3、干草堆</td>
+</tr>
+<tr>
+<td>雪原冻土</td>
+<td>雪堆 ×2、冰面贴图</td>
+<td>树木（覆雪材质）、岩石</td>
+</tr>
+<tr>
+<td>军事禁区</td>
+<td>掩体工事 ×3、铁丝网</td>
+<td>建筑、栅栏/沙袋、油桶</td>
+</tr>
+</tbody></table>
+</div>
+<p>每个场景只需 2-6 个专属资产，其余靠地表贴图 + 色调偏移。
+6 个场景的总地形资产量因此压到 <strong>30 个左右</strong>，而不是 6 × 30。</p>
+<blockquote>
+<p>这条对应 <code>00-决策清单.html</code> C5：场景改的是<strong>挑战签名</strong>，不是资产。
+资产层面<strong>同一套网格，换材质就是新场景。</strong></p>
+</blockquote>
+<hr>
+<h2 id="6.-特效-vfx"><a class="anchor" href="#6.-特效-vfx">#</a>6. 特效（VFX）</h2>
+<p>俯视视角下特效的作用是<strong>信息</strong>，不是美观。所以只做&quot;能传递状态&quot;的那几种：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>特效</th>
+<th>传递的信息</th>
+<th>实现</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>命中闪光</td>
+<td>打中了</td>
+<td>3 帧的白色叠加</td>
+</tr>
+<tr>
+<td>暴击数字</td>
+<td>这一下很重</td>
+<td>飘字，橙色，1.5 倍字号</td>
+</tr>
+<tr>
+<td>伤害数字</td>
+<td>常规反馈</td>
+<td>飘字，白色小字</td>
+</tr>
+<tr>
+<td>中毒地面</td>
+<td>这块地不能站</td>
+<td>贴地贴图，带呼吸动画</td>
+</tr>
+<tr>
+<td>冰冻</td>
+<td>这只被控住了</td>
+<td>单位套一层半透明蓝色壳</td>
+</tr>
+<tr>
+<td>自爆预警</td>
+<td>快跑</td>
+<td>单位膨胀 + 红色闪烁</td>
+</tr>
+<tr>
+<td>技能释放</td>
+<td>谁放了大招</td>
+<td>脚下光环扩散</td>
+</tr>
+<tr>
+<td>治疗</td>
+<td>谁在回血</td>
+<td>单位向上的绿色粒子</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>全部用 billboard 贴片或贴地贴图实现，不用粒子系统。</strong>
+300 只僵尸同屏时，粒子系统是第一个该砍的东西。</p>
+<blockquote>
+<p><strong>一个刻意的省略：不做血条飘字以外的&quot;打击感&quot;。</strong>
+屏幕震动、受击顿帧、镜头拉近——这些在原型阶段加，
+现在做等于在不知道手感的情况下调手感。</p>
+</blockquote>
+<hr>
+<h2 id="7.-音频-占位-原型阶段再定"><a class="anchor" href="#7.-音频-占位-原型阶段再定">#</a>7. 音频（占位，原型阶段再定）</h2>
+<p>本作的声音需求比一般射击游戏<strong>低</strong>——玩家不瞄准、不开枪。
+真正需要声音的是<strong>状态提示</strong>：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>音效</th>
+<th>触发</th>
+<th>优先级</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BOSS 登场</td>
+<td>每 5 分钟</td>
+<td>高</td>
+</tr>
+<tr>
+<td>队员阵亡</td>
+<td>死亡时</td>
+<td>高</td>
+</tr>
+<tr>
+<td>队员低血</td>
+<td>血量 &lt; 30%</td>
+<td>高</td>
+</tr>
+<tr>
+<td>拾取增益</td>
+<td>拾取时</td>
+<td>中</td>
+</tr>
+<tr>
+<td>关卡阶段切换</td>
+<td>每 5 分钟</td>
+<td>中</td>
+</tr>
+<tr>
+<td>背景音乐</td>
+<td>全程，按阶段分层</td>
+<td>低</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>攻击/命中的音效优先级最低</strong>——300 只僵尸同屏时，枪声会变成噪音。
+本作的声音设计目标不是&quot;每一枪都响&quot;，是&quot;该听见的能听见&quot;。</p>
+<hr>
+<h2 id="8.-资产生成的工作流"><a class="anchor" href="#8.-资产生成的工作流">#</a>8. 资产生成的工作流</h2>
+<pre><code>1. 批量生成      Rodin，按 §2.2 / §3.1 / §4.2 的模板，一次一个对象
+2. 筛选          人工过一遍，挑轮廓清晰的（俯视视角下细节多的反而更差）
+3. 压缩          gltf-transform：Draco + KTX2
+4. 命名          &lt;category&gt;_&lt;name&gt;_&lt;variant&gt;.glb
+5. 入库          assets/models/&lt;category&gt;/
+</code></pre>
+<h3 id="8.1-命名规范-现在不定-后面会返工"><a class="anchor" href="#8.1-命名规范-现在不定-后面会返工">#</a>8.1 命名规范（现在不定，后面会返工）</h3>
+<pre><code>角色     char_ron.glb        char_vera.glb
+僵尸     zomb_normal.glb     zomb_brute.glb
+BOSS     boss_corrupted.glb  boss_chaos.glb
+地形     prop_building_01.glb  prop_tree_pine_02.glb
+道具     item_buff_shield.glb
+武器     wpn_sniper.glb      wpn_greatsword.glb   （id 与 weapons.ts 的 WeaponId 一致）
+</code></pre>
+<p><strong>小写 + 下划线 + 数字后缀</strong>，不用驼峰（跨平台大小写敏感问题）、不用空格。</p>
+<h3 id="8.2-一次性生成的预算估计"><a class="anchor" href="#8.2-一次性生成的预算估计">#</a>8.2 一次性生成的预算估计</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>数量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>角色</td>
+<td>12</td>
+<td>可玩角色，<strong>空手生成</strong>（§2.3）</td>
+</tr>
+<tr>
+<td>武器</td>
+<td>14</td>
+<td>独立模型，原点在握把；与 <code>WEAPONS</code> 一一对应</td>
+</tr>
+<tr>
+<td>僵尸</td>
+<td>9</td>
+<td>分裂小复用缩放；<strong>场景变体靠 §5.1 的材质契约，不额外生成</strong></td>
+</tr>
+<tr>
+<td>BOSS</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>地形道具</td>
+<td>~30</td>
+<td>含 6 个场景的专属元素；树木的尺寸变体靠缩放；<strong>沙袋/铁丝网/木墙复用已有几何，只换材质</strong></td>
+</tr>
+<tr>
+<td>增益道具</td>
+<td>1 + 5 图标</td>
+<td>共享底座 + 5 个图标贴片</td>
+</tr>
+<tr>
+<td>残骸</td>
+<td>1</td>
+<td>共享碎石堆（§4.3），三种可破坏障碍切到同一个</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td><strong>≈ 75 次生成</strong></td>
+<td>比上一版多 14 次（武器从角色身上拆出来，§2.3）</td>
+</tr>
+</tbody></table>
+</div>
+<p>按 Rodin 单次生成的成本，这是一次<strong>可控的、一次性的</strong>投入。
+大头不在生成，在 §1.1 的<strong>动画方案验证</strong>——那才是原型阶段第一个要过的关。</p>
+<blockquote>
+<p><strong>注意 75 这个数不随关卡数增长。</strong> 82 个子关卡用的还是这 75 个资产：
+场景变体是材质，关卡变体是刷怪表（<code>src/data/scenes.ts</code>）。
+这一条是&quot;关卡由推导而来&quot;在资产层的直接体现——<strong>如果这里开始涨，
+说明有人又开始手写关卡了。</strong></p>
+<p>本轮新增三种障碍，资产只多了一次生成，靠的正是这条规矩：
+<strong>障碍的差别写在 <code>OBSTACLES</code> 表里（4 个布尔位），不写在模型里。</strong></p>
+</blockquote>
+</main>
+</div>
+</body>
+</html>

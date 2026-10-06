@@ -1,5 +1,5 @@
 /**
- * `docs/03-计算演示.md` 的复算脚本。
+ * `docs/03-计算演示.html` 的复算脚本。
  *
  * 跑法：node src/sim/_calc03.ts
  * 它把薇拉对卡俄斯的六步链逐段打印出来，**全部走真实实现**（derive / expectedDamage /

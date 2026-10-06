@@ -1,0 +1,1278 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>01 系统策划案</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#1.-一句话定位">1. 一句话定位</a></li><li class="d2"><a href="#2.-核心玩法循环">2. 核心玩法循环</a></li><li class="d2"><a href="#3.-小队控制">3. 小队控制</a></li><li class="d3"><a href="#3.1-控制方式">3.1 控制方式</a></li><li class="d3"><a href="#3.2-编队与牵引-关键机制">3.2 编队与牵引（关键机制）</a></li><li class="d3"><a href="#3.3-队长切换为什么是核心">3.3 队长切换为什么是核心</a></li><li class="d2"><a href="#4.-战斗规则">4. 战斗规则</a></li><li class="d3"><a href="#4.1-伤害公式-唯一真源-src-data-damage.ts">4.1 伤害公式（唯一真源：<code>src/data/damage.ts</code>）</a></li><li class="d3"><a href="#4.2-甲型克制矩阵">4.2 甲型克制矩阵</a></li><li class="d3"><a href="#4.3-ai-效率系数-0.75">4.3 AI 效率系数 0.75</a></li><li class="d3"><a href="#4.4-换弹机制">4.4 换弹机制</a></li><li class="d2"><a href="#5.-队员-ai">5. 队员 AI</a></li><li class="d3"><a href="#5.1-三层结构">5.1 三层结构</a></li><li class="d3"><a href="#5.2-差异化靠参数-不靠代码">5.2 差异化靠参数，不靠代码</a></li><li class="d3"><a href="#5.2.1-控制-辅助的技能必须被建模-否则&quot;带奶妈&quot;是负收益">5.2.1 控制/辅助的技能必须被建模，否则&quot;带奶妈&quot;是负收益</a></li><li class="d3"><a href="#5.3-玩家指令-三个按钮-不是三十个">5.3 玩家指令：三个按钮，不是三十个</a></li><li class="d3"><a href="#5.3.1-队伍是一个整体-不是五个人">5.3.1 队伍是一个整体，不是五个人</a></li><li class="d3"><a href="#5.4-战术动作与文字提示-用户裁决-#9-#10">5.4 战术动作与文字提示（用户裁决 #9 / #10）</a></li><li class="d2"><a href="#6.-武器系统-14-种">6. 武器系统（14 种）</a></li><li class="d3"><a href="#6.1-三条成长轴">6.1 三条成长轴</a></li><li class="d3"><a href="#6.2-武器阶-随等级自动涨-不花任何钱">6.2 武器阶：<strong>随等级自动涨，不花任何钱</strong></a></li><li class="d3"><a href="#6.3-hitsperattack-为什么必须压低单发">6.3 <code>hitsPerAttack</code> 为什么必须压低单发</a></li><li class="d2"><a href="#7.-僵尸系统-9-种">7. 僵尸系统（9 种）</a></li><li class="d3"><a href="#7.1-设计原则-每种僵尸必须能用一个行为动词概括">7.1 设计原则：每种僵尸必须能用一个<strong>行为动词</strong>概括</a></li><li class="d3"><a href="#7.1.1-本轮新增-僵尸的控制抗性">7.1.1 本轮新增：僵尸的<strong>控制抗性</strong></a></li><li class="d3"><a href="#7.2-两条反直觉的设计">7.2 两条反直觉的设计</a></li><li class="d3"><a href="#7.2-两条反直觉的设计-1">7.2 两条反直觉的设计</a></li><li class="d3"><a href="#7.3-阶段缩放">7.3 阶段缩放</a></li><li class="d2"><a href="#8.-关卡与刷怪">8. 关卡与刷怪</a></li><li class="d3"><a href="#8.1-刷怪用&quot;威胁预算&quot;而不是&quot;只数&quot;">8.1 刷怪用&quot;威胁预算&quot;而不是&quot;只数&quot;</a></li><li class="d3"><a href="#8.2-三个阶段">8.2 三个阶段</a></li><li class="d3"><a href="#8.3-boss-战期间的处理-不清场-但分阶段降刷怪">8.3 BOSS 战期间的处理：<strong>不清场，但分阶段降刷怪</strong></a></li><li class="d3"><a href="#8.4-boss-登场-清杂兵-留特化型-重要设计规则">8.4 BOSS 登场：清杂兵，留特化型（重要设计规则）</a></li><li class="d3"><a href="#8.5-阶段-3-的&quot;关底感&quot;从哪来">8.5 阶段 3 的&quot;关底感&quot;从哪来</a></li><li class="d2"><a href="#9.-boss-规格">9. BOSS 规格</a></li><li class="d3"><a href="#9.1-为什么-boss-血量是配平的锚点">9.1 为什么 BOSS 血量是配平的<strong>锚点</strong></a></li><li class="d3"><a href="#9.2-超时机制">9.2 超时机制</a></li><li class="d3"><a href="#9.3-胜利条件">9.3 胜利条件</a></li><li class="d2"><a href="#10.-经济与成长">10. 经济与成长</a></li><li class="d3"><a href="#10.1-局内-零购买-一切成长自动">10.1 局内：零购买，一切成长自动</a></li><li class="d3"><a href="#10.2-局外-金钱买装备本身-全队共享">10.2 局外：金钱买装备本身，全队共享</a></li><li class="d3"><a href="#10.3-等级曲线为什么是乘区而不是属性">10.3 等级曲线为什么是乘区而不是属性</a></li><li class="d2"><a href="#11.-任务-npc">11. 任务 NPC</a></li><li class="d3"><a href="#11.1-任务给荣誉值-这是军衔线的唯一入口">11.1 任务给<strong>荣誉值</strong>，这是军衔线的唯一入口</a></li><li class="d3"><a href="#11.2-高级技能-两把钥匙">11.2 高级技能：两把钥匙</a></li><li class="d2"><a href="#12.-增益道具">12. 增益道具</a></li><li class="d3"><a href="#12.1-局内临时武器">12.1 局内临时武器</a></li><li class="d2"><a href="#13.-地图与地形">13. 地图与地形</a></li><li class="d3"><a href="#13.1-结构">13.1 结构</a></li><li class="d3"><a href="#13.2-六个场景">13.2 六个场景</a></li><li class="d3"><a href="#13.3-地形要素-未改-但职能变了">13.3 地形要素（未改，但职能变了）</a></li><li class="d3"><a href="#13.4-地图尺寸与视线">13.4 地图尺寸与视线</a></li></ol></nav>
+<main class="doc">
+<h1 id="01-系统策划案"><a class="anchor" href="#01-系统策划案">#</a>01 系统策划案</h1>
+<blockquote>
+<p>核心玩法循环、战斗规则、AI 行为、经济、任务、关卡。
+所有数值的<strong>真源</strong>在 <code>src/data/*.ts</code>，本文与代码共用同一份数据，不重复维护。</p>
+<p><strong>第二轮修订（2026-09）</strong>：§5.3 命令栏扩为三个按钮 · §6.2 武器阶改自动 ·
+§7 僵尸表加控制抗性 · §10 经济整段重写（局内零购买 + 局外买装备、全队共享）·
+§11 任务接荣誉值、新增 §11.2 高级技能双钥匙 · §13 新增三种可破坏障碍。</p>
+<p><strong>第三轮修订（2026-10）</strong>：队长改由<strong>鼠标点地</strong>驱动（WASD 退为微调）·
+§5.3 四个命令按钮换成<strong>三种互斥阵型</strong>、集火与撤退并进鼠标 · 新增 §5.3.1
+「队伍是一个整体」的四条无操作规则 · §5.1 站位层改由 <code>SQUAD_COMMANDS.rings</code> 驱动，
+<code>HeroRole</code> 首次进入 AI。</p>
+</blockquote>
+<hr>
+<h2 id="1.-一句话定位"><a class="anchor" href="#1.-一句话定位">#</a>1. 一句话定位</h2>
+<p><strong>俯视 3D 小队生存射击。</strong> 玩家只控制 5 人小队的队长走位，
+其余 4 人自动跟随、自动索敌、自动开火、自动放技能；
+目标是在<strong>世界地图的 6 个场景 / 82 个子关卡</strong>里抗住 3 波不断涌来的僵尸、
+打掉 3 个 BOSS、并<strong>尽量让每个队员都活到最后</strong>。</p>
+<p>设计上最反直觉的一条：<strong>玩家不负责输出。</strong>
+输出是队员 AI 的事，玩家负责的是&quot;把队伍带到正确的位置&quot;。
+所以本作的技巧不在准星，在于<strong>读战场</strong>——判断哪一侧压力最大、什么时候该撤、什么时候该贴脸。</p>
+<p>第二条同样反直觉：<strong>卡住玩家的不能是数值，只能是阵容。</strong>
+每个场景、每个子关卡提出一种<strong>挑战维度</strong>（压力来源），
+玩家的长期成长是&quot;解锁新关卡 → 撞上新维度 → 现有阵容解不掉 → 重组阵容&quot;。
+武器没有局外养成（C3），所以卡住的时候没有数值可以刷——<strong>只能换人</strong>。
+详见 <code>08-关卡方案.html</code> 与 <code>09-角色与成长.html</code>。</p>
+<hr>
+<h2 id="2.-核心玩法循环"><a class="anchor" href="#2.-核心玩法循环">#</a>2. 核心玩法循环</h2>
+<p>本节的两个循环（单局 / 秒级）<strong>未改动</strong>，本文档描述的就是它们。
+新增的是外面两层：<strong>元循环</strong>从&quot;解锁一个角色&quot;扩成了&quot;一张地图&quot;。</p>
+<pre><code>长期循环（新）
+  世界地图 → 6 个场景 → 每场景 13-15 个子关卡（合计 82 关）
+      ↓ 每个子关卡 = 一次 15 分钟 run（下图的单局循环）
+  撞上新的挑战维度 → 现有阵容解不掉 → 解锁 / 强化角色 → 重组阵容 → 通关
+
+单局循环（15 分钟，未改动）
+  ┌──────────────────────────────────────────────────────┐
+  │  阶段 1 [0:00-5:00] 接触   → BOSS 腐化重装兵  [5:00]  │
+  │  阶段 2 [5:00-10:00] 压制  → BOSS 毒母·薇丝   [10:00] │
+  │  阶段 3 [10:00-15:00] 狂潮 → BOSS 尸潮之主·卡俄斯[15:00]│
+  └──────────────────────────────────────────────────────┘
+  （同一个关卡有普通 / 困难 / 噩梦三档，三档改的是**构成**不是数值——C4）
+
+  秒级循环（玩家视角，未改动）
+    观察 → 判断压力方向 → 移动队长 → 队员自动跟随交火
+      → 拾取增益 / 顺手完成任务 → 等级与武器阶自动涨 → 重复
+
+  局外循环（修订：B4/B5 + 本轮技能点 / 军衔）
+    结算 → 金钱带出关卡 → 在局外商店买**装备本身**（新武器 / 新道具，买断、全队共享）
+         → 技能点 → 点专精节点、买高级技能（唯一的局外数值强化）
+         → 荣誉值 → 升军衔（给资格与 AI 参数，不给属性）
+         → 换阵容重打
+</code></pre>
+<p><strong>为什么循环成立</strong>：玩家每 15 秒就要重新判断一次&quot;站在哪里&quot;，
+因为僵尸从四面八方来、队员有牵引范围、地形有阻挡。
+这是持续的小决策流，不是一次性的战术选择。</p>
+<p><strong>为什么长期循环成立</strong>：难度增长主要来自<strong>维度构成</strong>而不是威胁预算
+（同场景内预算只涨 ×2.05，维度却从 1 个变 3 个）。
+所以&quot;打不过&quot;的体感是&quot;我缺一种能力&quot;，不是&quot;我伤害不够&quot;——
+而唯一能补上这种能力的方式是换人。</p>
+<hr>
+<h2 id="3.-小队控制"><a class="anchor" href="#3.-小队控制">#</a>3. 小队控制</h2>
+<h3 id="3.1-控制方式"><a class="anchor" href="#3.1-控制方式">#</a>3.1 控制方式</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>操作</th>
+<th>键位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>移动队长</td>
+<td>WASD</td>
+<td>唯一的高频操作</td>
+</tr>
+<tr>
+<td>鼠标视角</td>
+<td>鼠标</td>
+<td>俯视相机旋转 / 缩放</td>
+</tr>
+<tr>
+<td>切换队长</td>
+<td>Tab / 1-5</td>
+<td><strong>核心战术操作</strong>——把控制权交给谁，等于决定队伍往哪走</td>
+</tr>
+<tr>
+<td>集火</td>
+<td>数字键 / 点击</td>
+<td>唯一的战术指令，指定全队攻击目标</td>
+</tr>
+<tr>
+<td>拾取</td>
+<td>自动</td>
+<td>走到增益道具上即拾取，不需要按键</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="3.2-编队与牵引-关键机制"><a class="anchor" href="#3.2-编队与牵引-关键机制">#</a>3.2 编队与牵引（关键机制）</h3>
+<pre><code>软牵引范围 12 格
+  └─ 队员超出 → 脱战回位，回位期间不攻击不索敌
+     这是&quot;惩罚玩家乱跑&quot;的机制：把队长拉太远，等于主动废掉 4 个队员的输出
+
+硬脱离范围 20 格
+  └─ 队员超出 → 强制传送归队
+     这是&quot;防卡死&quot;的兜底：防僵尸潮把队员推挤到地形里，导致队伍残缺
+</code></pre>
+<p>两个范围的距离差（12 vs 20）是<strong>刻意的缓冲区</strong>：玩家有 8 格的容错空间反悔。
+若两值相等，超出一格就被传送，手感会很硬。</p>
+<h3 id="3.3-队长切换为什么是核心"><a class="anchor" href="#3.3-队长切换为什么是核心">#</a>3.3 队长切换为什么是核心</h3>
+<p>队员的 <code>AIProfile</code> 决定它往哪站（近战前压、远程后撤）。
+<strong>换队长 = 换整支队的重心位置。</strong>
+例：被尸潮逼近时切成坦克当队长，整队重心前移，远程自然退到坦克身后；
+需要撤退时切成狙击手当队长，整队重心后移，近战自动脱离接触。</p>
+<p>这是一个<strong>用站位代替指令</strong>的设计——不增加按键，但提供战术表达。</p>
+<hr>
+<h2 id="4.-战斗规则"><a class="anchor" href="#4.-战斗规则">#</a>4. 战斗规则</h2>
+<h3 id="4.1-伤害公式-唯一真源-src-data-damage.ts"><a class="anchor" href="#4.1-伤害公式-唯一真源-src-data-damage.ts">#</a>4.1 伤害公式（唯一真源：<code>src/data/damage.ts</code>）</h3>
+<pre><code>最终伤害 = 基础伤害
+         × 攻击乘区 (1 + 力量 × 0.02)
+         × 等级乘区 (1 + 0.25 × (等级-1))
+         × 技能乘区 (1 + 冷却占比 × (倍率-1))
+         × 暴击期望 (1 + 暴击率 × (暴击伤害-1))
+         × 护甲减免   [有效护甲/(有效护甲+100) 的反面]
+         × 甲型克制   [7×4 矩阵]
+</code></pre>
+<p>其中：</p>
+<pre><code>有效护甲 = 目标护甲 × (1 - 穿透/(穿透+60))
+</code></pre>
+<p><strong>穿透削弱的是目标护甲，不是给自己加伤害。</strong> 这一点很重要——
+它让&quot;穿透&quot;成为一个独立的成长轴：面对 220 护甲的胖僵尸，穿透 60 相当于把它的护甲砍半，
+收益远高于同等的攻击力提升。这让&quot;带穿刺武器&quot;成为一个有意义的战术选择。</p>
+<h3 id="4.2-甲型克制矩阵"><a class="anchor" href="#4.2-甲型克制矩阵">#</a>4.2 甲型克制矩阵</h3>
+<p>无任何一格为 0——<strong>避免出现&quot;这把武器对这个敌人完全无效&quot;的死局</strong>。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>伤害类型</th>
+<th>无甲</th>
+<th>轻甲</th>
+<th>中甲</th>
+<th>重甲</th>
+<th>设计意图</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>冲击</td>
+<td>1.00</td>
+<td>1.10</td>
+<td>1.00</td>
+<td>0.85</td>
+<td>通用，对重甲乏力</td>
+</tr>
+<tr>
+<td>斩击</td>
+<td>1.00</td>
+<td><strong>1.15</strong></td>
+<td>0.95</td>
+<td>0.80</td>
+<td>克轻甲，被重甲克</td>
+</tr>
+<tr>
+<td>穿刺</td>
+<td>1.00</td>
+<td>1.00</td>
+<td><strong>1.10</strong></td>
+<td>1.05</td>
+<td>穿透系，稳定</td>
+</tr>
+<tr>
+<td>火焰</td>
+<td>1.00</td>
+<td>0.95</td>
+<td>1.00</td>
+<td><strong>1.15</strong></td>
+<td>克重甲，被轻甲规避</td>
+</tr>
+<tr>
+<td>冰霜</td>
+<td>1.00</td>
+<td>1.00</td>
+<td>1.00</td>
+<td>1.00</td>
+<td>纯控制，无克制</td>
+</tr>
+<tr>
+<td>爆炸</td>
+<td>1.00</td>
+<td>0.90</td>
+<td>1.10</td>
+<td><strong>1.20</strong></td>
+<td>最强克制，但武器射速慢</td>
+</tr>
+<tr>
+<td>毒</td>
+<td>1.00</td>
+<td>1.05</td>
+<td>0.95</td>
+<td>0.90</td>
+<td>对轻甲优</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="4.3-ai-效率系数-0.75"><a class="anchor" href="#4.3-ai-效率系数-0.75">#</a>4.3 AI 效率系数 0.75</h3>
+<p>纸面 DPS × 0.75 = 实战 DPS。
+走位、切换目标、技能前摇、被击退都会损失输出。
+<strong>这个系数是配平的前提</strong>，不是修正项——所有 BOSS 血量都建立在它之上。
+若原型实测发现队员空转更多，这个值要下调，且必须重跑 BOSS 血量的反向校准。</p>
+<h3 id="4.4-换弹机制"><a class="anchor" href="#4.4-换弹机制">#</a>4.4 换弹机制</h3>
+<p>远程武器用<strong>弹匣 + 换弹</strong>，不管理弹药总数。</p>
+<p>理由：弹药总数是一种&quot;资源管理&quot;，但在自动战斗游戏里玩家管不到队员的弹药，
+所以弹药总数只会变成一个&quot;莫名其妙打不出子弹&quot;的负反馈。
+而换弹<strong>时间</strong>是可读的节奏起伏——玩家能看见、能预判、能在换弹窗口调整站位。</p>
+<p>换弹惩罚在 DPS 计算里被摊掉：</p>
+<pre><code>换弹占比 = 弹匣容量 × 射击间隔 / (弹匣容量 × 射击间隔 + 换弹时间)
+</code></pre>
+<p>这让&quot;大弹匣慢换弹&quot;和&quot;小弹匣快换弹&quot;成为真正的取舍。</p>
+<hr>
+<h2 id="5.-队员-ai"><a class="anchor" href="#5.-队员-ai">#</a>5. 队员 AI</h2>
+<h3 id="5.1-三层结构"><a class="anchor" href="#5.1-三层结构">#</a>5.1 三层结构</h3>
+<pre><code>第 0 层：阵型          当前档位（普通防御 / 环形 / 推进）决定每名队员的站位锚点：
+                      谁站外圈、谁站中心、离队长多远、朝哪边展开（SQUAD_COMMANDS.rings）
+                      ↑ 第三轮新增。它是队员 AI 的**输入**，不是第四层逻辑
+
+第一层：站位          锚点之内，engageDistanceMul × 武器射程 = 期望交战距离
+                      近战 &gt; 1.0 前压，远程 &lt; 0.8 保持距离
+                      活动半径上限 = 本层的 tether，超出即强制回位（硬约束）
+
+第二层：索敌          aggroRange 内寻找目标，按 targetPriority 排序
+                      closest（最近）/ weakest（最弱）/ strongest（最强）
+                      leashRange 超出则脱战
+
+第三层：开火与技能    能量满即放 / 条件触发（如自身血量 &lt; 40% 放保命技）
+                      血量低于 retreatHpPct 则后撤
+</code></pre>
+<p><strong>第 0 层与前三层的分工</strong>：阵型管&quot;队伍长什么形状&quot;，
+前三层管&quot;队员在这个形状里怎么打架&quot;。阵型每帧只改一件事——锚点坐标；
+索敌、拴绳、走位、开火全部复用现成逻辑。这样加一档阵型 = 加一行数据，
+不是加一套 AI。</p>
+<h3 id="5.2-差异化靠参数-不靠代码"><a class="anchor" href="#5.2-差异化靠参数-不靠代码">#</a>5.2 差异化靠参数，不靠代码</h3>
+<p>12 个角色共用<strong>同一套 AI 代码</strong>，行为差异全部来自 <code>AIProfile</code> 的 5 个参数。
+加一个新角色 = 加一行数据，不是加一个类。</p>
+<p>示例对比：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>索敌</th>
+<th>脱战</th>
+<th>交战系数</th>
+<th>优先级</th>
+<th>后撤阈值</th>
+<th>读起来的行为</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>铁壁·罗恩（坦）</td>
+<td>14</td>
+<td>22</td>
+<td>1.2</td>
+<td>最近</td>
+<td>永不</td>
+<td>死战不退，顶在最前</td>
+</tr>
+<tr>
+<td>鹰眼·薇拉（狙）</td>
+<td>40</td>
+<td>55</td>
+<td>0.8</td>
+<td>最强</td>
+<td>30%</td>
+<td>躲在最后，专打 BOSS</td>
+</tr>
+<tr>
+<td>疾风·凯（近战）</td>
+<td>18</td>
+<td>26</td>
+<td>1.1</td>
+<td>最弱</td>
+<td>25%</td>
+<td>贴脸收残血</td>
+</tr>
+<tr>
+<td>圣手·莉安（辅）</td>
+<td>22</td>
+<td>30</td>
+<td>0.75</td>
+<td>最弱</td>
+<td>40%</td>
+<td>最怕死，最早撤</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>薇拉的&quot;优先打最强&quot;是刻意的</strong>：狙击手自动锁 BOSS。
+这让玩家不需要手动点 BOSS，但需要理解&quot;带薇拉 = 队伍重心会往后跑&quot;。</p>
+<h3 id="5.2.1-控制-辅助的技能必须被建模-否则&quot;带奶妈&quot;是负收益"><a class="anchor" href="#5.2.1-控制-辅助的技能必须被建模-否则&quot;带奶妈&quot;是负收益">#</a>5.2.1 控制/辅助的技能必须被建模，否则&quot;带奶妈&quot;是负收益</h3>
+<p>初版模拟器只算伤害，于是霜语·艾拉（93 DPS）和圣手·莉安（96 DPS）的价值<strong>完全隐形</strong>，
+跑出来&quot;均衡阵容 4/20 通关、无治疗阵容 20/20&quot;——<strong>带治疗反而更容易团灭</strong>。</p>
+<p>这是建模缺陷，不是设计结论。补上三个字段后（<code>src/data/characters.ts</code>）：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>谁在用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>teamDefMul</code></td>
+<td>技能生效期间全队受伤乘以该系数</td>
+<td>罗恩 0.5 / 博姆 0.6 / 艾拉 0</td>
+</tr>
+<tr>
+<td><code>healPerSec</code></td>
+<td>每秒回复全队，等于自身最大生命的比例</td>
+<td>莉安 0.06</td>
+</tr>
+</tbody></table>
+</div>
+<p>补上之后均衡阵容回到 20/20。<strong>教训：任何&quot;看起来弱&quot;的角色，
+先怀疑模拟器没建模，再怀疑数值不平衡。</strong></p>
+<h3 id="5.3-玩家指令-三个按钮-不是三十个"><a class="anchor" href="#5.3-玩家指令-三个按钮-不是三十个">#</a>5.3 玩家指令：三个按钮，不是三十个</h3>
+<blockquote>
+<p><strong>第三轮修订（2026-10）</strong>：原来是&quot;自由 ⇄ 集火 / 重整阵型 / 跟随 ⇄ 紧密跟随&quot;四个按钮，
+现在换成<strong>三个互斥阵型</strong>，且队长改由<strong>鼠标点地</strong>驱动。这一节的核心担心没有变，
+变的只是它守住的形状。</p>
+</blockquote>
+<p>核心体验是&quot;<strong>单手控队长 + 读战场</strong>&quot;。指令一多就变成 RTS，
+而队员 AI 的可读性会被指令噪音淹没——玩家会去盯按钮，而不是盯战场。
+这条担心本轮<strong>依然成立</strong>，所以第三轮重做时守住了它的形状：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阵型</th>
+<th>朝向</th>
+<th>站位</th>
+<th>什么时候用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>普通防御</strong></td>
+<td>有</td>
+<td>最紧。近战前扇形、远程后扇形、辅助中心</td>
+<td>默认。立定防守、卡口</td>
+</tr>
+<tr>
+<td><strong>环形防御</strong></td>
+<td>无</td>
+<td>近战铺满外圈 360°、远程环视、辅助内圈游走</td>
+<td>被包围、四面八方来敌</td>
+</tr>
+<tr>
+<td><strong>搜索推进</strong></td>
+<td>有</td>
+<td>松散。近战可前置更远、活动范围更大</td>
+<td>推进、清图</td>
+</tr>
+</tbody></table>
+</div>
+<p>三档<strong>互斥</strong>——同一条轴上的三个档位，不存在&quot;集火的同时紧密跟随&quot;这种叠加态。
+这比旧的&quot;两个独立二态开关 + 一个即时动作&quot;<strong>更省认知</strong>：旧形态要求玩家在脑子里
+同时维持两个位，新形态只需要维持一个位。<strong>换的是形状，不是数量。</strong></p>
+<p><strong>玩家的操作只剩三件</strong>：①左键点地面 = 移动（落点即阵型中心）；
+②按住左键拖 = 指定阵型朝向（不拖就由系统自动决定，见 <code>04-技术框架.html</code> §5.5）；
+③左键点敌人 = 集火。<strong>没有按钮要按。</strong></p>
+<p>三档都是<strong>效率旋钮</strong>，不是<strong>操作门槛</strong>。压舱石还是这条：
+<strong>默认&quot;普通防御&quot;必须能通关</strong>——阵型栏是让好玩家打得更好看，
+不是让普通玩家打得下去。</p>
+<blockquote>
+<p>旧版本这里是&quot;只保留集火一个&quot;，第二轮扩为三个按钮，第三轮换成三个阵型。
+改动见 <code>00-决策清单.html</code> A29。
+试玩时若发现玩家在战斗中频繁切阵型，说明它已经越过那条线，要往回砍。</p>
+</blockquote>
+<p><strong>集火不再是按钮。</strong> 原来的&quot;自由 ⇄ 集火&quot;是一个二态开关，
+现在左键点敌人就是集火，再点地面解除。它从&quot;命令栏上的一个档&quot;变成
+&quot;鼠标上的一个动作&quot;——<strong>少了一个按钮，功能没少</strong>。</p>
+<p><strong>撤退不再是阵型。</strong> 旧形态的第三档是&quot;撤离阵型&quot;（近战在队长身前铺扇形、
+远程缩后、被贴脸往外让）。但撤退本质上是&quot;往哪撤&quot;的<strong>移动意图</strong>，
+不是一个站位形状。所以它现在是<strong>鼠标的一个用例</strong>：点队长身后，
+队伍保持原阵型与迎敌朝向，有序边打边撤。<strong>阵型栏因此保持三档。</strong></p>
+<p><strong>WASD 保留，但语义变了</strong>：不再是&quot;五个队员各自朝输入方向走&quot;，而是整队平移的微调。
+<code>W</code> / <code>A</code> / <code>D</code> 按相机相对方向平移整个队伍且<strong>不改变阵型</strong>，<code>S</code> 判为撤退
+（与&quot;点队长身后&quot;同一条分支）。它存在，但不看攻略的玩家一辈子不按也不会吃亏。</p>
+<h3 id="5.3.1-队伍是一个整体-不是五个人"><a class="anchor" href="#5.3.1-队伍是一个整体-不是五个人">#</a>5.3.1 队伍是一个整体，不是五个人</h3>
+<p>第三轮的另一半目标：让队伍在关卡里<strong>被视作一个行动单元</strong>。这几条都不增加玩家操作：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>规则</th>
+<th>解决什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>移动途中不主动索敌，到位才展开</td>
+<td>队员被拉成一条长条，前面的先接敌、后面的还在走</td>
+</tr>
+<tr>
+<td>站位的活动圈是<strong>硬约束</strong>，超出即强制回位</td>
+<td>近战被僵尸带离阵型，越追越远</td>
+</tr>
+<tr>
+<td>锚点先做可达性吸附，再兜底卡住自动寻路</td>
+<td>站位点被指到墙里，队员贴墙挪、慢慢掉队</td>
+</tr>
+<tr>
+<td>切阵型按&quot;离自己最近的槽位&quot;认领</td>
+<td>换档时两人对冲（A 跑 B 的位），队伍像是在打架</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>&quot;移动途中不索敌&quot;是这里面最便宜、收益最大的一条。</strong> 不加的话，
+跑在最前的队员撞上僵尸就停下开火，后面的还在往前走——
+队伍自然被拉成长条，而这正是&quot;某个队员单独战斗&quot;的来源。</p>
+<hr>
+<h3 id="5.4-战术动作与文字提示-用户裁决-#9-#10"><a class="anchor" href="#5.4-战术动作与文字提示-用户裁决-#9-#10">#</a>5.4 战术动作与文字提示（用户裁决 #9 / #10）</h3>
+<p>后期的 AI 不只是&quot;打得更准&quot;，而是<strong>会自己做战术动作</strong>。它们由军衔 6-12 级解锁、按定位分配，
+AI 自己判断时机，<strong>玩家不用按任何键</strong>——这守住了上面&quot;三个按钮&quot;的形状。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>动作</th>
+<th>军衔</th>
+<th>谁会</th>
+<th>AI 什么时候做</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>构筑工事</td>
+<td>6 准尉</td>
+<td>坦克 · 近战</td>
+<td>原地交战 &gt;8 秒且正面 ≥6 只：放一排沙袋</td>
+</tr>
+<tr>
+<td>布设地雷</td>
+<td>7 少尉</td>
+<td>控制 · 远程 · 近战</td>
+<td>突进 / 自爆僵尸从同一方向来：来路埋 3 颗雷</td>
+</tr>
+<tr>
+<td>埋设陷阱</td>
+<td>8 中尉</td>
+<td>控制 · 辅助 · 召唤</td>
+<td>卡口 / 走廊有敌人排队：减速网 + 短时定身</td>
+</tr>
+<tr>
+<td>架设堡垒</td>
+<td>10 少校</td>
+<td>坦克 · 辅助</td>
+<td>护送 / 守护任务或 BOSS 战：三面木墙围出据点</td>
+</tr>
+<tr>
+<td>呼叫炮火</td>
+<td>12 上校</td>
+<td>远程 · 控制 · 辅助</td>
+<td>视野内有精英，或 ≥12 只聚在 5 格内：3 秒后落点</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>每次触发都在 HUD 命令栏上方给一行文字提示</strong>（如&quot;格温 架设堡垒&quot;、&quot;薇拉 呼叫炮火——3 秒后落点&quot;），
+高级技能释放同理。玩家不用盯着队员，也知道队员刚做了什么——这是 E1&quot;AI 可读性&quot;的一部分答案。</p>
+<p><strong>战术动作不给维度答案</strong>：地雷能帮你打突进，但阵容里没有突进答案的队伍照样过不了突进关。
+工事与堡垒复用 §13 的沙袋 / 木墙，不是新障碍。数据在 <code>progression.ts</code> 的 <code>TACTICS</code>。</p>
+<hr>
+<h2 id="6.-武器系统-14-种"><a class="anchor" href="#6.-武器系统-14-种">#</a>6. 武器系统（14 种）</h2>
+<p>完整数值见 <code>02-数值表.html</code>。这里只讲设计取舍。</p>
+<h3 id="6.1-三条成长轴"><a class="anchor" href="#6.1-三条成长轴">#</a>6.1 三条成长轴</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>轴</th>
+<th>来源</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>攻击力</td>
+<td>力量属性 + 等级</td>
+<td>通用基础</td>
+</tr>
+<tr>
+<td>穿透</td>
+<td>武器固有 + 武器阶</td>
+<td><strong>对高护甲目标的乘算收益</strong></td>
+</tr>
+<tr>
+<td>频率</td>
+<td>敏捷属性 + 武器固有射速</td>
+<td>单位时间输出次数</td>
+</tr>
+</tbody></table>
+</div>
+<p>刻意让它们<strong>互相不能替代</strong>：狙击枪穿透高但频率极低（0.35/s），
+冲锋枪频率极高但穿透低（10）。所以&quot;哪把武器强&quot;取决于<strong>打什么敌人</strong>，
+而不是取决于一个全局的强弱排序。</p>
+<h3 id="6.2-武器阶-随等级自动涨-不花任何钱"><a class="anchor" href="#6.2-武器阶-随等级自动涨-不花任何钱">#</a>6.2 武器阶：<strong>随等级自动涨，不花任何钱</strong></h3>
+<p>每把武器 3 阶，<strong>由等级自动带动</strong>（<code>weapons.ts</code> 的 <code>tierForLevel</code>）：</p>
+<pre><code>1-2 级 → 0 阶      3-4 级 → 1 阶      5 级 → 2 阶
+阶加成：伤害 × (1 + 0.35 × 阶)    穿透 × (1 + 0.20 × 阶)
+</code></pre>
+<p><strong>这条在本轮改了。</strong> 旧版是&quot;金钱购买 <code>+0 免费 / +1 花 700 / +2 花 1500</code>&quot;，
+与等级线各占一半节奏。改自动的理由在 <code>00-决策清单.html</code> A25 / B4：</p>
+<ul>
+<li>局内不该有购买动作，玩家的手应该在<strong>走位</strong>上，不在商店上；</li>
+<li>武器阶由时间免费给之后，金钱就能去买<strong>真正稀缺的东西</strong>——
+别的角色买不到的新武器<strong>种类</strong>（A26）。</li>
+</ul>
+<p>代价是前 5 分钟少了一个&quot;攒钱买东西&quot;的正反馈。当前用等级里程碑顶上
+（3 级 / 5 级各是一个可见的跳变），实机手感需要 M2 试玩确认。</p>
+<h3 id="6.3-hitsperattack-为什么必须压低单发"><a class="anchor" href="#6.3-hitsperattack-为什么必须压低单发">#</a>6.3 <code>hitsPerAttack</code> 为什么必须压低单发</h3>
+<p><code>hitsPerAttack &gt; 1</code> 的武器（大刀 3、手雷 6、喷火器 4、火箭筒 5、激光 3）
+天然有 AOE 优势。所以它们的<strong>单发伤害必须压低</strong>，
+否则近战群伤武器会直接碾压所有单体远程武器——大刀单发 190 vs 狙击枪 700，
+但大刀一次打 3 个，实际总输出并不吃亏。</p>
+<hr>
+<h2 id="7.-僵尸系统-9-种"><a class="anchor" href="#7.-僵尸系统-9-种">#</a>7. 僵尸系统（9 种）</h2>
+<h3 id="7.1-设计原则-每种僵尸必须能用一个行为动词概括"><a class="anchor" href="#7.1-设计原则-每种僵尸必须能用一个行为动词概括">#</a>7.1 设计原则：每种僵尸必须能用一个<strong>行为动词</strong>概括</h3>
+<p>否则它就只是一个换皮的血包。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>血</th>
+<th>速</th>
+<th>甲</th>
+<th>行为动词</th>
+<th>具体表现</th>
+<th>贡献维度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通</td>
+<td>200</td>
+<td>2.2</td>
+<td>无</td>
+<td><strong>数量</strong></td>
+<td>构成战场底噪</td>
+<td>潮涌</td>
+</tr>
+<tr>
+<td>高速</td>
+<td>120</td>
+<td>5.0</td>
+<td>无</td>
+<td><strong>冲刺</strong></td>
+<td>突进，惩罚站桩与长换弹</td>
+<td>突进 · 开阔</td>
+</tr>
+<tr>
+<td>高防胖</td>
+<td>1400</td>
+<td>1.2</td>
+<td>重甲</td>
+<td><strong>阻挡</strong></td>
+<td>缓慢推挤，逼你处理它</td>
+<td>重甲 · 卡口</td>
+</tr>
+<tr>
+<td>毒液</td>
+<td>350</td>
+<td>2.0</td>
+<td>轻甲</td>
+<td><strong>区域封锁</strong></td>
+<td>死亡留毒池，逼你放弃阵地</td>
+<td>毒区 · 卡口</td>
+</tr>
+<tr>
+<td>爆炸</td>
+<td>400</td>
+<td>2.6</td>
+<td>中甲</td>
+<td><strong>逼迫走位</strong></td>
+<td>靠近自爆，范围 2.5 格</td>
+<td>自爆</td>
+</tr>
+<tr>
+<td>分裂</td>
+<td>300</td>
+<td>2.2</td>
+<td>无</td>
+<td><strong>清场惩罚</strong></td>
+<td>死亡分裂 3 只小僵尸</td>
+<td>分裂</td>
+</tr>
+<tr>
+<td>跳跃</td>
+<td>250</td>
+<td>3.0</td>
+<td>无</td>
+<td><strong>无视地形</strong></td>
+<td>跳过掩体，落地 AOE</td>
+<td>迟滞 · 开阔</td>
+</tr>
+<tr>
+<td><strong>护盾</strong></td>
+<td>900</td>
+<td>1.8</td>
+<td>中甲</td>
+<td><strong>破防检查</strong></td>
+<td>正面护盾吸收固定伤害，破盾后 3 秒虚弱（受伤 +50%），<strong>霸体</strong></td>
+<td>精英护盾 · 围猎 · 控制抗性</td>
+</tr>
+<tr>
+<td><strong>喷吐</strong></td>
+<td>600</td>
+<td>1.6</td>
+<td>轻甲</td>
+<td><strong>远程压制</strong></td>
+<td>12 格外喷吐，不进入接触距离</td>
+<td>远程压制 · 围猎</td>
+</tr>
+</tbody></table>
+</div>
+<p>九种动词<strong>互不重叠</strong>，这样玩家在战场上一眼能读出战术含义。</p>
+<h3 id="7.1.1-本轮新增-僵尸的控制抗性"><a class="anchor" href="#7.1.1-本轮新增-僵尸的控制抗性">#</a>7.1.1 本轮新增：僵尸的<strong>控制抗性</strong></h3>
+<p>九种僵尸各自补了五个字段，让&quot;控制&quot;第一次有了对抗面
+（<code>00-决策清单.html</code> A24，完整矩阵见 <code>02-数值表.html</code> §11）：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>回答哪个英雄手段</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>stab</code> <strong>稳固</strong></td>
+<td>抵抗击退/击倒，与英雄 <code>Derived.stab</code> 同量纲</td>
+<td>力量（近战击退力）/ 敏捷（远程击退力）</td>
+</tr>
+<tr>
+<td><code>superArmor</code> <strong>霸体</strong></td>
+<td><strong>只免疫位移</strong>（击退 + 击倒）</td>
+<td>火箭筒那类&quot;唯一的成规模击退来源&quot;</td>
+</tr>
+<tr>
+<td><code>freezeRes</code> <strong>抗冻</strong></td>
+<td>抵抗冻结的概率与时长</td>
+<td>冷冻枪</td>
+</tr>
+<tr>
+<td><code>cunning</code> <strong>狡诈</strong></td>
+<td>抵抗嘲讽</td>
+<td>嘲讽类技能</td>
+</tr>
+<tr>
+<td><code>knock</code></td>
+<td>僵尸<strong>自己</strong>的击退力</td>
+<td>反过来打乱你的阵型</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>注意表里没有的东西：没有 <code>slowRes</code>。</strong> 减速是本作唯一不设对抗的控制属性——
+这是刻意的地板，理由写在 <code>02-数值表.html</code> §11 与 <code>00-决策清单.html</code> A24。
+一句话：控制流需要一个走到黑的缝隙，否则它永远打不过&quot;堆抗性&quot;。</p>
+<p>数值上刻意拉开的两端：<strong>护盾僵尸</strong>稳固 120 + 霸体 + 抗冻 0.35，几乎推不动；
+<strong>分裂小僵尸</strong>稳固 20、抗性全 0，是击退流的最佳目标。
+<code>02-数值表.html</code> §11.1 的 12×9 矩阵里，断岳·铁牛挥大刀对胖僵尸的击退命中率是 <strong>0.75</strong>
+（推得动，但明显费力），对霸体僵尸直接是 <code>霸体</code>。</p>
+<h3 id="7.2-两条反直觉的设计"><a class="anchor" href="#7.2-两条反直觉的设计">#</a>7.2 两条反直觉的设计</h3>
+<p><strong>本轮新增的两只</strong>（7 → 9）专门服务两个新维度，机制上是刻意反着来的：</p>
+<ul>
+<li><strong>护盾僵尸逼迫阵容准备&quot;爆发窗口&quot;这个能力</strong>，而不是&quot;更多的持续输出&quot;——
+它的护盾吸收固定伤害，所以持续磨盾是纯浪费。</li>
+<li><strong>喷吐僵尸让&quot;龟缩阵地&quot;这个稳赢打法第一次付出代价</strong>——
+在旧版里站着不动几乎总是最优解（见 <code>00-决策清单.html</code> D1：
+常规阶段贴身占比 0%），远程僵尸是从结构上修正它。</li>
+</ul>
+<p>原有的 7 种各补一个 <code>dims</code> 字段声明自己贡献哪些维度（上表最后一列），<strong>数值一个未改</strong>。</p>
+<h3 id="7.2-两条反直觉的设计-1"><a class="anchor" href="#7.2-两条反直觉的设计-1">#</a>7.2 两条反直觉的设计</h3>
+<p><strong>A. 胖僵尸的作用是&quot;逼你处理&quot;，不是&quot;造成伤害&quot;。</strong>
+1400 血（普通僵尸的 7 倍）但速度只有 1.2（普通的一半）。
+它不会杀人，它只是堵住你的路、消耗你的输出时间。</p>
+<p><strong>B. 分裂僵尸让 AOE 武器在这里变成负收益。</strong>
+打死 1 只分裂僵尸 → 变成 3 只小僵尸。
+所以带大刀的队伍遇到分裂僵尸时，输出反而是倒扣的。
+这迫使玩家理解&quot;高 DPS 不等于最优解&quot;，是阵容深度的主要来源之一。</p>
+<h3 id="7.3-阶段缩放"><a class="anchor" href="#7.3-阶段缩放">#</a>7.3 阶段缩放</h3>
+<pre><code>阶段血量倍率 [1.0, 1.7, 2.8]     阶段伤害倍率 [1.0, 1.5, 2.2]
+</code></pre>
+<p>血量倍率<strong>必须略低于</strong>小队输出成长（等级 1→5 是 ×2.0，武器 0→2 阶是 ×1.7，合计 ×3.4）。
+这样玩家越打越轻松，压力集中在 BOSS 和刷新密度上。</p>
+<p>初版用了 4.5——僵尸血量涨得比小队伤害快，阶段 3 场上堆到 80+ 只，前沿直接崩了。</p>
+<blockquote>
+<p><strong>注意这条缩放是&quot;一次 run 之内&quot;的。</strong>
+关卡之间的难度增长走的是另一条完全不同的机制——威胁预算与维度权重，
+见 §8.6 与 <code>08-关卡方案.html</code> §4。两者不要混。</p>
+</blockquote>
+<hr>
+<h2 id="8.-关卡与刷怪"><a class="anchor" href="#8.-关卡与刷怪">#</a>8. 关卡与刷怪</h2>
+<h3 id="8.1-刷怪用&quot;威胁预算&quot;而不是&quot;只数&quot;"><a class="anchor" href="#8.1-刷怪用&quot;威胁预算&quot;而不是&quot;只数&quot;">#</a>8.1 刷怪用&quot;威胁预算&quot;而不是&quot;只数&quot;</h3>
+<p>每只僵尸有 <code>threat</code> 成本（普通 1、胖 3、毒 1.8、爆炸 2）。
+出怪速率以<strong>威胁值/秒</strong>表示，预算累积到够一只就刷一只。</p>
+<p><strong>为什么不用只数</strong>：用只数的话，调整出怪表（比如把普通换成胖僵尸）
+会意外地大幅改变难度，因为胖僵尸的实际压力远大于普通僵尸。
+用威胁值则&quot;总压力&quot;是可读、可控的常量。</p>
+<h3 id="8.2-三个阶段"><a class="anchor" href="#8.2-三个阶段">#</a>8.2 三个阶段</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>时间</th>
+<th>威胁速率</th>
+<th>出怪构成</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1 接触</td>
+<td>0:00-5:00</td>
+<td>3.0 → 4.0</td>
+<td>普通 75 / 高速 25</td>
+</tr>
+<tr>
+<td>2 压制</td>
+<td>5:00-10:00</td>
+<td>4.5 → 6.0</td>
+<td>+ 毒液 / 分裂 / 爆炸</td>
+</tr>
+<tr>
+<td>3 狂潮</td>
+<td>10:00-15:00</td>
+<td>4.2 → 4.8</td>
+<td>+ 胖 / 跳跃（全类型）</td>
+</tr>
+</tbody></table>
+</div>
+<p>阶段 3 的威胁速率<strong>低于</strong>阶段 2 的终值——这不是笔误。
+阶段 3 的出怪表里胖僵尸（threat 3）和跳跃僵尸占比更高，
+同样的威胁值对应<strong>更少的只数、更高的单体质量</strong>。
+表上看速率降了，实际压力是升的。</p>
+<h3 id="8.3-boss-战期间的处理-不清场-但分阶段降刷怪"><a class="anchor" href="#8.3-boss-战期间的处理-不清场-但分阶段降刷怪">#</a>8.3 BOSS 战期间的处理：<strong>不清场，但分阶段降刷怪</strong></h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>BOSS</th>
+<th>刷怪乘数</th>
+<th>目标场上只数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>腐化重装兵</td>
+<td>0.18</td>
+<td>3</td>
+</tr>
+<tr>
+<td>毒母·薇丝</td>
+<td>0.15</td>
+<td>4.5</td>
+</tr>
+<tr>
+<td>尸潮之主·卡俄斯</td>
+<td><strong>0.70</strong></td>
+<td>6</td>
+</tr>
+</tbody></table>
+</div>
+<ul>
+<li>完全停止 → BOSS 战变成&quot;打木桩 90 秒&quot;</li>
+<li>完全不停 → 阶段 3 的 BOSS 战会被杂兵淹没</li>
+</ul>
+<p><strong>三个乘数差这么多，是必须差这么多。</strong> 刷怪预算按<strong>威胁值</strong>计，
+而阶段 2 的出怪表是数量型（普通/高速，威胁 1.0-1.2）、
+阶段 3 是质量型（胖僵尸威胁 3.0）。同样预算下阶段 2 堆出的<strong>身体</strong>更多。</p>
+<p>阶段 3 的乘数是阶段 2 的 4.7 倍，但只数只多 33%。
+<strong>倍数骗人，只数不骗人</strong>——所以这张表要同时写乘数和只数，不能只写乘数。</p>
+<p>初版三个阶段都用 0.35：关底战最低血量 96%，第二场 BOSS 只有 55%，
+<strong>难度峰跑到了第二场</strong>。分阶段之后曲线才单调递增。</p>
+<h3 id="8.4-boss-登场-清杂兵-留特化型-重要设计规则"><a class="anchor" href="#8.4-boss-登场-清杂兵-留特化型-重要设计规则">#</a>8.4 BOSS 登场：清杂兵，留特化型（重要设计规则）</h3>
+<p><strong>BOSS 登场时，移除场上用「数量」施压的僵尸（普通 / 高速 / 分裂小），
+保留用「行为」施压的特化型（胖 / 毒液 / 爆炸 / 分裂 / 跳跃）。</strong></p>
+<p>理由不是数值，是<strong>读法</strong>：
+关底 BOSS 落地时如果场上还堆着 78 只杂兵，玩家阵亡后读到的是&quot;我被围死了&quot;，
+而不是&quot;我打不过 BOSS&quot;。前者让人归因于随机性，后者让人想再打一次。</p>
+<pre><code>实测依据：
+  清场前   15:22-15:29 的 7 秒内从满血到全灭，BOSS 还剩 68% 血
+  全部清场 关底战最低血量 96.4% —— 但难度峰跑到了 10:40，关底成了过场
+  清杂兵   关底战最低血量 84-88%，毒池/自爆/跳跃仍在逼玩家走位
+</code></pre>
+<p><strong>&quot;全部清场&quot;是一个看似正确、实际有害的过度修正。</strong>
+它确实守住了失败归因，但也把关底战抽成了纯 DPS 木桩。
+真正的规则是&quot;清掉肉墙，留下机制&quot;——玩家不再被淹死，但仍然不能站着不动。</p>
+<h3 id="8.5-阶段-3-的&quot;关底感&quot;从哪来"><a class="anchor" href="#8.5-阶段-3-的&quot;关底感&quot;从哪来">#</a>8.5 阶段 3 的&quot;关底感&quot;从哪来</h3>
+<p>关底 BOSS 的压迫感<strong>不来自数值</strong>（它的血量/护甲只比第二场高 10%-50%），
+而来自三件事：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>来源</th>
+<th>具体</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>场上只数最高</td>
+<td>BOSS3 战 6 只 vs BOSS1 战 3 只 —— 玩家一眼能看出&quot;更挤&quot;</td>
+</tr>
+<tr>
+<td>特化型占比最高</td>
+<td>阶段 3 出怪表含全部 9 种，毒池+自爆+跳跃+护盾+喷吐同时在场上</td>
+</tr>
+<tr>
+<td>击杀窗口最紧</td>
+<td>目标 60s，实测 51.2s，只剩 8.8s 余量 —— 三个 BOSS 里最紧</td>
+</tr>
+</tbody></table>
+</div>
+<h2 id="9.-boss-规格"><a class="anchor" href="#9.-boss-规格">#</a>9. BOSS 规格</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>BOSS</th>
+<th>时间</th>
+<th>血</th>
+<th>护甲</th>
+<th>速度</th>
+<th>攻击</th>
+<th>目标击杀</th>
+<th>实测击杀</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>腐化重装兵</td>
+<td>5:00</td>
+<td>48,500</td>
+<td>200</td>
+<td>2.0</td>
+<td>260</td>
+<td>30s</td>
+<td>31.0s</td>
+</tr>
+<tr>
+<td>毒母·薇丝</td>
+<td>10:00</td>
+<td>70,000</td>
+<td>320</td>
+<td>2.2</td>
+<td>380</td>
+<td>45s</td>
+<td>45.8s</td>
+</tr>
+<tr>
+<td>尸潮之主·卡俄斯</td>
+<td>15:00</td>
+<td>94,000</td>
+<td>480</td>
+<td>2.4</td>
+<td>520</td>
+<td>60s</td>
+<td><strong>51.2s</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>这张表必须同时列出&quot;目标&quot;和&quot;实测&quot;。</strong> 只列目标的话，
+没人知道校准到底成没成立；只列实测的话，没人知道余量是多少。
+三场余量都在 ±15% 容差内，第三场最紧——那是关底该有的样子。</p>
+<blockquote>
+<p><strong>第二轮修订</strong>：实测秒数由 <code>27.9 / 37.2 / 53.5</code> 上移到 <code>32.9 / 48.6 / 54.0</code>；同类武器拉平（≤×1.3）后再到 <code>31.0 / 45.8 / 51.2</code>。
+原因不是配平变了，是<strong>升级节奏变了</strong>——等级从&quot;攒积分买&quot;改由存活时长驱动（A25），
+时间轴上的实际等级从 <code>[4,5,5]</code> 变成 <code>[3,4,5]</code>，三个 BOSS 都要多打几秒。
+BOSS 血量一个数没动，判定仍然全部达标（<code>02-数值表.html</code> §6.2）。</p>
+</blockquote>
+<h3 id="9.1-为什么-boss-血量是配平的锚点"><a class="anchor" href="#9.1-为什么-boss-血量是配平的锚点">#</a>9.1 为什么 BOSS 血量是配平的<strong>锚点</strong></h3>
+<p>配平链条是<strong>反向</strong>推导的：</p>
+<pre><code>定 BOSS 血量 → 反推小队必须在 N 秒内击杀 → 得出小队 DPS 目标
+            → 反推单角色 DPS → 反推武器伤害 → 反推僵尸血量
+</code></pre>
+<p>所以 BOSS 血量是第一个该定的数，也是最后一个该动的数。
+<strong>修改规则：只在小队 DPS 公式或成长曲线变动后才重跑校准</strong>（<code>balance-check.ts</code> §4b），
+不要凭手感改。手填的第一版（6万/18万/48万）比实测需求高 3-6 倍，第 1 个 BOSS 就全灭。</p>
+<h3 id="9.2-超时机制"><a class="anchor" href="#9.2-超时机制">#</a>9.2 超时机制</h3>
+<p>每场 BOSS 战上限 90 秒。超时 = 失败。
+这不是惩罚玩家的机制，是<strong>防止 BOSS 战拖成 5 分钟的耐力赛</strong>——
+90 秒足够看出&quot;打不动&quot;，继续拖只会让玩家难受。</p>
+<h3 id="9.3-胜利条件"><a class="anchor" href="#9.3-胜利条件">#</a>9.3 胜利条件</h3>
+<p><strong>三个 BOSS 全部击杀</strong>才算通关。不是&quot;活到 15 分钟&quot;。</p>
+<p>这条曾经写错过：早期版本 <code>RUN_DURATION = 900</code> 被当成终点，
+而关底 BOSS 恰好也在 900 秒登场，于是循环在 BOSS 落地那一帧就结束了——
+<strong>最后的决战根本没发生过，&quot;通关&quot;只等于&quot;撑到 15 分钟&quot;</strong>。
+现在循环跑到 <code>RUN_END = 900 + 90</code>，胜利条件是 <code>allBossesDead()</code>。</p>
+<hr>
+<h2 id="10.-经济与成长"><a class="anchor" href="#10.-经济与成长">#</a>10. 经济与成长</h2>
+<p><strong>本节按本轮方案整段重写。</strong> 旧版是&quot;局内双资源、各自买东西&quot;，
+与&quot;局内零购买&quot;（A25）直接冲突，所以整个经济被拆成了<strong>局内 / 局外两层</strong>。</p>
+<h3 id="10.1-局内-零购买-一切成长自动"><a class="anchor" href="#10.1-局内-零购买-一切成长自动">#</a>10.1 局内：零购买，一切成长自动</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>成长</th>
+<th>驱动</th>
+<th>玩家要做什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>角色等级</td>
+<td><strong>存活时长</strong>（<code>LEVEL_TIME</code>）</td>
+<td>活着、别让队员死光</td>
+</tr>
+<tr>
+<td>武器阶</td>
+<td>等级（<code>tierForLevel</code>）</td>
+<td>同上，间接</td>
+</tr>
+</tbody></table>
+</div>
+<pre><code>等级时间表 [0, 90, 240, 450, 660] 秒      每级 +8% 属性 +25% 最终伤害
+满级时刻：11:00（实测，见 `02-数值表.html` §8）
+</code></pre>
+<p><strong>局内没有任何购买动作</strong>——没有商店、没有升级按钮、没有加点面板。
+玩家在局内只做一件事：<strong>决定站在哪里</strong>。</p>
+<h3 id="10.2-局外-金钱买装备本身-全队共享"><a class="anchor" href="#10.2-局外-金钱买装备本身-全队共享">#</a>10.2 局外：金钱买装备本身，全队共享</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>货币</th>
+<th>来源</th>
+<th>买什么</th>
+<th>买不到什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>金钱</strong></td>
+<td>击杀掉落，<strong>结算带出</strong></td>
+<td>14 把武器 + 5 种道具，<strong>买断、非消耗品</strong></td>
+<td>阶、等级、属性</td>
+</tr>
+<tr>
+<td><strong>技能点</strong></td>
+<td>每颗<strong>新</strong>星 1 点，每关每档三星封顶</td>
+<td>专精节点、高级技能</td>
+<td>属性、维度答案</td>
+</tr>
+<tr>
+<td><strong>荣誉值</strong></td>
+<td>局内随机任务</td>
+<td>军衔（给资格与 AI 参数）</td>
+<td>属性（编译器禁止）</td>
+</tr>
+</tbody></table>
+</div>
+<p>实测一局产出：<strong>10,313 金钱</strong>。全解锁 142,800 → <strong>约 14 局 / 4 小时</strong>
+（详见 <code>02-数值表.html</code> §7.2.2 与 §12）。</p>
+<p><strong>买到的东西怎么用</strong>（用户裁决 #1）：一件装备可以<strong>同时装给多位会用这一类武器的角色</strong>，
+每人出战前选 1 把主武器 + 1 件道具；默认武器免费、永远在库里。</p>
+<p><strong>武器类别</strong>：刀剑 · 长柄 · 弓箭 · 短枪 · <strong>步枪</strong> · 狙击 · 爆炸 · 喷射 · 投掷 · 能量。同类输出模式相近、<strong>DPS 差 ≤×1.3</strong>（哨兵 §13a 闸门），
+每个角色只会其中 1-2 类（<code>characters.ts</code> 的 <code>weaponClasses</code>），所以换武器是&quot;同一种打法换个手感&quot;，不是跨打法跳数字。
+道具装上后<strong>每局按条件自动触发一次</strong>（如&quot;血量首次低于 40%&quot;），下一局重新就绪。</p>
+<blockquote>
+<p>同类之内的强弱差（上一版艾拉冷冻器 → 喷火器 ×2.4）已按方案 B 拉平到 ≤×1.3，
+并新增突击步枪（步枪类，薇拉 / 杰特可用）。见 <code>09-角色与成长.html</code> §8 第 7 条。</p>
+</blockquote>
+<p><strong>为什么&quot;只买种类&quot;是这条设计的题眼</strong>：买<strong>种类</strong>给的是<strong>新答案</strong>
+（新武器意味着新的维度解）；买<strong>阶/等级/属性</strong>给的是<strong>新数字</strong>
+（同一套答案打得更疼）。后者会直接架空&quot;卡住只能换阵容&quot;这个前提。
+所以打不过回去刷，打开的是<strong>选项</strong>，不是<strong>强度</strong>。</p>
+<h3 id="10.3-等级曲线为什么是乘区而不是属性"><a class="anchor" href="#10.3-等级曲线为什么是乘区而不是属性">#</a>10.3 等级曲线为什么是乘区而不是属性</h3>
+<pre><code>每级 +8% 基础属性 + 25% 最终伤害（独立乘区 `levelDmgMul`）
+</code></pre>
+<p>原因：<code>atkMul = 1 + 力量×0.02</code> 带一个 +1 基数。
+若让等级去缩放力量，34→45 只会让乘区从 1.68 到 1.90（+13%），
+完全跟不上关卡缩放。拆成独立乘区后，&quot;升一级 +25%&quot;是玩家看得见、算得清的。</p>
+<hr>
+<h2 id="11.-任务-npc"><a class="anchor" href="#11.-任务-npc">#</a>11. 任务 NPC</h2>
+<p>三种任务类型，<strong>全部可在战斗中顺手完成，不要求原地站桩</strong>：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>为什么可行</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>护送至地点</td>
+<td>把 NPC 送到地图某点</td>
+<td>玩家本来就在移动</td>
+</tr>
+<tr>
+<td>守护目标</td>
+<td>保护一个点位 N 秒</td>
+<td>玩家本来就要清怪</td>
+</tr>
+<tr>
+<td>拾取并带回</td>
+<td>捡到物品再送回</td>
+<td>只是多跑一趟</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>设计约束：不设计&quot;原地不动 N 秒&quot;型任务。</strong>
+本作的核心操作是移动，站桩型任务会直接和核心循环对撞。</p>
+<h3 id="11.1-任务给荣誉值-这是军衔线的唯一入口"><a class="anchor" href="#11.1-任务给荣誉值-这是军衔线的唯一入口">#</a>11.1 任务给<strong>荣誉值</strong>，这是军衔线的唯一入口</h3>
+<p>任务完成给 <strong>12 荣誉值</strong>，通关再额外给 <strong>20</strong>（<code>HONOR_PER_TASK</code> / <code>HONOR_CLEAR_BONUS</code>）。
+一局实测约 <strong>56 荣誉值</strong>。</p>
+<p><strong>荣誉值平均分给所有参战队员</strong>（<code>honorPerHero</code>），每人约 <strong>11.2</strong>。
+这条是本设计的题眼，值得单独说：</p>
+<ul>
+<li>军衔衡量的是&quot;<strong>这支小队打了多少仗</strong>&quot;，不是&quot;谁抢到了人头&quot;；</li>
+<li>所以<strong>换阵容不会让某个角色落后</strong>——12 个角色一起长，
+玩家每次换阵容都是拿一支成型的队伍去打，而不是在重新养一个白板；</li>
+<li>若改成只给 MVP，玩家就会被<strong>锁在固定阵容</strong>里刷军衔，
+与&quot;卡住只能换阵容&quot;的设计目标正好相反。</li>
+</ul>
+<p>军衔 12 级，累计门槛从 0 到 4,000。满军衔约 <strong>358 局 / 90 小时</strong>
+（<code>02-数值表.html</code> §12.3）——它是一条<strong>长期背景线</strong>，不是一条要追完的进度条。</p>
+<p><strong>军衔给什么、不给什么</strong>（由编译器强制，<code>00-决策清单.html</code> A27）：</p>
+<pre><code>type RankEffect = Exclude&lt;SpecEffect, { kind: &#39;attr&#39; }&gt;
+</code></pre>
+<p>军衔只给 <code>skill</code>（低级技能的数值变好）与 <code>ai</code>（更聪明的索敌与更及时的规避），
+<strong>一丁点战斗属性都不加</strong>。它还会给<strong>高级技能的解锁资格</strong>（见 §11.2）。</p>
+<h3 id="11.2-高级技能-两把钥匙"><a class="anchor" href="#11.2-高级技能-两把钥匙">#</a>11.2 高级技能：两把钥匙</h3>
+<p>12 个角色各有一个<strong>高级技能</strong>，它需要<strong>两把钥匙同时到齐</strong>才解锁：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>钥匙</th>
+<th>谁给</th>
+<th>门槛</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>资格</td>
+<td><strong>军衔</strong></td>
+<td>5 级「上士」（累计 400 荣誉，约 36 局）</td>
+</tr>
+<tr>
+<td>到手</td>
+<td><strong>技能点</strong></td>
+<td>4 点（约 2 局）</td>
+</tr>
+</tbody></table>
+</div>
+<pre><code class="language-ts">advancedSkillUnlocked(rank, purchased)  // rank &gt;= 5 &amp;&amp; purchased
+</code></pre>
+<p><strong>为什么必须两把</strong>：玩家需求里同时有&quot;技能点解锁高级技能&quot;（P5）与
+&quot;军衔解锁高级技能&quot;（P6）两句话。只留一把，另一句就会落空——
+所以两把都要，这是唯一能让两句话同时为真的读法。</p>
+<p>设计上的好处也实在：<strong>军衔是慢线、技能点是快线</strong>，
+两把钥匙把&quot;长期投入&quot;和&quot;当下选择&quot;缝在了一起——
+你不可能靠狂刷一个关卡同时推完两条线（它们的产出条件完全不同：通关 vs 局内任务）。</p>
+<hr>
+<hr>
+<h2 id="12.-增益道具"><a class="anchor" href="#12.-增益道具">#</a>12. 增益道具</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>道具</th>
+<th>持续</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>防御盾</td>
+<td>15s</td>
+<td>受到伤害 -50%</td>
+</tr>
+<tr>
+<td>加速</td>
+<td>15s</td>
+<td>移动速度 +60%</td>
+</tr>
+<tr>
+<td>增伤</td>
+<td>15s</td>
+<td>造成伤害 +40%</td>
+</tr>
+<tr>
+<td>加血</td>
+<td>15s</td>
+<td>立即回复 40% 最大生命</td>
+</tr>
+<tr>
+<td>冷却缩减</td>
+<td>15s</td>
+<td>技能冷却 -40%</td>
+</tr>
+</tbody></table>
+</div>
+<p>自动拾取（走到上面即拾取），无按键负担。
+作用是给&quot;走位&quot;这个核心操作提供<strong>直接的物质回报</strong>——
+玩家不是&quot;为了躲怪而走位&quot;，而是&quot;为了捡东西而走位，顺便躲了怪&quot;。</p>
+<p><strong>局内拾取与局外装备是两回事</strong>（用户裁决 #1 / #2）：</p>
+<ul>
+<li><strong>局外买的道具</strong>：非消耗品，出战前装备，每局按条件自动触发一次。</li>
+<li><strong>局内拾取的一切</strong>：只在本局有效，<strong>绝不带出关卡</strong>。</li>
+</ul>
+<h3 id="12.1-局内临时武器"><a class="anchor" href="#12.1-局内临时武器">#</a>12.1 局内临时武器</h3>
+<p>精英、补给箱与 BOSS 会掉<strong>临时武器</strong>：主武器或副武器都有，<strong>弹药有限</strong>，
+打完自动切回角色原来的武器。临时武器<strong>不看武器类别</strong>，谁捡到谁用——
+它同时是军械库的<strong>试用</strong>：捡到一把火箭筒打了 17 秒，玩家就知道自己要不要买它。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>武器</th>
+<th>槽位</th>
+<th>弹药</th>
+<th>约可用</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>火箭筒</td>
+<td>副</td>
+<td>6</td>
+<td>17s</td>
+<td>精英</td>
+</tr>
+<tr>
+<td>狙击枪</td>
+<td>副</td>
+<td>8</td>
+<td>23s</td>
+<td>精英</td>
+</tr>
+<tr>
+<td>手雷</td>
+<td>副</td>
+<td>10</td>
+<td>20s</td>
+<td>补给箱</td>
+</tr>
+<tr>
+<td>喷火器</td>
+<td>主</td>
+<td>120</td>
+<td>15s</td>
+<td>补给箱</td>
+</tr>
+<tr>
+<td>激光枪</td>
+<td>主</td>
+<td>60</td>
+<td>50s</td>
+<td>BOSS</td>
+</tr>
+</tbody></table>
+</div>
+<p>阶跟随拾取时的局内等级。数据在 <code>weapons.ts</code> 的 <code>TEMP_WEAPON_DROPS</code>，秒数由哨兵 §13b 算。</p>
+<hr>
+<hr>
+<h2 id="13.-地图与地形"><a class="anchor" href="#13.-地图与地形">#</a>13. 地图与地形</h2>
+<p><strong>本节按 C5 整段重写。</strong> 旧版是&quot;6 张地图、地形不同、机制微调&quot;；
+新版是**&quot;6 个场景，各自的挑战签名不同&quot;**——地形从&quot;地图设定&quot;降级为
+<strong>表达挑战维度的手段之一</strong>（详见 <code>00-决策清单.html</code> C5 与 <code>08-关卡方案.html</code> §3）。</p>
+<h3 id="13.1-结构"><a class="anchor" href="#13.1-结构">#</a>13.1 结构</h3>
+<pre><code>世界地图 → 6 个场景 → 每场景 13-15 个子关卡（合计 82 关）
+                        ↓ 每个子关卡 = 一次 15 分钟 run
+                     三档难度（普通 / 困难 / 噩梦）
+</code></pre>
+<p>一个子关卡不是&quot;一块地形&quot;，是<strong>一组维度权重 + 一套刷怪表 + 一个地形修正</strong>。
+地形修正、刷怪表、BOSS 分派全部由 <code>src/data/scenes.ts</code> 的 <code>expandScene()</code> 推导，
+<strong>不存在&quot;手写 82 张地图配置&quot;这件事</strong>。</p>
+<h3 id="13.2-六个场景"><a class="anchor" href="#13.2-六个场景">#</a>13.2 六个场景</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>签名维度</th>
+<th>地形修正</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>城市废墟</td>
+<td>卡口 · 自爆 · 重甲</td>
+<td>移动 ×1.0 / 掩体 0.8 / 可引爆物 2</td>
+</tr>
+<tr>
+<td>原始丛林</td>
+<td>潮涌 · 毒区 · 突进</td>
+<td>移动 ×0.9 / 毒池 ✓ / 掩体 0.35</td>
+</tr>
+<tr>
+<td>沼泽疫地</td>
+<td>迟滞 · 毒区 · 远程压制</td>
+<td>移动 ×0.6 / 毒池 ✓ / 掩体 0.2</td>
+</tr>
+<tr>
+<td>荒漠废土</td>
+<td>开阔 · 远程压制 · 突进</td>
+<td>移动 ×1.0 / 掩体 0.05</td>
+</tr>
+<tr>
+<td>雪原冻土</td>
+<td>迟滞 · 围猎 · 精英护盾</td>
+<td>移动 ×0.7 / 掩体 0.25</td>
+</tr>
+<tr>
+<td>军事禁区</td>
+<td>重甲 · 围猎 · 分裂</td>
+<td>移动 ×1.0 / 掩体 0.7 / 可引爆物 2</td>
+</tr>
+</tbody></table>
+</div>
+<p>旧版的&quot;草原&quot;并入&quot;原始丛林&quot;（两者在旧版都是&quot;无遮挡全向来敌&quot;，
+与新版&quot;开阔&quot;维度的职能重叠）。</p>
+<p><strong>场景顺序即教学顺序</strong>：城市废墟 → 原始丛林 → 荒漠废土 → 军事禁区 → 雪原冻土 → 沼泽疫地。
+沼泽疫地排在最后是刻意的——它三个维度等权（8/8/8），没有&quot;主维度&quot;可以集中资源对付。</p>
+<h3 id="13.3-地形要素-未改-但职能变了"><a class="anchor" href="#13.3-地形要素-未改-但职能变了">#</a>13.3 地形要素（未改，但职能变了）</h3>
+<p>地形要素本身沿用旧版，<strong>改的是它在体系里的位置</strong>：
+旧版它是地图属性，新版它是某个维度的表达手段。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>地形元素</th>
+<th>机制</th>
+<th>现在服务于哪个维度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>建筑 / 走廊</td>
+<td>绝对阻挡，视线与移动均不可通过，<strong>不可破坏</strong></td>
+<td><strong>卡口</strong></td>
+</tr>
+<tr>
+<td>开阔地</td>
+<td>无掩体，四面来敌</td>
+<td><strong>开阔</strong></td>
+</tr>
+<tr>
+<td>沼泽 / 水域</td>
+<td>减速（全场景修正）</td>
+<td><strong>迟滞</strong></td>
+</tr>
+<tr>
+<td>冰面</td>
+<td>打滑，转向/急停延迟</td>
+<td><strong>迟滞</strong></td>
+</tr>
+<tr>
+<td>毒洼</td>
+<td>持续伤害区</td>
+<td><strong>毒区</strong></td>
+</tr>
+<tr>
+<td>可破坏障碍 / 油桶</td>
+<td>破坏后开通路径，也会放出僵尸</td>
+<td><strong>自爆</strong></td>
+</tr>
+<tr>
+<td><strong>沙袋 / 铁丝网</strong>（本轮新增）</td>
+<td><strong>挡人不挡弹</strong>：子弹穿过，人不可通行，可破坏</td>
+<td><strong>控制抗性</strong></td>
+</tr>
+<tr>
+<td><strong>木墙</strong>（本轮新增）</td>
+<td>可破坏的墙——与建筑的唯一区别是<strong>能炸开</strong></td>
+<td><strong>控制抗性 · 卡口</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>6 种地形要素表达 13 个维度</strong>——
+所以 F1（数量与节奏）、F2（抗性与反制）两族的 6 个维度<strong>完全靠僵尸构筑</strong>，
+不靠地形。这个分工是刻意的：地形维度改变&quot;你能站在哪&quot;，
+僵尸维度改变&quot;你要打什么&quot;。两者交替出现，玩家才会同时调整站位和阵容。</p>
+<p><strong>新增的三种障碍只引入两条通行语义</strong>（<code>00-决策清单.html</code> A30）：
+&quot;人能挡、子弹不挡&quot;（沙袋/铁丝网）与&quot;可炸开&quot;（木墙）。
+木墙只是&quot;可破坏的建筑&quot;，不是第三种东西——枚举值只多了两个，不是三个。
+它们服务第 13 维「控制抗性」的<strong>地形侧</strong>：
+霸体僵尸被沙袋卡住时，玩家能站着输出；不卡住时，击退才是有意义的答案。</p>
+<h3 id="13.4-地图尺寸与视线"><a class="anchor" href="#13.4-地图尺寸与视线">#</a>13.4 地图尺寸与视线</h3>
+<p>地图尺寸 <strong>256×256 格</strong>，视口约 25 格半径。</p>
+<p><strong>&quot;水域仅特定角色可通行&quot;这条旧设计仍然成立</strong>，但它在体系里的价值变了：
+旧版它是&quot;阵容决定能走哪条路&quot;的地图决策，
+新版它是<strong>迟滞维度的一种解法</strong>——绕开还是硬穿，取决于你带没带对的人。</p>
+</main>
+</div>
+</body>
+</html>

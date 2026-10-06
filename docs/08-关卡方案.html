@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>08 关卡方案</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#1.-长期成长线-从&quot;一局-15-分钟&quot;到&quot;一张地图-82-关&quot;">1. 长期成长线：从&quot;一局 15 分钟&quot;到&quot;一张地图 82 关&quot;</a></li><li class="d2"><a href="#2.-挑战维度的定义与判据">2. 挑战维度的定义与判据</a></li><li class="d3"><a href="#2.1-什么叫&quot;维度&quot;">2.1 什么叫&quot;维度&quot;</a></li><li class="d3"><a href="#2.2-13-个维度-4-族-×-3-+-f2-补第-4-个">2.2 13 个维度（4 族 × 3 + F2 补第 4 个）</a></li><li class="d3"><a href="#2.3-维度靠&quot;地形-×-僵尸&quot;构筑-不是靠数值">2.3 维度靠&quot;地形 × 僵尸&quot;构筑（不是靠数值）</a></li><li class="d3"><a href="#2.4-与旧版僵尸表的对应-7-→-9-种">2.4 与旧版僵尸表的对应（7 → 9 种）</a></li><li class="d2"><a href="#3.-六个场景">3. 六个场景</a></li><li class="d3"><a href="#3.1-场景顺序即教学顺序">3.1 场景顺序即教学顺序</a></li><li class="d2"><a href="#4.-阶梯-子关卡怎么推导出来">4. 阶梯：子关卡怎么推导出来</a></li><li class="d3"><a href="#4.1-威胁预算只做温和增长">4.1 威胁预算只做温和增长</a></li><li class="d2"><a href="#5.-完整推导样例-原始丛林-15-关">5. 完整推导样例：原始丛林 15 关</a></li><li class="d3"><a href="#5.1-完整关名与-boss-分派">5.1 完整关名与 BOSS 分派</a></li><li class="d2"><a href="#6.-三档难度-c4">6. 三档难度（C4）</a></li><li class="d3"><a href="#6.1-权重上移是什么意思">6.1 权重上移是什么意思</a></li><li class="d3"><a href="#6.2-噩梦档的引入期压缩-为什么是&quot;提前引入&quot;而不是&quot;删关卡&quot;">6.2 噩梦档的引入期压缩：为什么是&quot;提前引入&quot;而不是&quot;删关卡&quot;</a></li><li class="d2"><a href="#7.-维度覆盖与&quot;多套阵容&quot;的可验证性">7. 维度覆盖与&quot;多套阵容&quot;的可验证性</a></li><li class="d3"><a href="#7.1-哨兵-§9-覆盖矩阵">7.1 哨兵 §9：覆盖矩阵</a></li><li class="d3"><a href="#7.2-哨兵-§10-阵容枚举——这一条要诚实地读">7.2 哨兵 §10：阵容枚举——<strong>这一条要诚实地读</strong></a></li><li class="d3"><a href="#7.3-稀有维度是唯一的过滤器">7.3 稀有维度是唯一的过滤器</a></li><li class="d3"><a href="#7.4-第-13-个维度的真约束在&quot;判定&quot;-不在&quot;覆盖&quot;">7.4 第 13 个维度的真约束在&quot;判定&quot;，不在&quot;覆盖&quot;</a></li><li class="d3"><a href="#7.5-障碍-三种新障碍只带来两类新语义">7.5 障碍：三种新障碍只带来两类新语义</a></li><li class="d2"><a href="#8.-未定项">8. 未定项</a></li></ol></nav>
+<main class="doc">
+<h1 id="08-关卡方案"><a class="anchor" href="#08-关卡方案">#</a>08 关卡方案</h1>
+<blockquote>
+<p>世界地图 → 6 个场景 → 每场景 13-15 个子关卡，合计 <strong>82 关</strong>。
+全部关卡由 <code>src/data/scenes.ts</code> 的 <code>expandScene()</code> 推导，本文所有数字都是它的输出，
+不手填。想看某一关长什么样，读 <code>expandScene()</code> 的结果，不要翻表。</p>
+<p>本文是设计顺序倒置的产物：<strong>先定挑战维度，再设计角色</strong>。
+所以这里不引用任何角色数据，角色是&quot;对着这张表&quot;设计出来的（见 <code>09-角色与成长.html</code>）。</p>
+</blockquote>
+<hr>
+<h2 id="1.-长期成长线-从&quot;一局-15-分钟&quot;到&quot;一张地图-82-关&quot;"><a class="anchor" href="#1.-长期成长线-从&quot;一局-15-分钟&quot;到&quot;一张地图-82-关&quot;">#</a>1. 长期成长线：从&quot;一局 15 分钟&quot;到&quot;一张地图 82 关&quot;</h2>
+<p>旧版把整个游戏压成一局：15 分钟，3 个阶段，3 个 BOSS，打完回到主菜单。
+那是一个<strong>单局体验</strong>，不是一条成长线——玩家第二次打开游戏，面对的是同一局。</p>
+<p>新版是四层结构：</p>
+<pre><code>世界地图
+  └─ 6 个场景（各自一个挑战签名）
+       └─ 每场景 13-15 个子关卡（沿维度逐层加深）
+            └─ 每个子关卡 = 一次 15 分钟单局（C1：时长不变）
+                 └─ 三档难度（C4：同一关可以打三遍，且三遍不一样）
+</code></pre>
+<p><strong>玩家的长期循环</strong>：</p>
+<pre><code>解锁新关卡 → 撞上新的维度 → 现有阵容解不掉
+           → 解锁/强化特定角色 → 重组阵容 → 通关 → 下一关
+</code></pre>
+<p><strong>世界地图是 6 条并列的区域线</strong>（用户裁决 #5）：六个场景的入口一开始全部开放，
+每条线内部按顺序解锁下一关。先推哪条由玩家定——<strong>&quot;先练哪套阵容&quot;于是成了玩家的选择</strong>，
+不是关卡表替他定的。§3.1 的场景顺序降级为<strong>推荐顺序</strong>（新手引导指向城市废墟）。
+规则函数是 <code>progression.ts</code> 的 <code>levelUnlocked</code>。</p>
+<p><strong>跨关继承只有三样</strong>（用户裁决 #6）：军衔、技能（专精 + 高级技能）、军械库（武器与道具）。
+其余——等级、武器阶、临时武器、拾取的增益——每关从零开始。</p>
+<p>关键在第三步：<strong>卡住玩家的必须是一个&quot;种类&quot;问题，不是一个&quot;数字&quot;问题。</strong>
+&quot;我的输出不够&quot;会让玩家去刷数值；&quot;我没有人能解这个维度&quot;才会让玩家去换阵容。
+所以每个新维度引入时，前面几关都设计成&quot;用老阵容能过，但明显吃力&quot;。</p>
+<hr>
+<h2 id="2.-挑战维度的定义与判据"><a class="anchor" href="#2.-挑战维度的定义与判据">#</a>2. 挑战维度的定义与判据</h2>
+<h3 id="2.1-什么叫&quot;维度&quot;"><a class="anchor" href="#2.1-什么叫&quot;维度&quot;">#</a>2.1 什么叫&quot;维度&quot;</h3>
+<p><strong>维度 = 压力的来源，不是数值的档位。</strong></p>
+<p>一条判据决定了一个压力源够不够格当维度，两条缺一不可：</p>
+<ol>
+<li><strong>破解它需要特定种类的能力，而不是更高的数字。</strong>
+如果&quot;把攻击力翻倍&quot;就能解，它是数值，不是维度。</li>
+<li><strong>至少有 3 个不同定位的角色能回答它。</strong>
+达不到说明这个维度只有一个阵容能解——那&quot;多套阵容&quot;就只是文案。</li>
+</ol>
+<p>第 2 条由哨兵 §9 机械校验，不是靠自觉（见 <code>09-角色与成长.html</code> §4）。</p>
+<h3 id="2.2-13-个维度-4-族-×-3-+-f2-补第-4-个"><a class="anchor" href="#2.2-13-个维度-4-族-×-3-+-f2-补第-4-个">#</a>2.2 13 个维度（4 族 × 3 + F2 补第 4 个）</h3>
+<blockquote>
+<p><strong>F2 是本轮唯一扩族的族</strong>：从 3 个维度涨到 4 个。
+族数仍然是 4——新维度「控制抗性」落在「抗性与反制」里，
+因为它要求的确实是&quot;换一种抗性手段&quot;这同一类能力，
+不是新的一类。<strong>扩族与扩维度是两件事，这里只做后者。</strong></p>
+</blockquote>
+<p>族的划分有意义：<strong>同族内的维度要求同类能力，跨族才要求完全不同的能力。</strong>
+所以&quot;阵容是否偏科&quot;可以看它在四族上各答了几个。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>族</th>
+<th>维度</th>
+<th>战场上是什么感觉</th>
+<th>破解需要什么种类的能力</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>F1 数量与节奏</strong></td>
+<td><strong>潮涌</strong></td>
+<td>一眼望不到边的小僵尸，单个不疼，但你只有 5 个人</td>
+<td>范围清场：一次攻击覆盖多个目标</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>突进</strong></td>
+<td>跑得比你快的僵尸，从你反应不过来的时候就已经贴脸了</td>
+<td>控制/减速 + 近距爆发，或高攻速快速点掉</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>围猎</strong></td>
+<td>BOSS 或精英在正面，小怪同时从侧面压上来</td>
+<td>分火能力，或一个能扛住正面让全队集火的支点</td>
+</tr>
+<tr>
+<td><strong>F2 抗性与反制</strong></td>
+<td><strong>重甲</strong></td>
+<td>打上去全是白字，它们走得很慢但你拦不住</td>
+<td>穿透或爆炸/火焰——靠堆攻击力没用</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>分裂</strong></td>
+<td>你一发 AOE 打死了三只，场上反而多了九只</td>
+<td>单体点杀，或先控住再逐个处理</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>精英护盾</strong></td>
+<td>怎么打都不掉血，直到某个瞬间它突然变得很脆</td>
+<td>破盾手段 + 集火窗口，AOE 磨盾是浪费</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>控制抗性</strong></td>
+<td>推不动、冻不住、嘲讽不灵——你最顺手的那一招突然不响了</td>
+<td>换一种控制手段，或者干脆放弃控制用点杀与续航硬吃。<strong>加大力度没有用</strong></td>
+</tr>
+<tr>
+<td><strong>F3 地形与空间</strong></td>
+<td><strong>卡口</strong></td>
+<td>只有一条路，僵尸排队进来，你的五个人挤在一起</td>
+<td>直线穿透或堵口能力，把走廊变成绞肉机</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>开阔</strong></td>
+<td>没有墙，没有掩体，四个方向同时来人</td>
+<td>持续输出 + 全域索敌，或者能自己创造阵地的召唤物</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>迟滞</strong></td>
+<td>脚下的地不让你好好走，走位这件事突然变得很贵</td>
+<td>机动力，或者干脆不依赖走位的远程输出</td>
+</tr>
+<tr>
+<td><strong>F4 持续与区域</strong></td>
+<td><strong>毒区</strong></td>
+<td>地上全是不能踩的东西，你被一点一点挤到墙角</td>
+<td>续航治疗，或能在毒区外解决战斗的射程</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>自爆</strong></td>
+<td>它们不咬你，它们只是走过来然后炸掉</td>
+<td>远程点杀或击退，把爆炸挡在接触距离之外</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>远程压制</strong></td>
+<td>站着不动就一直在挨打，可前面又有一堆东西挡路</td>
+<td>主动前压的突进手段，或者比它更长的射程</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="2.3-维度靠&quot;地形-×-僵尸&quot;构筑-不是靠数值"><a class="anchor" href="#2.3-维度靠&quot;地形-×-僵尸&quot;构筑-不是靠数值">#</a>2.3 维度靠&quot;地形 × 僵尸&quot;构筑（不是靠数值）</h3>
+<p>这是用户明确要求的一条。每个维度声明两样东西：</p>
+<ul>
+<li><strong>地形要素</strong>：这个维度在关卡里靠什么地形被表达出来</li>
+<li><strong>僵尸池</strong>：哪些僵尸贡献这个维度</li>
+</ul>
+<p>刷怪表由两者加权推导，<strong>不存在&quot;手写 82 张刷怪表&quot;这件事</strong>（见 §5）。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>地形要素</th>
+<th>僵尸池</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>潮涌</td>
+<td>— （纯靠数量）</td>
+<td>普通僵尸 · 分裂小僵尸</td>
+</tr>
+<tr>
+<td>突进</td>
+<td>—</td>
+<td>高速僵尸</td>
+</tr>
+<tr>
+<td>围猎</td>
+<td>—</td>
+<td>护盾僵尸 · 喷吐僵尸</td>
+</tr>
+<tr>
+<td>重甲</td>
+<td>—</td>
+<td>高防胖僵尸</td>
+</tr>
+<tr>
+<td>分裂</td>
+<td>—</td>
+<td>分裂僵尸 · 分裂小僵尸</td>
+</tr>
+<tr>
+<td>精英护盾</td>
+<td>—</td>
+<td>护盾僵尸</td>
+</tr>
+<tr>
+<td>控制抗性</td>
+<td>沙袋 · 铁丝网</td>
+<td>高防胖僵尸 · 护盾僵尸 · 毒液僵尸 · 跳跃僵尸</td>
+</tr>
+<tr>
+<td>卡口</td>
+<td>建筑 · 走廊</td>
+<td>高防胖僵尸 · 毒液僵尸</td>
+</tr>
+<tr>
+<td>开阔</td>
+<td>开阔地</td>
+<td>高速僵尸 · 跳跃僵尸</td>
+</tr>
+<tr>
+<td>迟滞</td>
+<td>沼泽 · 水域 · 冰面</td>
+<td>跳跃僵尸</td>
+</tr>
+<tr>
+<td>毒区</td>
+<td>毒洼 · 沼泽</td>
+<td>毒液僵尸</td>
+</tr>
+<tr>
+<td>自爆</td>
+<td>可引爆物</td>
+<td>爆炸僵尸</td>
+</tr>
+<tr>
+<td>远程压制</td>
+<td>—</td>
+<td>喷吐僵尸</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>控制抗性是唯一一个&quot;地形与僵尸一起使劲&quot;的维度</strong>：
+霸体僵尸（胖 / 护盾）挡住位移，抗冻与狡诈挡在另外两扇门上，
+而沙袋与铁丝网在同一个场景里把路也切碎——
+&quot;推不动、冻不住、路还被拦着&quot;三件事同时发生，才逼得出&quot;换手段&quot;这个反应。</p>
+<p><strong>F3 三个维度全部靠地形，F1/F2/F4 大部分靠僵尸</strong>——这个分布是刻意的。
+地形维度改变的是&quot;你能站在哪&quot;，僵尸维度改变的是&quot;你要打什么&quot;。
+两者交替出现，玩家才会同时调整站位和阵容，而不是只调其中一个。</p>
+<h3 id="2.4-与旧版僵尸表的对应-7-→-9-种"><a class="anchor" href="#2.4-与旧版僵尸表的对应-7-→-9-种">#</a>2.4 与旧版僵尸表的对应（7 → 9 种）</h3>
+<p>新增 2 只，专门服务两个新维度：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>血</th>
+<th>速</th>
+<th>甲</th>
+<th>行为动词</th>
+<th>贡献维度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>护盾僵尸</strong></td>
+<td>900</td>
+<td>1.8</td>
+<td>中甲</td>
+<td><strong>破防检查</strong></td>
+<td>精英护盾 · 围猎</td>
+</tr>
+<tr>
+<td><strong>喷吐僵尸</strong></td>
+<td>600</td>
+<td>1.6</td>
+<td>轻甲</td>
+<td><strong>远程压制</strong></td>
+<td>远程压制 · 围猎</td>
+</tr>
+</tbody></table>
+</div>
+<p>第 13 个维度「控制抗性」<strong>不新增资产</strong>，它复用已有的 4 只僵尸，
+靠给它们补控制字段来表达（<code>stab</code> / <code>superArmor</code> / <code>freezeRes</code> / <code>cunning</code>）：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>控制字段</th>
+<th>挡住的是哪扇门</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>高防胖僵尸</td>
+<td><code>superArmor</code> · 稳固 90</td>
+<td>位移。推不动，但冻得住</td>
+</tr>
+<tr>
+<td>护盾僵尸</td>
+<td><code>superArmor</code> · 稳固 120 · 抗冻 0.35 · 狡诈 0.30</td>
+<td>三扇门全部上锁</td>
+</tr>
+<tr>
+<td>毒液僵尸</td>
+<td>稳固 52 · 抗冻 0.60</td>
+<td>冻结。4 秒只剩 1.60 秒，但嘲讽对它照样好使</td>
+</tr>
+<tr>
+<td>跳跃僵尸</td>
+<td>稳固 36 · 狡诈 0.60</td>
+<td>嘲讽。推它并不难</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>这张表的读法不是&quot;谁的控制抗性最高&quot;</strong>：跳跃与毒液的综合评分同为 0.27，
+但一个挡的是嘲讽、一个挡的是冻结。所以&quot;控制抗性&quot;不是一个数字，
+是<strong>三扇各自上锁的门</strong>——玩家只能带上能开不同门的队友，
+这正是它作为第 13 个维度而不是第 5 个属性的理由（实测见 <code>npm run sim</code> §11）。</p>
+<p>护盾僵尸正面护盾吸收固定伤害，破盾后 3 秒虚弱（受伤 +50%），<strong>不吃控制</strong>——
+它逼迫阵容准备&quot;爆发窗口&quot;这个能力，而不是&quot;更多的持续输出&quot;。
+喷吐僵尸在 12 格外远程喷吐，不进入接触距离——它让&quot;龟缩阵地&quot;这个稳赢打法第一次付出代价。</p>
+<p>原有的 7 种各补一个 <code>dims</code> 字段声明自己贡献哪些维度，数值未改动。</p>
+<hr>
+<h2 id="3.-六个场景"><a class="anchor" href="#3.-六个场景">#</a>3. 六个场景</h2>
+<p>场景名沿用 <code>05-资产清单.html</code> §5 已预算过资产的 6 个地形，但<strong>含义全变了</strong>：
+旧版是&quot;6 张地形不同、机制微调的地图&quot;，新版是&quot;6 个要什么阵容各不相同的挑战签名&quot;。
+旧版&quot;草原&quot;并入&quot;原始丛林&quot;。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>签名维度</th>
+<th>地形修正</th>
+<th>一句话</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>城市废墟</strong></td>
+<td>卡口 · 自爆 · 重甲</td>
+<td>移动 ×1.0 / 掩体 0.8 / 可引爆物 2</td>
+<td>街道被楼体切成走廊，爆炸僵尸从拐角后面走出来，胖僵尸堵住唯一的出口</td>
+</tr>
+<tr>
+<td><strong>原始丛林</strong></td>
+<td>潮涌 · 毒区 · 突进</td>
+<td>移动 ×0.9 / 毒池 ✓ / 掩体 0.35</td>
+<td>树冠遮住视线，小僵尸像潮水一样从灌木里渗出来，毒液僵尸死在你退无可退的地方</td>
+</tr>
+<tr>
+<td><strong>沼泽疫地</strong></td>
+<td>迟滞 · 毒区 · 远程压制</td>
+<td>移动 ×0.6 / 毒池 ✓ / 掩体 0.2</td>
+<td>每走一步都在往下陷，喷吐僵尸站在你够不到的地方慢慢磨</td>
+</tr>
+<tr>
+<td><strong>荒漠废土</strong></td>
+<td>开阔 · 远程压制 · 突进</td>
+<td>移动 ×1.0 / 掩体 0.05</td>
+<td>没有一处掩体，四个方向同时来人，跑得最快的和最远的同时在打你</td>
+</tr>
+<tr>
+<td><strong>雪原冻土</strong></td>
+<td>迟滞 · 围猎 · 精英护盾</td>
+<td>移动 ×0.7 / 掩体 0.25</td>
+<td>冰面上刹不住脚，精英护盾僵尸顶在最前面，小怪趁你打不动它的时候围上来</td>
+</tr>
+<tr>
+<td><strong>军事禁区</strong></td>
+<td>重甲 · <strong>控制抗性</strong> · 分裂</td>
+<td>移动 ×1.0 / 掩体 0.7 / 可引爆物 2 / 木墙 0.6</td>
+<td>装甲单位推进得又稳又慢，推不动也冻不住；精英在正面吸引火力，分裂僵尸逼你不能用范围武器；铁丝网与沙袋把路切成一段段</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>沼泽疫地的 <code>moveMul: 0.6</code> 是全游戏最强的一条地形修正</strong>，
+所以它的签名维度里有两个都在惩罚&quot;原地不动&quot;（迟滞、远程压制）——
+地形不让你走，僵尸又逼你走，这个矛盾就是它的挑战。</p>
+<h3 id="3.1-场景顺序即教学顺序"><a class="anchor" href="#3.1-场景顺序即教学顺序">#</a>3.1 场景顺序即教学顺序</h3>
+<p>六个场景在地图上是<strong>并列开放</strong>的（§1），但有<strong>推荐</strong>推进顺序，理由是<strong>维度难度的递进</strong>：</p>
+<pre><code>城市废墟  卡口/自爆/重甲   三维都靠&quot;站位纪律&quot;和&quot;点名&quot;，最容易读懂
+原始丛林  潮涌/毒区/突进   第一次要求&quot;清场速率&quot;这个能力
+荒漠废土  开阔/远程压制/突进  第一次要求&quot;主动进攻&quot;而不是占住地形
+军事禁区  重甲/控制抗性/分裂  第一次要求&quot;换手段&quot;——最顺手的那一招会突然不响
+雪原冻土  迟滞/围猎/精英护盾 第一次要求&quot;爆发窗口调度&quot;
+沼泽疫地  迟滞/毒区/远程压制 三个维度互相加固，没有短板可以牺牲
+</code></pre>
+<p><strong>沼泽疫地排在最后是刻意的</strong>：它的三维等权（8/8/8），没有&quot;主维度&quot;可以集中资源对付。
+前面每个场景的终关都还留着一个主次结构，玩家可以取舍；沼泽疫地的终关不给这个选项。</p>
+<hr>
+<h2 id="4.-阶梯-子关卡怎么推导出来"><a class="anchor" href="#4.-阶梯-子关卡怎么推导出来">#</a>4. 阶梯：子关卡怎么推导出来</h2>
+<p>每个场景定义一条 <code>ladder</code>：5 段，每段声明关数、活跃维度与权重、威胁增长率。
+<strong>不是手写 13-15 行表，而是从这 5 段展开。</strong></p>
+<pre><code>段 1  引入期   3 关   单维度，纯教学      &quot;教会玩家这个维度是什么感觉&quot;
+段 2  叠加期   3 关   主维度 + 次维度      &quot;加入第二个维度，形成第一个两难&quot;
+段 3  叠加期   3-4 关 三维全开，主次分明   &quot;第三个维度进场，开始需要取舍&quot;
+段 4  组合期   3-5 关 权重最深的区间       &quot;本场景的标准解区间&quot;
+段 5  终关     1 关   权重重新集中到主维度 &quot;BOSS 与维度群同时压上&quot;
+</code></pre>
+<p><strong>关数为什么是 13 或 15</strong>：城市废墟与原始丛林的第 4 段是 4-5 关，其余四个是 3 关。
+这不是疏漏——前两个场景是<strong>教学场景</strong>，标准解区间留得更长，
+让玩家有足够空间试出&quot;我该带谁&quot;。第 4 段之后场景就直接进终关了。</p>
+<h3 id="4.1-威胁预算只做温和增长"><a class="anchor" href="#4.1-威胁预算只做温和增长">#</a>4.1 威胁预算只做温和增长</h3>
+<p>同场景内，威胁预算从 3.0 涨到 6.16（原始丛林 15 关），<strong>只有 ×2.05</strong>。
+而活跃维度从 1 个变成 3 个且权重全开。</p>
+<p>这是&quot;不堆数值&quot;在数值层的具体实现：<strong>难度增长主要来自构成，不是来自预算。</strong>
+如果玩家在丛林-15 卡住，他需要的是&quot;换一个能同时解潮涌+毒区+突进的阵容&quot;，
+而不是&quot;回去把武器再练高点&quot;。（武器也没有局外养成，见 <code>00-决策清单.html</code> C3。）</p>
+<hr>
+<h2 id="5.-完整推导样例-原始丛林-15-关"><a class="anchor" href="#5.-完整推导样例-原始丛林-15-关">#</a>5. 完整推导样例：原始丛林 15 关</h2>
+<p>这张表是 <code>expandScene(SCENE_BY_ID.jungle, &#39;normal&#39;)</code> 的<strong>直接输出</strong>，不是手抄的。
+验证命令：</p>
+<pre><code class="language-bash">node -e &quot;import(&#39;./src/data/scenes.ts&#39;).then(m =&gt; \
+  console.log(m.expandScene(m.SCENE_BY_ID.jungle, &#39;normal&#39;)))&quot;
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>关</th>
+<th>段</th>
+<th>维度权重</th>
+<th>威胁/秒</th>
+<th>刷怪表（威胁权重）</th>
+<th>BOSS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>jungle-01</td>
+<td>丛林边缘</td>
+<td>潮涌 10</td>
+<td>3.00</td>
+<td>普通 10</td>
+<td>① 腐化重装兵</td>
+</tr>
+<tr>
+<td>jungle-02</td>
+<td>丛林边缘</td>
+<td>潮涌 10</td>
+<td>3.21</td>
+<td>普通 10</td>
+<td>①</td>
+</tr>
+<tr>
+<td>jungle-03</td>
+<td>丛林边缘</td>
+<td>潮涌 10</td>
+<td>3.43</td>
+<td>普通 10</td>
+<td>①</td>
+</tr>
+<tr>
+<td>jungle-04</td>
+<td>腐叶层</td>
+<td>潮涌 8 · 毒区 4</td>
+<td>3.68</td>
+<td>普通 8 · 毒液 4</td>
+<td>①</td>
+</tr>
+<tr>
+<td>jungle-05</td>
+<td>腐叶层</td>
+<td>潮涌 8 · 毒区 4</td>
+<td>3.90</td>
+<td>普通 8 · 毒液 4</td>
+<td>①</td>
+</tr>
+<tr>
+<td>jungle-06</td>
+<td>腐叶层</td>
+<td>潮涌 8 · 毒区 4</td>
+<td>4.13</td>
+<td>普通 8 · 毒液 4</td>
+<td>② 毒母·薇丝</td>
+</tr>
+<tr>
+<td>jungle-07</td>
+<td>毒雾带</td>
+<td>潮涌 8 · 毒区 5 · 突进 4</td>
+<td>4.38</td>
+<td>普通 8 · 高速 4 · 毒液 5</td>
+<td>②</td>
+</tr>
+<tr>
+<td>jungle-08</td>
+<td>毒雾带</td>
+<td>潮涌 8 · 毒区 5 · 突进 4</td>
+<td>4.60</td>
+<td>普通 8 · 高速 4 · 毒液 5</td>
+<td>②</td>
+</tr>
+<tr>
+<td>jungle-09</td>
+<td>毒雾带</td>
+<td>潮涌 8 · 毒区 5 · 突进 4</td>
+<td>4.83</td>
+<td>普通 8 · 高速 4 · 毒液 5</td>
+<td>②</td>
+</tr>
+<tr>
+<td>jungle-10</td>
+<td>深林</td>
+<td>潮涌 8 · 毒区 7 · 突进 6</td>
+<td>5.07</td>
+<td>普通 8 · 高速 6 · 毒液 7</td>
+<td>②</td>
+</tr>
+<tr>
+<td>jungle-11</td>
+<td>深林</td>
+<td>潮涌 8 · 毒区 7 · 突进 6</td>
+<td>5.27</td>
+<td>普通 8 · 高速 6 · 毒液 7</td>
+<td>③ 尸潮之主·卡俄斯</td>
+</tr>
+<tr>
+<td>jungle-12</td>
+<td>深林</td>
+<td>潮涌 8 · 毒区 7 · 突进 6</td>
+<td>5.48</td>
+<td>普通 8 · 高速 6 · 毒液 7</td>
+<td>③</td>
+</tr>
+<tr>
+<td>jungle-13</td>
+<td>深林</td>
+<td>潮涌 8 · 毒区 7 · 突进 6</td>
+<td>5.70</td>
+<td>普通 8 · 高速 6 · 毒液 7</td>
+<td>③</td>
+</tr>
+<tr>
+<td>jungle-14</td>
+<td>深林</td>
+<td>潮涌 8 · 毒区 7 · 突进 6</td>
+<td>5.93</td>
+<td>普通 8 · 高速 6 · 毒液 7</td>
+<td>③</td>
+</tr>
+<tr>
+<td>jungle-15</td>
+<td>母巢</td>
+<td>潮涌 10 · 毒区 6 · 突进 6</td>
+<td>6.16</td>
+<td>普通 10 · 高速 6 · 毒液 6</td>
+<td>③</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>读法</strong>：</p>
+<ul>
+<li><strong>刷怪表是推导出来的，不是配置的。</strong> 毒液僵尸贡献「毒区」和「卡口」两个维度，
+所以它出现在丛林是因为丛林有「毒区」，权重 4 直接来自关卡的维度权重。
+改一个维度权重，所有下游关卡的刷怪表跟着变。</li>
+<li><strong>第 3 关到第 4 关是这道场景最重要的一次跳变</strong>：刷怪表从&quot;只有普通僵尸&quot;
+变成&quot;普通 + 毒液&quot;，玩家第一次遇到&quot;地上有不能踩的东西&quot;。</li>
+<li><strong>终关（jungle-15）把权重重新压回潮涌 10。</strong>
+场景最后 5 关一直在加毒区和突进的权重，让玩家以为答案是&quot;抗消耗&quot;；
+终关突然把潮涌权重顶格，把答案拉回&quot;你的清场速率够不够&quot;。
+这是阶梯的&quot;收束&quot;——终关是<strong>对整条阶梯主线的回扣</strong>，不是维度的简单叠加。</li>
+</ul>
+<h3 id="5.1-完整关名与-boss-分派"><a class="anchor" href="#5.1-完整关名与-boss-分派">#</a>5.1 完整关名与 BOSS 分派</h3>
+<p>关卡名由场景名 + 序号 + 段标签生成（<code>丛林 07 · 毒雾带</code>），不单独维护文案。</p>
+<p>BOSS 从全局池 <code>BOSSES</code> 里按场景自己的 <code>bossStages</code> 三元组取，
+按关卡进度分派（第 1-5 关取第一个，6-10 关取第二个，11 关以后取第三个）。
+<strong>所以同一个 BOSS 在不同场景里的登场时机不同</strong>——丛林终关是卡俄斯，
+沼泽终关是腐化重装兵（<code>bossStages: [1, 2, 0]</code>）。同一个 BOSS 换到不同的维度组合里，
+打法完全不同，这是复用 BOSS 资产但不复用体验的做法。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>bossStages</th>
+<th>终关 BOSS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>城市废墟</td>
+<td>[0, 1, 2]</td>
+<td>尸潮之主·卡俄斯</td>
+</tr>
+<tr>
+<td>原始丛林</td>
+<td>[0, 1, 2]</td>
+<td>尸潮之主·卡俄斯</td>
+</tr>
+<tr>
+<td>沼泽疫地</td>
+<td>[1, 2, 0]</td>
+<td>腐化重装兵</td>
+</tr>
+<tr>
+<td>荒漠废土</td>
+<td>[0, 2, 1]</td>
+<td>毒母·薇丝</td>
+</tr>
+<tr>
+<td>雪原冻土</td>
+<td>[1, 0, 2]</td>
+<td>尸潮之主·卡俄斯</td>
+</tr>
+<tr>
+<td>军事禁区</td>
+<td>[2, 1, 0]</td>
+<td>腐化重装兵</td>
+</tr>
+</tbody></table>
+</div>
+<hr>
+<h2 id="6.-三档难度-c4"><a class="anchor" href="#6.-三档难度-c4">#</a>6. 三档难度（C4）</h2>
+<p><strong>难度档按场景逐档解锁</strong>（用户裁决 #7）：本场景普通档终关通关 → 困难开放；困难终关通关 → 噩梦开放。
+按场景而不是全局，和并列地图一致——在丛林打到噩梦不需要先打完沼泽。规则函数 <code>difficultyUnlocked</code>。</p>
+<p><strong>难度档刻意不是&quot;同一条曲线乘系数&quot;。</strong> 三档改的是<strong>构成</strong>：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>档</th>
+<th>威胁预算</th>
+<th>权重上移</th>
+<th>引入期</th>
+<th>环境修正</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>普通</strong></td>
+<td>×1.0</td>
+<td>0 档</td>
+<td>标准</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>困难</strong></td>
+<td>×1.25</td>
+<td>1 档（次级维度权重上抬）</td>
+<td>标准</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>噩梦</strong></td>
+<td>×1.5</td>
+<td>2 档</td>
+<td><strong>下一段维度提前半权重进场</strong></td>
+<td>毒池不消失 / 无补给箱 / BOSS 提前 60 秒（按场景取其一）</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="6.1-权重上移是什么意思"><a class="anchor" href="#6.1-权重上移是什么意思">#</a>6.1 权重上移是什么意思</h3>
+<p><code>shiftWeights()</code> 把<strong>非最高权重</strong>的维度整体抬升，缩小主次差距：</p>
+<pre><code>困难档：潮涌 10 保持，毒区 4 → 5.2，突进 4 → 5.2
+噩梦档：潮涌 10，毒区 4 → 6（再叠一层权重上移）
+</code></pre>
+<p>于是<strong>同一个关卡在三档下是不同的战场</strong>，而不是同一场战斗里更肉的同一种僵尸。
+困难档要处理的&quot;配角维度&quot;更多，噩梦档则几乎把三维拉平——
+原本&quot;集中资源解主维度、次要维度靠抗性硬吃&quot;的策略在噩梦档失效。</p>
+<h3 id="6.2-噩梦档的引入期压缩-为什么是&quot;提前引入&quot;而不是&quot;删关卡&quot;"><a class="anchor" href="#6.2-噩梦档的引入期压缩-为什么是&quot;提前引入&quot;而不是&quot;删关卡&quot;">#</a>6.2 噩梦档的引入期压缩：为什么是&quot;提前引入&quot;而不是&quot;删关卡&quot;</h3>
+<p>初版噩梦档的实现是<strong>删掉前两段的关卡各一关</strong>，让玩家更快进入三维区间。
+这个做法有一个致命副作用：<strong>同一个关卡 id 在不同难度下指向不同内容。</strong></p>
+<pre><code>普通档 jungle-13 = 深林（第 4 段中段）
+噩梦档 jungle-13 = 母巢（终关）
+</code></pre>
+<p>同名不同关。存档、进度、&quot;我卡在丛林-13&quot;这句话、玩家之间的交流，全部失准。
+关数也从 15 变成 13，地图完成度显示成 13/15 还是 13/13 说不清。</p>
+<p><strong>所以改成&quot;提前引入&quot;</strong>：噩梦档把<strong>下一段的维度按半权重提前放进当前段</strong>，
+关数不变（82 关三档一致）。</p>
+<pre><code>普通檔 jungle-01  潮涌 10                     单一维度，平稳开场
+噩梦档 jungle-01  潮涌 10 · 毒区 5.2          第 1 关就两个维度，没有平稳开场
+</code></pre>
+<p>压缩引入期的效果达成了（噩梦档玩家第一关就要同时处理两件事），
+但关卡标识保持唯一。<strong>代价是噩梦档的第 1 关不再是教学关</strong>——这正是它该有的样子。</p>
+<hr>
+<h2 id="7.-维度覆盖与&quot;多套阵容&quot;的可验证性"><a class="anchor" href="#7.-维度覆盖与&quot;多套阵容&quot;的可验证性">#</a>7. 维度覆盖与&quot;多套阵容&quot;的可验证性</h2>
+<h3 id="7.1-哨兵-§9-覆盖矩阵"><a class="anchor" href="#7.1-哨兵-§9-覆盖矩阵">#</a>7.1 哨兵 §9：覆盖矩阵</h3>
+<p>每个维度至少要 <strong>3 个答案形状</strong>、来自 <strong>≥2 个不同定位</strong>。
+答案的详细定义与赋值见 <code>09-角色与成长.html</code> §4。</p>
+<p>当前 <strong>13 个维度全部达标</strong>，且没有一个答案标签是无人使用的死标签。</p>
+<p>「控制抗性」是<strong>答案最宽的一个维度（6 个形状 / 6 种定位）</strong>，
+而这不矛盾：宽是因为<strong>手段本身就该多</strong>（嘲讽 / 破甲 / 爆发 / 点杀 / 续航 / 减速），
+窄是因为<strong>每一种手段都会被某一扇门挡掉</strong>。
+覆盖宽 ≠ 没约束——约束在下面 §7.3 那张判定表里，不在这一列。</p>
+<h3 id="7.2-哨兵-§10-阵容枚举——这一条要诚实地读"><a class="anchor" href="#7.2-哨兵-§10-阵容枚举——这一条要诚实地读">#</a>7.2 哨兵 §10：阵容枚举——<strong>这一条要诚实地读</strong></h3>
+<p>哨兵枚举了全部 C(12,5) = 792 套阵容，对每一关数&quot;有多少套阵容能覆盖该关的全部活跃维度&quot;。</p>
+<p>实测结果（<code>npm run sim</code> §10 直接输出，不手抄）：</p>
+<pre><code>阵容总数                                792
+能覆盖全部 13 个维度的阵容              693 套（占 87.5%）
+全 82 关里门槛最高的一关                736 套可行（占 92.9%）
+</code></pre>
+<p>而且 <strong>82 关里有 38 关并列这个门槛</strong>，按维度构成归并只有 7 组：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>维度构成</th>
+<th>关数</th>
+<th>属于</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>swarm+poison</td>
+<td>3</td>
+<td>原始丛林</td>
+</tr>
+<tr>
+<td>swarm+poison+rush</td>
+<td>9</td>
+<td>原始丛林</td>
+</tr>
+<tr>
+<td>sluggish</td>
+<td>6</td>
+<td>沼泽疫地 + 雪原冻土</td>
+</tr>
+<tr>
+<td>sluggish+suppress</td>
+<td>3</td>
+<td>沼泽疫地</td>
+</tr>
+<tr>
+<td>sluggish+suppress+poison</td>
+<td>7</td>
+<td>沼泽疫地</td>
+</tr>
+<tr>
+<td>sluggish+shielded</td>
+<td>3</td>
+<td>雪原冻土</td>
+</tr>
+<tr>
+<td>sluggish+shielded+eliteHunt</td>
+<td>7</td>
+<td>雪原冻土</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>这个并列本身就是结论</strong>：门槛由「最稀有的那个维度」单方面决定，跟关卡序号、
+跟&quot;凑了几个维度&quot;都无关。含 <code>sluggish</code> 或 <code>poison</code> 的关卡，不管另外两个维度是什么，
+可行阵容数都是 736。</p>
+<p><strong>这个数字说明的事情比它听起来弱得多，不要误读。</strong></p>
+<p>覆盖门槛几乎不筛人：最紧的一关也放行 92.9% 的阵容。原因是结构性的——
+5 名队员、每人平均能回答 <strong>8.4 个</strong>维度（这个数哨兵里也是算出来的），并集自然铺满全集。
+所以**&quot;能不能进&quot;这件事基本是免费的，二分覆盖数不能证明&quot;阵容选择有后果&quot;。**</p>
+<p>它仍然有价值的唯一理由在 §9：每个维度都至少有 3 种答案形状、2 个不同定位可回答，
+即<strong>不存在&quot;没有任何角色能应付的维度&quot;</strong>。这是可玩性下限，不是深度证明。</p>
+<p><strong>真正决定阵容区分度的，是同一维度下不同答案的效率差。</strong>
+比如用穿透枪阵解潮涌，和用范围清场解潮涌，清怪速率差多少？
+这需要把维度折进刷怪与承伤模型里才量得出来，当前模拟器结构上做不到
+（见 <code>02-数值表.html</code> §10）。</p>
+<p><strong>所以本轮不声称&quot;阵容已经有多样性&quot;，只声称&quot;维度没有死胡同&quot;。</strong>
+用户要求的&quot;每种挑战不止有单一方案&quot;这一条，目前只完成了下限，
+上限要等 M2 原型才能量。</p>
+<h3 id="7.3-稀有维度是唯一的过滤器"><a class="anchor" href="#7.3-稀有维度是唯一的过滤器">#</a>7.3 稀有维度是唯一的过滤器</h3>
+<p>上表的门槛全部由两个维度决定：<strong>迟滞</strong>和<strong>毒区</strong>（各 3 个答案、4 个定位），
+它们各自把 792 套阵容筛到 736 套——<strong>别的维度在覆盖上几乎是免费的。</strong></p>
+<blockquote>
+<p><strong>本轮新增的第 13 个维度没有改变这条结论。</strong>
+实测它的回答面是<strong>全员 12 人</strong>，所以它带来的约束力是 0。
+这一条必须写在这里，免得下一轮有人以为&quot;加了维度就加了深度&quot;——
+它的作用在<strong>判定</strong>（§7.4），不在<strong>覆盖</strong>。</p>
+</blockquote>
+<p>而且这两个维度是<strong>同一批人</strong>在回答：</p>
+<pre><code>迟滞 = 毒区 = { 罗恩, 凯, 薇拉, 莉安 }
+</code></pre>
+<p>（迟滞的答案是续航/机动/射程，毒区的答案是续航/射程/机动/减伤，落在同一组角色上。）
+所以&quot;2 个检查点&quot;实际是<strong>同一个检查点数了两遍</strong>。</p>
+<p>这对教学是好消息：玩家的实际体验会是&quot;在沼泽疫地第 1 关就发现队里没人能在泥里跑&quot;，
+而不是打到第 10 关才发现。<strong>问题暴露得早，改阵容的成本低。</strong></p>
+<p>但它也暴露了一个真问题：<strong>如果只有一个检查点，那&quot;多套阵容&quot;就从
+13 个维度退化成了 1 条约束。</strong> 这是本轮设计的下限所在，
+需要在 M2 里用效率差（而非覆盖数）重新量。</p>
+<hr>
+<h3 id="7.4-第-13-个维度的真约束在&quot;判定&quot;-不在&quot;覆盖&quot;"><a class="anchor" href="#7.4-第-13-个维度的真约束在&quot;判定&quot;-不在&quot;覆盖&quot;">#</a>7.4 第 13 个维度的真约束在&quot;判定&quot;，不在&quot;覆盖&quot;</h3>
+<p>覆盖数证明不了东西（上面 §7.3），所以新维度换了另一把尺子：
+<strong>同一种控制手段，对不同僵尸的命中率差多少？</strong>
+三张判定表由 <code>npm run sim</code> §11 直接输出，不是手抄。</p>
+<p><strong>位移</strong>（<code>clamp(0.85 × atk² / (atk² + stab²))</code>，atk = 武器击退 × 力量/敏捷乘区）：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>英雄 · 武器</th>
+<th>击退力</th>
+<th>普通僵尸(36)</th>
+<th>毒液僵尸(52)</th>
+<th>护盾僵尸(120)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>断岳·铁牛·大刀</td>
+<td>96.8</td>
+<td>0.75</td>
+<td>0.66</td>
+<td>霸体</td>
+</tr>
+<tr>
+<td>铁壁·罗恩·大刀</td>
+<td>78.0</td>
+<td>0.70</td>
+<td>0.59</td>
+<td>霸体</td>
+</tr>
+<tr>
+<td>鹰眼·薇拉·狙击枪</td>
+<td>55.4</td>
+<td>0.60</td>
+<td>0.45</td>
+<td>霸体</td>
+</tr>
+<tr>
+<td>疾风·凯·剑</td>
+<td>29.4</td>
+<td>0.34</td>
+<td>0.21</td>
+<td>霸体</td>
+</tr>
+<tr>
+<td>烈焰·萨满·喷火器</td>
+<td>7.7</td>
+<td>0.04</td>
+<td>0.02</td>
+<td>霸体</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>冻结</strong>（艾拉的寒霜新星，基础 4 秒）与<strong>嘲讽</strong>（0-1 上 1000 点采样喂 <code>tauntLands()</code>）：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>僵尸</th>
+<th>冻结实际时长</th>
+<th>嘲讽命中率</th>
+<th>挡住的是</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通 / 高速僵尸</td>
+<td>4.00s</td>
+<td>1.00</td>
+<td>什么都不挡</td>
+</tr>
+<tr>
+<td>毒液僵尸</td>
+<td><strong>1.60s</strong></td>
+<td>1.00</td>
+<td>冻结</td>
+</tr>
+<tr>
+<td>跳跃僵尸</td>
+<td>3.60s</td>
+<td><strong>0.40</strong></td>
+<td>嘲讽</td>
+</tr>
+<tr>
+<td>护盾僵尸</td>
+<td>2.60s</td>
+<td>0.70</td>
+<td>三扇全挡（且霸体）</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>读法就是这一维度的全部内容</strong>：</p>
+<ul>
+<li><strong>击退力是一份要花出去的选择，不是一句台词。</strong> 全队最高的铁牛（96.8）
+推开普通怪也只有 0.75，而喷火器（7.7）永远推不动谁（0.04）。
+但对着硬目标，<strong>最高的击退力也只能拿到一半</strong>——玩家于是学到&quot;换手段&quot;，
+而不是&quot;加力度&quot;。</li>
+<li><strong>三扇门各自上锁。</strong> 跳跃与毒液的综合评分同为 0.27，挡的却是不同的门。
+队伍里只有冻结，就过不了毒液；只有嘲讽，就过不了跳跃。</li>
+<li><strong>减速不设对抗属性</strong>，所以它是这条轴上<strong>永远关不上的一格</strong>——
+这是刻意留的地板。任何一层控制都能被完全免疫的话，控制流整体作废。</li>
+</ul>
+<hr>
+<h3 id="7.5-障碍-三种新障碍只带来两类新语义"><a class="anchor" href="#7.5-障碍-三种新障碍只带来两类新语义">#</a>7.5 障碍：三种新障碍只带来两类新语义</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>障碍</th>
+<th>可破坏</th>
+<th>挡人</th>
+<th>挡弹</th>
+<th>挡视线</th>
+<th>耐久</th>
+<th>残留</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>沙袋</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>320</td>
+<td>rubble</td>
+</tr>
+<tr>
+<td>铁丝网</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>180</td>
+<td>none</td>
+</tr>
+<tr>
+<td>木墙</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>900</td>
+<td>rubble</td>
+</tr>
+<tr>
+<td>建筑（对照）</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>none</td>
+</tr>
+</tbody></table>
+</div>
+<p>四种代表障碍的通行位掩码<strong>只有 2 种组合</strong>（挡人 / 全挡）——
+新障碍没有引入第四种通行语义。<strong>木墙与建筑的唯一区别是可破坏</strong>，
+这是刻意的：让&quot;绕开&quot;与&quot;打开&quot;成为两种可学的反应，而不是两种不同的墙。</p>
+<hr>
+<h2 id="8.-未定项"><a class="anchor" href="#8.-未定项">#</a>8. 未定项</h2>
+<ol>
+<li><del>世界地图的界面形态</del> <strong>已答（C6-#5）：6 条并列区域线，线内顺序解锁，见 §1。</strong> 原问题：场景是并列可选，还是需要解锁前置？目前数据层不做限制，
+任何场景任何关卡都能直接进。解锁曲线属于 <code>06-开发路线图.html</code> M3 的范围。</li>
+<li><del>关卡间的连续性</del> <strong>已答（C6-#6）：只继承军衔 / 技能 / 军械库，等级与武器阶每关从零开始。</strong> 原问题：子关卡之间是否保留上一关的状态（等级/武器阶）？
+当前 <code>expandScene()</code> 每关都从 1 级 / 0 阶武器开始，与 <code>run.ts</code> 的单场景基线一致。
+若要做跨关继承，<code>run-sim.ts</code> 需要参数化（M2）。</li>
+<li><del>难度档的解锁方式</del> <strong>已答（C6-#7）：按场景逐档解锁，见 §6。</strong> 原问题：是通关即解锁下一档，还是独立可选？倾向后者（玩家可以自选苦吃）。</li>
+</ol>
+</main>
+</div>
+</body>
+</html>
