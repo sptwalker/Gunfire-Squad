@@ -314,17 +314,10 @@ body{
   border-radius:2px;
 }
 
-/* 两态开关：左右各一个词，亮的是当前态。按一次换边，不弹菜单 */
-.cmdbtn .seg{
-  display:flex;align-items:center;gap:4px;
-  font-size:11.5px;font-weight:400;letter-spacing:.06em;
-}
-.cmdbtn .seg > span{padding:1px 6px;color:var(--g-muted);border-radius:2px}
-.cmdbtn .seg > span.on{background:var(--g-energy);color:#1a1208;font-weight:700}
-.cmdbtn .seg > i{color:#3d4a58;font-style:normal}
-/* 即时动作：冷却中整颗按钮降透明度，右侧显示秒数——与队员技能列同一套读法 */
-.cmdbtn.cool{opacity:.5}
-.cmdbtn.cool .tm{font-family:"JetBrains Mono",monospace;color:var(--g-muted);font-size:10.5px}
+/* 三档互斥阵型：亮的是当前档，点另一个就换。不弹菜单——弹菜单会让视线离开战场 */
+.cmdbtn.sel{background:var(--g-energy);color:#1a1208;border-color:var(--g-energy)}
+.cmdbtn.sel .tm{color:#1a1208;opacity:.65}
+.cmdbtn .tm{font-family:"JetBrains Mono",monospace;color:var(--g-muted);font-size:10.5px}
 
 .minimap{
   width:132px;
@@ -774,9 +767,9 @@ footer{
       </div>
 
       <div class="bc">
-        <div class="cmdbtn"><div class="seg"><span class="on">自由索敌</span><i>⇄</i><span>集火进攻</span></div></div>
-        <div class="cmdbtn"><kbd>R</kbd>重整阵型<span class="tm">25s</span></div>
-        <div class="cmdbtn"><div class="seg"><span class="on">跟随</span><i>⇄</i><span>紧密跟随</span></div></div>
+        <div class="cmdbtn sel"><b>普通防御</b><span class="tm">默认</span></div>
+        <div class="cmdbtn"><b>环形防御</b></div>
+        <div class="cmdbtn"><b>搜索推进</b></div>
       </div>
 
       <div class="br">
@@ -800,9 +793,11 @@ footer{
     <div class="r"><dt>BOSS 血条</dt><dd>居中置顶，只在 BOSS 存活时出现。血条上有 1px 亮色游标标出最近一次的伤害位置，让「刚打掉多少」不用回看数字。三段式是因为本局有三个 BOSS，游标会依次走完。</dd></div>
     <div class="r"><dt>增益倒计时</dt><dd>左侧竖排，最多同时 5 个（buff 上限）。颜色即道具色，与地面上的拾取物同色，形成「地上捡的＝身上挂的」的对应关系。</dd></div>
     <div class="r"><dt>伤害飘字</dt><dd>常规白色，暴击琥珀色且 1.5 倍字号，毒伤紫色，治疗绿色。四类共用一套字号级差，不靠动画区分——300 只僵尸同屏时动画会被淹没。</dd></div>
-    <div class="r"><dt>命令栏</dt><dd>三个按钮：<code>自由索敌 ⇄ 集火进攻</code>、<code>重整阵型</code>（25s 冷却）、<code>跟随 ⇄ 紧密跟随</code>。<b>两个是状态切换、只有一个是即时动作</b>——所以它给的是效率旋钮不是操作门槛。<span class="warn">默认「自由」必须能通关</span>：不碰命令栏也打不过，说明它已经变成门槛（<code>00-决策清单.md</code> A29）。</dd></div>
+    <div class="r"><dt>阵型栏</dt><dd>三个按钮：<code>普通防御</code>、<code>环形防御</code>、<code>搜索推进</code>，亮色的是当前档。<b>三档互斥</b>——同一条轴上的三个位置，不存在叠加态，所以玩家只需要记住一个位（旧版是两个独立开关，要同时记两个）。它给的是效率旋钮不是操作门槛。<span class="warn">默认「普通防御」必须能通关</span>：不碰阵型栏也打不过，说明它已经变成门槛（<code>00-决策清单.md</code> A29）。</dd></div>
+    <div class="r"><dt>没有按钮的战斗操作</dt><dd>集火不再是按钮——<b>左键点敌人就是集火</b>，点地面解除。移动也是：<b>左键点地面</b>落点即阵型中心，逐帧画出每名队员的目的站位与阵型朝向标识，角色随后移动过去；<b>按住左键拖</b>则出现箭头手动指定朝向，松开才落位。点<b>队长身后</b>判为撤退，队伍不转向、保持迎敌朝向边打边撤。<span class="warn">WASD 仍在，但只做整队平移微调，不改变阵型</span>。</dd></div>
+    <div class="r"><dt>地面站位指示</dt><dd>下达移动指令后显示 1–2 秒，队员到位后淡出。<b>不常驻</b>——常驻就变成玩家盯地面读摆位，正是 §5.3 担心的"视线离开战场"。同时画出<b>近战的最大活动圈</b>，它读的就是该阵型层的 <code>tether</code>：<span class="warn">画出来的圈和 AI 实际遵守的圈是同一个字段</span>，不许有两份。</dd></div>
     <div class="r"><dt>战术提示</dt><dd>命令栏正上方，最多两行，新的在下、旧的变淡，3 秒后消失。队员放高级技能或军衔解锁的战术动作（工事 / 地雷 / 陷阱 / 堡垒 / 炮火）时各出一行，文案取 <code>progression.ts</code> 的 <code>TACTICS[].callout</code>。<span class="warn">只写动作不写数字</span>——它回答"队员刚做了什么"，不是战斗日志。</dd></div>
-    <div class="r"><dt>两态开关的画法</dt><dd>左右两个词并排，亮色的是当前态，中间一个 <code>⇄</code>。按一次换边，<span class="warn">不弹菜单</span>——弹菜单会让玩家的视线离开战场，而本作的核心体验是"读战场"。冷却中的按钮整颗降透明度并显示剩余秒数，与队员技能列是同一套读法。</dd></div>
+    <div class="r"><dt>三档的画法</dt><dd>三个按钮并排，亮色实心的是当前档，其余降透明度。按一下就换档，<span class="warn">不弹菜单</span>——弹菜单会让玩家的视线离开战场，而本作的核心体验是"读战场"。<b>旧的「两态开关」画法（左右两个词加一个 <code>⇄</code>）随命令栏重构一起删除</b>：三档互斥之后不再有"两个词换边"这种形状。</dd></div>
     <div class="r"><dt>小地图</dt><dd>132px 见方，显示 256×256 全图。只画三样：小队点、僵尸云、任务点。<span class="warn">不画地形</span>——俯视主视角已经能看到地形，小地图重复画等于浪费一块像素。</dd></div>
     <div class="r"><dt>任务提示</dt><dd>BOSS 血条正下方，一行，不占用操作区。任务都设计成「战斗中顺手完成」，所以提示必须能被余光扫到而不是要去读。</dd></div>
   </dl>
@@ -1228,7 +1223,7 @@ footer{
         <tr><td>技能冷却</td><td><code>characters.ts</code> AIProfile 技能参数</td><td>已定</td></tr>
         <tr><td>增益倒计时</td><td><code>run.ts</code> BUFFS（5 种 × 15s）</td><td>已定</td></tr>
         <tr><td>伤害飘字</td><td><code>combat.ts</code> computeDamage 输出</td><td>已定</td></tr>
-        <tr><td>命令栏三按钮</td><td><code>characters.ts</code> SQUAD_COMMANDS（free 是默认态不是按钮）</td><td>待 M3</td></tr>
+        <tr><td>阵型栏三档 + 鼠标点地</td><td><code>characters.ts</code> SQUAD_COMMANDS（defend 是默认态不是按钮）· 锚点与地面指示见 <code>04-技术框架.md</code> §5.4</td><td>待 M3</td></tr>
         <tr><td>小地图</td><td>core 空间索引查询</td><td>待 M2</td></tr>
         <tr><td>任务进度</td><td><code>quest.ts</code>（三种任务类型）</td><td>待 M3</td></tr>
         <tr><td>武器升级 DPS 增量</td><td><code>weapons.ts</code> 阶系数 + 穿透收益</td><td>已定</td></tr>

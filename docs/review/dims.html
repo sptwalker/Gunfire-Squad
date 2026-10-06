@@ -1,0 +1,212 @@
+<title>挑战维度设计图</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700;900&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{--bg:#f3f4f2;--paper:#fbfbf9;--ink:#1d2228;--ink2:#4a535d;--mute:#7b848d;--line:#d9dcd8;--line2:#e8eae6;
+  --acc:#8a5a1c;--acc-soft:#f1e6d4;--steel:#2f5470;--steel-soft:#e3ebf1;--warn:#a2412c;--warn-soft:#f6e4de;--focus:#2f5470;
+  --tempo:#b5562d;--resist:#5a4b9a;--space:#2f7a5b;--attrition:#9a7a12}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --bg:#15181b;--paper:#1c2024;--ink:#e6e8e6;--ink2:#b3b9bf;--mute:#838b93;--line:#30363c;--line2:#262b30;
+  --acc:#d9a35c;--acc-soft:#332a1d;--steel:#8fb6d4;--steel-soft:#1f2b35;--warn:#e8876f;--warn-soft:#3a231d;--focus:#8fb6d4;
+  --tempo:#e88a5f;--resist:#a99be6;--space:#6cc59d;--attrition:#d9b84a}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#15181b;--paper:#1c2024;--ink:#e6e8e6;--ink2:#b3b9bf;--mute:#838b93;--line:#30363c;--line2:#262b30;
+  --acc:#d9a35c;--acc-soft:#332a1d;--steel:#8fb6d4;--steel-soft:#1f2b35;--warn:#e8876f;--warn-soft:#3a231d;--focus:#8fb6d4;
+  --tempo:#e88a5f;--resist:#a99be6;--space:#6cc59d;--attrition:#d9b84a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding-inline:20px;padding-block:32px 80px;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3,h4{font-family:"Noto Serif SC","Songti SC",serif;margin:0;line-height:1.3;text-wrap:balance}
+h1{font-size:2.2rem;font-weight:900}h2{font-size:1.45rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+code,.rk,.num{font-family:"JetBrains Mono",ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums}
+code{font-size:.75rem;color:var(--mute)}
+.eyebrow{font-size:.75rem;letter-spacing:.14em;color:var(--acc);font-weight:500}
+.top{border-bottom:2px solid var(--ink);padding-bottom:20px}.lede{color:var(--ink2);max-width:72ch;margin:8px 0 0}
+.home{display:inline-flex;margin:10px 0 12px;padding:6px 14px;border:1px solid var(--steel);border-radius:4px;background:var(--steel-soft);color:var(--steel);font-weight:700;font-size:.88rem;text-decoration:none}
+.home:hover{background:var(--steel);color:var(--paper)}
+.stats{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:14px;font-size:.9rem;color:var(--ink2)}.stats b{font-size:1.3rem;color:var(--ink);margin-right:4px;font-family:"JetBrains Mono",monospace}
+section.part{display:flex;flex-direction:column;gap:14px}
+.f-tempo{--fc:var(--tempo)}.f-resist{--fc:var(--resist)}.f-space{--fc:var(--space)}.f-attrition{--fc:var(--attrition)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--ink2)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--fc);margin-right:6px;vertical-align:-1px}
+/* 维度卡 */
+.fams{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;align-items:start}
+.fam{display:flex;flex-direction:column;gap:10px}
+.fam h3{font-size:1.1rem;display:flex;align-items:baseline;gap:8px;color:var(--fc);padding-bottom:4px;border-bottom:3px solid var(--fc)}
+.fam h3 span{font-family:"JetBrains Mono",monospace;font-size:.78rem}
+.dim{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--fc);border-radius:5px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;scroll-margin-top:16px}
+.dim:target{box-shadow:0 0 0 3px var(--steel-soft)}
+.dim header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.dim h4{font-size:1.1rem}
+.feels{margin:0;color:var(--ink2);font-size:.9rem}
+dl{display:grid;grid-template-columns:4.6em 1fr;gap:4px 10px;margin:0;font-size:.86rem}
+dt{color:var(--steel);font-weight:700;font-size:.78rem;padding-top:2px}dd{margin:0}
+.mute{color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:.75rem;padding:0 8px;border:1px solid var(--line);border-radius:10px;color:var(--ink2);text-decoration:none;white-space:nowrap}
+a.chip{border-color:var(--fc);color:var(--fc)}
+/* 关系图 */
+.graph{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+.graph svg{display:block;width:100%;min-width:640px;height:auto;font-size:14px}
+.graph text{fill:var(--ink);dominant-baseline:middle}.graph .cnt{fill:var(--mute);font-family:"JetBrains Mono",monospace;font-size:11px}
+.graph .ax{fill:var(--mute);font-size:12px;letter-spacing:.06em}
+.e{fill:none;stroke:var(--fc);stroke-width:1.4;opacity:.38;transition:opacity .15s,stroke-width .15s}
+.nd circle{fill:var(--fc)}.na rect{fill:var(--paper);stroke:var(--ink2);stroke-width:1.5}
+.n{cursor:pointer;outline:none}.n:focus-visible text{text-decoration:underline}
+svg.hl .e{opacity:.06}svg.hl .e.on{opacity:.95;stroke-width:2.6}svg.hl .n{opacity:.3}svg.hl .n.on{opacity:1}
+.hint{font-size:.82rem;color:var(--mute);margin:0}
+/* 表格 */
+.tw{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line2);text-align:left;font-weight:400;vertical-align:middle}
+thead th{font-size:.78rem;color:var(--ink2)}
+tbody th{font-weight:400}tbody th b{font-weight:700;display:block}tbody th small{color:var(--mute);font-size:.74rem}
+.mx thead th:not(.corner):not(:last-child){border-top:4px solid var(--fc);text-align:center;min-width:3.4em}
+.mx thead th span{writing-mode:vertical-rl;letter-spacing:.1em;display:inline-block;min-height:4.5em}
+.mx td{text-align:center}.mx tbody tr:hover{background:var(--steel-soft)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--fc)}
+.num{text-align:center}.low{color:var(--warn);background:var(--warn-soft);font-weight:700}
+tfoot th,tfoot td{border-top:2px solid var(--line);border-bottom:0;font-size:.8rem}
+.sc .brief{color:var(--ink2);max-width:46ch}.sc th{white-space:nowrap;font-weight:700}
+.sp td{white-space:nowrap}.sp thead th small{display:block;color:var(--mute);font-family:"JetBrains Mono",monospace;font-size:.7rem}
+.rk{font-size:.75rem;background:var(--steel-soft);color:var(--steel);padding:1px 6px;border-radius:3px}
+.sp .c{margin-left:8px;color:var(--mute);font-family:"JetBrains Mono",monospace;font-size:.78rem}
+.none{color:var(--warn)}
+</style>
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">Gunfire Squad · 挑战维度 × 答案</div>
+  <a class="home" href="index.html">← 返回职业树首页</a>
+  <h1>对抗维度设计图</h1>
+  <p class="lede">维度是压力的<b>来源</b>，答案是能力的<b>形状</b>。一个维度至少要有 3 种答案能解，才保证"不止一套阵容"。全部数据从 scenes.ts / zombies.ts / 各职业树直接读出，不手填。</p>
+  <div class="stats"><span><b>13</b>挑战维度</span><span><b>4</b>维度家族</span><span><b>15</b>答案标签</span><span><b>50</b>条对应关系</span><span><b>6</b>场景</span></div>
+</header>
+
+<section class="part"><h2>一、对抗关系图</h2>
+  <div class="legend"><span class="f-tempo">F1 数量与节奏</span><span class="f-resist">F2 抗性与反制</span><span class="f-space">F3 地形与空间</span><span class="f-attrition">F4 持续与区域</span></div>
+  <p class="hint">鼠标悬停或键盘聚焦任一节点，高亮它的全部连线。数字 = 连线数。</p>
+  <div class="graph"><svg viewBox="0 0 900 580" role="img" aria-label="挑战维度与答案标签的对应关系图">
+<g class="edges"><path class="e f-tempo" data-d="swarm" data-a="aoeClear" d="M230 40.8 C450 40.8 450 38.0 670 38.0"/><path class="e f-tempo" data-d="swarm" data-a="sustainedDps" d="M230 40.8 C450 40.8 450 110.0 670 110.0"/><path class="e f-tempo" data-d="swarm" data-a="explosive" d="M230 40.8 C450 40.8 450 218.0 670 218.0"/><path class="e f-tempo" data-d="rush" data-a="burst" d="M230 82.3 C450 82.3 450 146.0 670 146.0"/><path class="e f-tempo" data-d="rush" data-a="control" d="M230 82.3 C450 82.3 450 290.0 670 290.0"/><path class="e f-tempo" data-d="rush" data-a="mitigate" d="M230 82.3 C450 82.3 450 362.0 670 362.0"/><path class="e f-tempo" data-d="rush" data-a="summon" d="M230 82.3 C450 82.3 450 506.0 670 506.0"/><path class="e f-tempo" data-d="eliteHunt" data-a="sustainedDps" d="M230 123.8 C450 123.8 450 110.0 670 110.0"/><path class="e f-tempo" data-d="eliteHunt" data-a="burst" d="M230 123.8 C450 123.8 450 146.0 670 146.0"/><path class="e f-tempo" data-d="eliteHunt" data-a="armorShred" d="M230 123.8 C450 123.8 450 254.0 670 254.0"/><path class="e f-tempo" data-d="eliteHunt" data-a="taunt" d="M230 123.8 C450 123.8 450 326.0 670 326.0"/><path class="e f-tempo" data-d="eliteHunt" data-a="summon" d="M230 123.8 C450 123.8 450 506.0 670 506.0"/><path class="e f-tempo" data-d="eliteHunt" data-a="debuff" d="M230 123.8 C450 123.8 450 542.0 670 542.0"/><path class="e f-resist" data-d="heavyArmor" data-a="pierce" d="M230 165.4 C450 165.4 450 182.0 670 182.0"/><path class="e f-resist" data-d="heavyArmor" data-a="explosive" d="M230 165.4 C450 165.4 450 218.0 670 218.0"/><path class="e f-resist" data-d="heavyArmor" data-a="armorShred" d="M230 165.4 C450 165.4 450 254.0 670 254.0"/><path class="e f-resist" data-d="split" data-a="singleTarget" d="M230 206.9 C450 206.9 450 74.0 670 74.0"/><path class="e f-resist" data-d="split" data-a="burst" d="M230 206.9 C450 206.9 450 146.0 670 146.0"/><path class="e f-resist" data-d="split" data-a="control" d="M230 206.9 C450 206.9 450 290.0 670 290.0"/><path class="e f-resist" data-d="shielded" data-a="singleTarget" d="M230 248.5 C450 248.5 450 74.0 670 74.0"/><path class="e f-resist" data-d="shielded" data-a="burst" d="M230 248.5 C450 248.5 450 146.0 670 146.0"/><path class="e f-resist" data-d="shielded" data-a="armorShred" d="M230 248.5 C450 248.5 450 254.0 670 254.0"/><path class="e f-resist" data-d="shielded" data-a="debuff" d="M230 248.5 C450 248.5 450 542.0 670 542.0"/><path class="e f-resist" data-d="ctrlResist" data-a="singleTarget" d="M230 290.0 C450 290.0 450 74.0 670 74.0"/><path class="e f-resist" data-d="ctrlResist" data-a="burst" d="M230 290.0 C450 290.0 450 146.0 670 146.0"/><path class="e f-resist" data-d="ctrlResist" data-a="armorShred" d="M230 290.0 C450 290.0 450 254.0 670 254.0"/><path class="e f-resist" data-d="ctrlResist" data-a="control" d="M230 290.0 C450 290.0 450 290.0 670 290.0"/><path class="e f-resist" data-d="ctrlResist" data-a="taunt" d="M230 290.0 C450 290.0 450 326.0 670 326.0"/><path class="e f-resist" data-d="ctrlResist" data-a="sustain" d="M230 290.0 C450 290.0 450 398.0 670 398.0"/><path class="e f-space" data-d="choke" data-a="pierce" d="M230 331.5 C450 331.5 450 182.0 670 182.0"/><path class="e f-space" data-d="choke" data-a="explosive" d="M230 331.5 C450 331.5 450 218.0 670 218.0"/><path class="e f-space" data-d="choke" data-a="taunt" d="M230 331.5 C450 331.5 450 326.0 670 326.0"/><path class="e f-space" data-d="choke" data-a="summon" d="M230 331.5 C450 331.5 450 506.0 670 506.0"/><path class="e f-space" data-d="open" data-a="sustainedDps" d="M230 373.1 C450 373.1 450 110.0 670 110.0"/><path class="e f-space" data-d="open" data-a="mobility" d="M230 373.1 C450 373.1 450 470.0 670 470.0"/><path class="e f-space" data-d="open" data-a="summon" d="M230 373.1 C450 373.1 450 506.0 670 506.0"/><path class="e f-space" data-d="sluggish" data-a="sustain" d="M230 414.6 C450 414.6 450 398.0 670 398.0"/><path class="e f-space" data-d="sluggish" data-a="ranged" d="M230 414.6 C450 414.6 450 434.0 670 434.0"/><path class="e f-space" data-d="sluggish" data-a="mobility" d="M230 414.6 C450 414.6 450 470.0 670 470.0"/><path class="e f-attrition" data-d="poison" data-a="mitigate" d="M230 456.2 C450 456.2 450 362.0 670 362.0"/><path class="e f-attrition" data-d="poison" data-a="sustain" d="M230 456.2 C450 456.2 450 398.0 670 398.0"/><path class="e f-attrition" data-d="poison" data-a="ranged" d="M230 456.2 C450 456.2 450 434.0 670 434.0"/><path class="e f-attrition" data-d="poison" data-a="mobility" d="M230 456.2 C450 456.2 450 470.0 670 470.0"/><path class="e f-attrition" data-d="suicide" data-a="control" d="M230 497.7 C450 497.7 450 290.0 670 290.0"/><path class="e f-attrition" data-d="suicide" data-a="ranged" d="M230 497.7 C450 497.7 450 434.0 670 434.0"/><path class="e f-attrition" data-d="suicide" data-a="mobility" d="M230 497.7 C450 497.7 450 470.0 670 470.0"/><path class="e f-attrition" data-d="suppress" data-a="mitigate" d="M230 539.2 C450 539.2 450 362.0 670 362.0"/><path class="e f-attrition" data-d="suppress" data-a="ranged" d="M230 539.2 C450 539.2 450 434.0 670 434.0"/><path class="e f-attrition" data-d="suppress" data-a="mobility" d="M230 539.2 C450 539.2 450 470.0 670 470.0"/><path class="e f-attrition" data-d="suppress" data-a="summon" d="M230 539.2 C450 539.2 450 506.0 670 506.0"/></g>
+<g class="n nd f-tempo" data-d="swarm" tabindex="0"><circle cx="230" cy="40.8" r="6"/><text x="216" y="40.8" text-anchor="end">潮涌<tspan class="cnt"> 3</tspan></text></g><g class="n nd f-tempo" data-d="rush" tabindex="0"><circle cx="230" cy="82.3" r="6"/><text x="216" y="82.3" text-anchor="end">突进<tspan class="cnt"> 4</tspan></text></g><g class="n nd f-tempo" data-d="eliteHunt" tabindex="0"><circle cx="230" cy="123.8" r="6"/><text x="216" y="123.8" text-anchor="end">围猎<tspan class="cnt"> 6</tspan></text></g><g class="n nd f-resist" data-d="heavyArmor" tabindex="0"><circle cx="230" cy="165.4" r="6"/><text x="216" y="165.4" text-anchor="end">重甲<tspan class="cnt"> 3</tspan></text></g><g class="n nd f-resist" data-d="split" tabindex="0"><circle cx="230" cy="206.9" r="6"/><text x="216" y="206.9" text-anchor="end">分裂<tspan class="cnt"> 3</tspan></text></g><g class="n nd f-resist" data-d="shielded" tabindex="0"><circle cx="230" cy="248.5" r="6"/><text x="216" y="248.5" text-anchor="end">精英护盾<tspan class="cnt"> 4</tspan></text></g><g class="n nd f-resist" data-d="ctrlResist" tabindex="0"><circle cx="230" cy="290.0" r="6"/><text x="216" y="290.0" text-anchor="end">控制抗性<tspan class="cnt"> 6</tspan></text></g><g class="n nd f-space" data-d="choke" tabindex="0"><circle cx="230" cy="331.5" r="6"/><text x="216" y="331.5" text-anchor="end">卡口<tspan class="cnt"> 4</tspan></text></g><g class="n nd f-space" data-d="open" tabindex="0"><circle cx="230" cy="373.1" r="6"/><text x="216" y="373.1" text-anchor="end">开阔<tspan class="cnt"> 3</tspan></text></g><g class="n nd f-space" data-d="sluggish" tabindex="0"><circle cx="230" cy="414.6" r="6"/><text x="216" y="414.6" text-anchor="end">迟滞<tspan class="cnt"> 3</tspan></text></g><g class="n nd f-attrition" data-d="poison" tabindex="0"><circle cx="230" cy="456.2" r="6"/><text x="216" y="456.2" text-anchor="end">毒区<tspan class="cnt"> 4</tspan></text></g><g class="n nd f-attrition" data-d="suicide" tabindex="0"><circle cx="230" cy="497.7" r="6"/><text x="216" y="497.7" text-anchor="end">自爆<tspan class="cnt"> 3</tspan></text></g><g class="n nd f-attrition" data-d="suppress" tabindex="0"><circle cx="230" cy="539.2" r="6"/><text x="216" y="539.2" text-anchor="end">远程压制<tspan class="cnt"> 4</tspan></text></g>
+<g class="n na" data-a="aoeClear" tabindex="0"><rect x="664" y="32.0" width="12" height="12" rx="2"/><text x="684" y="38.0">范围清场<tspan class="cnt"> 1</tspan></text></g><g class="n na" data-a="singleTarget" tabindex="0"><rect x="664" y="68.0" width="12" height="12" rx="2"/><text x="684" y="74.0">单体点杀<tspan class="cnt"> 3</tspan></text></g><g class="n na" data-a="sustainedDps" tabindex="0"><rect x="664" y="104.0" width="12" height="12" rx="2"/><text x="684" y="110.0">持续输出<tspan class="cnt"> 3</tspan></text></g><g class="n na" data-a="burst" tabindex="0"><rect x="664" y="140.0" width="12" height="12" rx="2"/><text x="684" y="146.0">爆发窗口<tspan class="cnt"> 5</tspan></text></g><g class="n na" data-a="pierce" tabindex="0"><rect x="664" y="176.0" width="12" height="12" rx="2"/><text x="684" y="182.0">直线穿透<tspan class="cnt"> 2</tspan></text></g><g class="n na" data-a="explosive" tabindex="0"><rect x="664" y="212.0" width="12" height="12" rx="2"/><text x="684" y="218.0">爆炸灼烧<tspan class="cnt"> 3</tspan></text></g><g class="n na" data-a="armorShred" tabindex="0"><rect x="664" y="248.0" width="12" height="12" rx="2"/><text x="684" y="254.0">破甲腐蚀<tspan class="cnt"> 4</tspan></text></g><g class="n na" data-a="control" tabindex="0"><rect x="664" y="284.0" width="12" height="12" rx="2"/><text x="684" y="290.0">控制减速<tspan class="cnt"> 4</tspan></text></g><g class="n na" data-a="taunt" tabindex="0"><rect x="664" y="320.0" width="12" height="12" rx="2"/><text x="684" y="326.0">堵口嘲讽<tspan class="cnt"> 3</tspan></text></g><g class="n na" data-a="mitigate" tabindex="0"><rect x="664" y="356.0" width="12" height="12" rx="2"/><text x="684" y="362.0">减伤护盾<tspan class="cnt"> 3</tspan></text></g><g class="n na" data-a="sustain" tabindex="0"><rect x="664" y="392.0" width="12" height="12" rx="2"/><text x="684" y="398.0">续航治疗<tspan class="cnt"> 3</tspan></text></g><g class="n na" data-a="ranged" tabindex="0"><rect x="664" y="428.0" width="12" height="12" rx="2"/><text x="684" y="434.0">远程射程<tspan class="cnt"> 4</tspan></text></g><g class="n na" data-a="mobility" tabindex="0"><rect x="664" y="464.0" width="12" height="12" rx="2"/><text x="684" y="470.0">机动突进<tspan class="cnt"> 5</tspan></text></g><g class="n na" data-a="summon" tabindex="0"><rect x="664" y="500.0" width="12" height="12" rx="2"/><text x="684" y="506.0">召唤物<tspan class="cnt"> 5</tspan></text></g><g class="n na" data-a="debuff" tabindex="0"><rect x="664" y="536.0" width="12" height="12" rx="2"/><text x="684" y="542.0">标记易伤<tspan class="cnt"> 2</tspan></text></g>
+<text class="ax" x="230" y="12" text-anchor="end">挑战维度（压力来源）</text><text class="ax" x="670" y="12">答案标签（能力形状）</text>
+</svg></div>
+</section>
+
+<section class="part"><h2>二、13 个挑战维度</h2><div class="fams"><section class="fam f-tempo"><h3><span>F1</span>数量与节奏</h3><article class="dim" id="d-swarm">
+  <header><h4>潮涌</h4><code>swarm</code></header>
+  <p class="feels">“一眼望不到边的小僵尸，单个不疼，但你只有 5 个人”</p>
+  <dl><dt>破解</dt><dd>范围清场：一次攻击覆盖多个目标</dd>
+  <dt>僵尸</dt><dd>普通僵尸、分裂小僵尸</dd>
+  <dt>地形</dt><dd><span class="mute">纯靠僵尸构成</span></dd>
+  <dt>答案 3</dt><dd class="chips"><span class="chip">范围清场</span><span class="chip">持续输出</span><span class="chip">爆炸灼烧</span></dd></dl>
+</article><article class="dim" id="d-rush">
+  <header><h4>突进</h4><code>rush</code></header>
+  <p class="feels">“跑得比你快的僵尸，从你反应不过来的时候就已经贴脸了”</p>
+  <dl><dt>破解</dt><dd>控制/减速 + 近距爆发，或高攻速快速点掉</dd>
+  <dt>僵尸</dt><dd>高速僵尸</dd>
+  <dt>地形</dt><dd><span class="mute">纯靠僵尸构成</span></dd>
+  <dt>答案 4</dt><dd class="chips"><span class="chip">爆发窗口</span><span class="chip">控制减速</span><span class="chip">减伤护盾</span><span class="chip">召唤物</span></dd></dl>
+</article><article class="dim" id="d-eliteHunt">
+  <header><h4>围猎</h4><code>eliteHunt</code></header>
+  <p class="feels">“BOSS 或精英在正面，小怪同时从侧面压上来”</p>
+  <dl><dt>破解</dt><dd>分火能力，或一个能扛住正面让全队集火的支点</dd>
+  <dt>僵尸</dt><dd>护盾僵尸、喷吐僵尸</dd>
+  <dt>地形</dt><dd><span class="mute">纯靠僵尸构成</span></dd>
+  <dt>答案 6</dt><dd class="chips"><span class="chip">持续输出</span><span class="chip">爆发窗口</span><span class="chip">破甲腐蚀</span><span class="chip">堵口嘲讽</span><span class="chip">召唤物</span><span class="chip">标记易伤</span></dd></dl>
+</article></section><section class="fam f-resist"><h3><span>F2</span>抗性与反制</h3><article class="dim" id="d-heavyArmor">
+  <header><h4>重甲</h4><code>heavyArmor</code></header>
+  <p class="feels">“打上去全是白字，它们走得很慢但你拦不住”</p>
+  <dl><dt>破解</dt><dd>穿透或爆炸/火焰——靠堆攻击力没用</dd>
+  <dt>僵尸</dt><dd>高防胖僵尸</dd>
+  <dt>地形</dt><dd><span class="mute">纯靠僵尸构成</span></dd>
+  <dt>答案 3</dt><dd class="chips"><span class="chip">直线穿透</span><span class="chip">爆炸灼烧</span><span class="chip">破甲腐蚀</span></dd></dl>
+</article><article class="dim" id="d-split">
+  <header><h4>分裂</h4><code>split</code></header>
+  <p class="feels">“你一发 AOE 打死了三只，场上反而多了九只”</p>
+  <dl><dt>破解</dt><dd>单体点杀，或先控住再逐个处理</dd>
+  <dt>僵尸</dt><dd>分裂僵尸、分裂小僵尸</dd>
+  <dt>地形</dt><dd><span class="mute">纯靠僵尸构成</span></dd>
+  <dt>答案 3</dt><dd class="chips"><span class="chip">单体点杀</span><span class="chip">爆发窗口</span><span class="chip">控制减速</span></dd></dl>
+</article><article class="dim" id="d-shielded">
+  <header><h4>精英护盾</h4><code>shielded</code></header>
+  <p class="feels">“怎么打都不掉血，直到某个瞬间它突然变得很脆”</p>
+  <dl><dt>破解</dt><dd>破盾手段 + 集火窗口，AOE 磨盾是浪费</dd>
+  <dt>僵尸</dt><dd>护盾僵尸</dd>
+  <dt>地形</dt><dd><span class="mute">纯靠僵尸构成</span></dd>
+  <dt>答案 4</dt><dd class="chips"><span class="chip">单体点杀</span><span class="chip">爆发窗口</span><span class="chip">破甲腐蚀</span><span class="chip">标记易伤</span></dd></dl>
+</article><article class="dim" id="d-ctrlResist">
+  <header><h4>控制抗性</h4><code>ctrlResist</code></header>
+  <p class="feels">“推不动、冻不住、嘲讽不灵——你最顺手的那一招突然不响了”</p>
+  <dl><dt>破解</dt><dd>换一种控制手段，或者干脆放弃控制用点杀与续航硬吃。加大力度没有用</dd>
+  <dt>僵尸</dt><dd>高防胖僵尸、护盾僵尸、毒液僵尸、跳跃僵尸</dd>
+  <dt>地形</dt><dd>沙袋、铁丝网</dd>
+  <dt>答案 6</dt><dd class="chips"><span class="chip">单体点杀</span><span class="chip">爆发窗口</span><span class="chip">破甲腐蚀</span><span class="chip">控制减速</span><span class="chip">堵口嘲讽</span><span class="chip">续航治疗</span></dd></dl>
+</article></section><section class="fam f-space"><h3><span>F3</span>地形与空间</h3><article class="dim" id="d-choke">
+  <header><h4>卡口</h4><code>choke</code></header>
+  <p class="feels">“只有一条路，僵尸排队进来，你的五个人挤在一起”</p>
+  <dl><dt>破解</dt><dd>直线穿透或堵口能力，把走廊变成绞肉机</dd>
+  <dt>僵尸</dt><dd>高防胖僵尸、毒液僵尸</dd>
+  <dt>地形</dt><dd>建筑、走廊</dd>
+  <dt>答案 4</dt><dd class="chips"><span class="chip">直线穿透</span><span class="chip">爆炸灼烧</span><span class="chip">堵口嘲讽</span><span class="chip">召唤物</span></dd></dl>
+</article><article class="dim" id="d-open">
+  <header><h4>开阔</h4><code>open</code></header>
+  <p class="feels">“没有墙，没有掩体，四个方向同时来人”</p>
+  <dl><dt>破解</dt><dd>持续输出 + 全域索敌，或者能自己创造阵地的召唤物</dd>
+  <dt>僵尸</dt><dd>高速僵尸、跳跃僵尸</dd>
+  <dt>地形</dt><dd>开阔地</dd>
+  <dt>答案 3</dt><dd class="chips"><span class="chip">持续输出</span><span class="chip">机动突进</span><span class="chip">召唤物</span></dd></dl>
+</article><article class="dim" id="d-sluggish">
+  <header><h4>迟滞</h4><code>sluggish</code></header>
+  <p class="feels">“脚下的地不让你好好走，走位这件事突然变得很贵”</p>
+  <dl><dt>破解</dt><dd>机动力，或者干脆不依赖走位的远程输出</dd>
+  <dt>僵尸</dt><dd>跳跃僵尸</dd>
+  <dt>地形</dt><dd>沼泽、水域、冰面</dd>
+  <dt>答案 3</dt><dd class="chips"><span class="chip">续航治疗</span><span class="chip">远程射程</span><span class="chip">机动突进</span></dd></dl>
+</article></section><section class="fam f-attrition"><h3><span>F4</span>持续与区域</h3><article class="dim" id="d-poison">
+  <header><h4>毒区</h4><code>poison</code></header>
+  <p class="feels">“地上全是不能踩的东西，你被一点一点挤到墙角”</p>
+  <dl><dt>破解</dt><dd>续航治疗，或能在毒区外解决战斗的射程</dd>
+  <dt>僵尸</dt><dd>毒液僵尸</dd>
+  <dt>地形</dt><dd>毒洼、沼泽</dd>
+  <dt>答案 4</dt><dd class="chips"><span class="chip">减伤护盾</span><span class="chip">续航治疗</span><span class="chip">远程射程</span><span class="chip">机动突进</span></dd></dl>
+</article><article class="dim" id="d-suicide">
+  <header><h4>自爆</h4><code>suicide</code></header>
+  <p class="feels">“它们不咬你，它们只是走过来然后炸掉”</p>
+  <dl><dt>破解</dt><dd>远程点杀或击退，把爆炸挡在接触距离之外</dd>
+  <dt>僵尸</dt><dd>爆炸僵尸</dd>
+  <dt>地形</dt><dd>油桶</dd>
+  <dt>答案 3</dt><dd class="chips"><span class="chip">控制减速</span><span class="chip">远程射程</span><span class="chip">机动突进</span></dd></dl>
+</article><article class="dim" id="d-suppress">
+  <header><h4>远程压制</h4><code>suppress</code></header>
+  <p class="feels">“站着不动就一直在挨打，可前面又有一堆东西挡路”</p>
+  <dl><dt>破解</dt><dd>主动前压的突进手段，或者比它更长的射程</dd>
+  <dt>僵尸</dt><dd>喷吐僵尸</dd>
+  <dt>地形</dt><dd><span class="mute">纯靠僵尸构成</span></dd>
+  <dt>答案 4</dt><dd class="chips"><span class="chip">减伤护盾</span><span class="chip">远程射程</span><span class="chip">机动突进</span><span class="chip">召唤物</span></dd></dl>
+</article></section></div></section>
+
+<section class="part"><h2>三、覆盖矩阵</h2><p class="hint">行 = 答案，列 = 维度。底行低于门槛的格子标红。</p><div class="tw"><table class="mx"><thead><tr><th class="corner">答案 ＼ 维度</th><th class="f-tempo"><span>潮涌</span></th><th class="f-tempo"><span>突进</span></th><th class="f-tempo"><span>围猎</span></th><th class="f-resist"><span>重甲</span></th><th class="f-resist"><span>分裂</span></th><th class="f-resist"><span>精英护盾</span></th><th class="f-resist"><span>控制抗性</span></th><th class="f-space"><span>卡口</span></th><th class="f-space"><span>开阔</span></th><th class="f-space"><span>迟滞</span></th><th class="f-attrition"><span>毒区</span></th><th class="f-attrition"><span>自爆</span></th><th class="f-attrition"><span>远程压制</span></th><th>覆盖</th></tr></thead><tbody>
+<tr><th><b>范围清场</b><small>一次攻击覆盖多个目标</small></th><td><i class="dot f-tempo" title="范围清场 → 潮涌"></i></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">1</td></tr><tr><th><b>单体点杀</b><small>高单体效率，不制造额外目标</small></th><td></td><td></td><td></td><td></td><td><i class="dot f-resist" title="单体点杀 → 分裂"></i></td><td><i class="dot f-resist" title="单体点杀 → 精英护盾"></i></td><td><i class="dot f-resist" title="单体点杀 → 控制抗性"></i></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">3</td></tr><tr><th><b>持续输出</b><small>不需要窗口，一直在打</small></th><td><i class="dot f-tempo" title="持续输出 → 潮涌"></i></td><td></td><td><i class="dot f-tempo" title="持续输出 → 围猎"></i></td><td></td><td></td><td></td><td></td><td></td><td><i class="dot f-space" title="持续输出 → 开阔"></i></td><td></td><td></td><td></td><td></td><td class="num">3</td></tr><tr><th><b>爆发窗口</b><small>短时间把伤害集中砸出去</small></th><td></td><td><i class="dot f-tempo" title="爆发窗口 → 突进"></i></td><td><i class="dot f-tempo" title="爆发窗口 → 围猎"></i></td><td></td><td><i class="dot f-resist" title="爆发窗口 → 分裂"></i></td><td><i class="dot f-resist" title="爆发窗口 → 精英护盾"></i></td><td><i class="dot f-resist" title="爆发窗口 → 控制抗性"></i></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">5</td></tr><tr><th><b>直线穿透</b><small>无视部分护甲，且吃站位</small></th><td></td><td></td><td></td><td><i class="dot f-resist" title="直线穿透 → 重甲"></i></td><td></td><td></td><td></td><td><i class="dot f-space" title="直线穿透 → 卡口"></i></td><td></td><td></td><td></td><td></td><td></td><td class="num">2</td></tr><tr><th><b>爆炸灼烧</b><small>高额定值伤害，不吃护甲减免</small></th><td><i class="dot f-tempo" title="爆炸灼烧 → 潮涌"></i></td><td></td><td></td><td><i class="dot f-resist" title="爆炸灼烧 → 重甲"></i></td><td></td><td></td><td></td><td><i class="dot f-space" title="爆炸灼烧 → 卡口"></i></td><td></td><td></td><td></td><td></td><td></td><td class="num">3</td></tr><tr><th><b>破甲腐蚀</b><small>把目标护甲降下来给全队用</small></th><td></td><td></td><td><i class="dot f-tempo" title="破甲腐蚀 → 围猎"></i></td><td><i class="dot f-resist" title="破甲腐蚀 → 重甲"></i></td><td></td><td><i class="dot f-resist" title="破甲腐蚀 → 精英护盾"></i></td><td><i class="dot f-resist" title="破甲腐蚀 → 控制抗性"></i></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">4</td></tr><tr><th><b>控制减速</b><small>限制移动</small></th><td></td><td><i class="dot f-tempo" title="控制减速 → 突进"></i></td><td></td><td></td><td><i class="dot f-resist" title="控制减速 → 分裂"></i></td><td></td><td><i class="dot f-resist" title="控制减速 → 控制抗性"></i></td><td></td><td></td><td></td><td></td><td><i class="dot f-attrition" title="控制减速 → 自爆"></i></td><td></td><td class="num">4</td></tr><tr><th><b>堵口嘲讽</b><small>把敌人固定在一点</small></th><td></td><td></td><td><i class="dot f-tempo" title="堵口嘲讽 → 围猎"></i></td><td></td><td></td><td></td><td><i class="dot f-resist" title="堵口嘲讽 → 控制抗性"></i></td><td><i class="dot f-space" title="堵口嘲讽 → 卡口"></i></td><td></td><td></td><td></td><td></td><td></td><td class="num">3</td></tr><tr><th><b>减伤护盾</b><small>降低全队承伤</small></th><td></td><td><i class="dot f-tempo" title="减伤护盾 → 突进"></i></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><i class="dot f-attrition" title="减伤护盾 → 毒区"></i></td><td></td><td><i class="dot f-attrition" title="减伤护盾 → 远程压制"></i></td><td class="num">3</td></tr><tr><th><b>续航治疗</b><small>续航治疗</small></th><td></td><td></td><td></td><td></td><td></td><td></td><td><i class="dot f-resist" title="续航治疗 → 控制抗性"></i></td><td></td><td></td><td><i class="dot f-space" title="续航治疗 → 迟滞"></i></td><td><i class="dot f-attrition" title="续航治疗 → 毒区"></i></td><td></td><td></td><td class="num">3</td></tr><tr><th><b>远程射程</b><small>在威胁范围外解决战斗</small></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><i class="dot f-space" title="远程射程 → 迟滞"></i></td><td><i class="dot f-attrition" title="远程射程 → 毒区"></i></td><td><i class="dot f-attrition" title="远程射程 → 自爆"></i></td><td><i class="dot f-attrition" title="远程射程 → 远程压制"></i></td><td class="num">4</td></tr><tr><th><b>机动突进</b><small>走位成本对你更低</small></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><i class="dot f-space" title="机动突进 → 开阔"></i></td><td><i class="dot f-space" title="机动突进 → 迟滞"></i></td><td><i class="dot f-attrition" title="机动突进 → 毒区"></i></td><td><i class="dot f-attrition" title="机动突进 → 自爆"></i></td><td><i class="dot f-attrition" title="机动突进 → 远程压制"></i></td><td class="num">5</td></tr><tr><th><b>召唤物</b><small>用编制外的单位分摊</small></th><td></td><td><i class="dot f-tempo" title="召唤物 → 突进"></i></td><td><i class="dot f-tempo" title="召唤物 → 围猎"></i></td><td></td><td></td><td></td><td></td><td><i class="dot f-space" title="召唤物 → 卡口"></i></td><td><i class="dot f-space" title="召唤物 → 开阔"></i></td><td></td><td></td><td></td><td><i class="dot f-attrition" title="召唤物 → 远程压制"></i></td><td class="num">5</td></tr><tr><th><b>标记易伤</b><small>为全队制造集火窗口</small></th><td></td><td></td><td><i class="dot f-tempo" title="标记易伤 → 围猎"></i></td><td></td><td></td><td><i class="dot f-resist" title="标记易伤 → 精英护盾"></i></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">2</td></tr>
+</tbody><tfoot><tr><th>答案数（门槛 ≥ 3）</th><td class="num ">3</td><td class="num ">4</td><td class="num ">6</td><td class="num ">3</td><td class="num ">3</td><td class="num ">4</td><td class="num ">6</td><td class="num ">4</td><td class="num ">3</td><td class="num ">3</td><td class="num ">4</td><td class="num ">3</td><td class="num ">4</td><td></td></tr></tfoot></table></div></section>
+
+<section class="part"><h2>四、场景签名</h2><p class="hint">每个场景由 3 个签名维度决定"要什么阵容"。点维度跳到对应卡片。</p><div class="tw"><table class="sc"><thead><tr><th>场景</th><th>签名维度</th><th>关卡</th><th>地形</th><th>一句话</th></tr></thead><tbody>
+<tr><th>城市废墟</th><td class="chips"><a class="chip f-space" href="#d-choke">卡口</a><a class="chip f-attrition" href="#d-suicide">自爆</a><a class="chip f-resist" href="#d-heavyArmor">重甲</a></td><td class="num">15</td><td>建筑、走廊、油桶</td><td class="brief">街道被楼体切成一条条走廊，爆炸僵尸从拐角后面走出来，胖僵尸堵住唯一的出口。</td></tr><tr><th>原始丛林</th><td class="chips"><a class="chip f-tempo" href="#d-swarm">潮涌</a><a class="chip f-attrition" href="#d-poison">毒区</a><a class="chip f-tempo" href="#d-rush">突进</a></td><td class="num">15</td><td>沼泽、毒洼、开阔地</td><td class="brief">树冠遮住视线，小僵尸像潮水一样从每一丛灌木里渗出来，毒液僵尸死在你退无可退的地方。</td></tr><tr><th>沼泽疫地</th><td class="chips"><a class="chip f-space" href="#d-sluggish">迟滞</a><a class="chip f-attrition" href="#d-poison">毒区</a><a class="chip f-attrition" href="#d-suppress">远程压制</a></td><td class="num">13</td><td>沼泽、水域、毒洼</td><td class="brief">每走一步都在往下陷，喷吐僵尸站在你够不到的地方慢慢磨，脚下还在掉血。</td></tr><tr><th>荒漠废土</th><td class="chips"><a class="chip f-space" href="#d-open">开阔</a><a class="chip f-attrition" href="#d-suppress">远程压制</a><a class="chip f-tempo" href="#d-rush">突进</a></td><td class="num">13</td><td>开阔地、油桶</td><td class="brief">没有一处掩体，四个方向同时来人，跑得最快的和最远的同时在打你。</td></tr><tr><th>雪原冻土</th><td class="chips"><a class="chip f-space" href="#d-sluggish">迟滞</a><a class="chip f-tempo" href="#d-eliteHunt">围猎</a><a class="chip f-resist" href="#d-shielded">精英护盾</a></td><td class="num">13</td><td>冰面、开阔地、补给箱</td><td class="brief">冰面上刹不住脚，精英护盾僵尸顶在最前面，小怪趁你打不动它的时候围上来。</td></tr><tr><th>军事禁区</th><td class="chips"><a class="chip f-resist" href="#d-heavyArmor">重甲</a><a class="chip f-resist" href="#d-ctrlResist">控制抗性</a><a class="chip f-resist" href="#d-split">分裂</a></td><td class="num">13</td><td>建筑、走廊、补给箱、油桶、沙袋、铁丝网、木墙</td><td class="brief">装甲单位推进得又稳又慢，推不动也冻不住；精英在正面吸引火力，分裂僵尸逼你不能用范围武器；铁丝网与沙袋把路切成一段段。</td></tr>
+</tbody></table></div></section>
+
+<section class="part"><h2>五、五棵职业树的答案供给</h2><p class="hint">每格：最早出现该答案的军衔 + 全树带该标签的职业数（每树 191 个）。“—”表示本树没有。</p><div class="tw"><table class="sp"><thead><tr><th>答案</th><th>剑士<small>sw</small></th><th>法师<small>mg</small></th><th>射手<small>ar</small></th><th>辅助师<small>md</small></th><th>技师<small>te</small></th></tr></thead><tbody>
+<tr><th>范围清场</th><td><span class="rk">W-1</span><span class="c">104</span></td><td><span class="rk">W-1</span><span class="c">125</span></td><td><span class="rk">W-1</span><span class="c">75</span></td><td><span class="rk">W-1</span><span class="c">46</span></td><td><span class="rk">W-1</span><span class="c">81</span></td></tr><tr><th>单体点杀</th><td><span class="rk">O-7</span><span class="c">11</span></td><td><span class="rk">E-7</span><span class="c">81</span></td><td><span class="rk">W-1</span><span class="c">67</span></td><td><span class="rk">O-1</span><span class="c">29</span></td><td><span class="rk">O-1</span><span class="c">34</span></td></tr><tr><th>持续输出</th><td><span class="rk">E-4</span><span class="c">105</span></td><td><span class="rk">E-4</span><span class="c">89</span></td><td><span class="rk">E-4</span><span class="c">113</span></td><td><span class="rk">E-7</span><span class="c">94</span></td><td><span class="rk">E-4</span><span class="c">95</span></td></tr><tr><th>爆发窗口</th><td><span class="rk">W-1</span><span class="c">83</span></td><td><span class="rk">E-7</span><span class="c">89</span></td><td><span class="rk">E-4</span><span class="c">72</span></td><td><span class="rk">W-1</span><span class="c">42</span></td><td><span class="rk">O-1</span><span class="c">30</span></td></tr><tr><th>直线穿透</th><td><span class="rk">O-1</span><span class="c">37</span></td><td><span class="rk">E-7</span><span class="c">47</span></td><td><span class="rk">W-1</span><span class="c">39</span></td><td><span class="rk">W-1</span><span class="c">20</span></td><td><span class="rk">O-1</span><span class="c">37</span></td></tr><tr><th>爆炸灼烧</th><td><span class="rk">O-1</span><span class="c">11</span></td><td><span class="rk">W-1</span><span class="c">37</span></td><td><span class="rk">W-1</span><span class="c">23</span></td><td><span class="rk">W-1</span><span class="c">32</span></td><td><span class="rk">W-1</span><span class="c">65</span></td></tr><tr><th>破甲腐蚀</th><td><span class="rk">E-7</span><span class="c">94</span></td><td><span class="rk">O-1</span><span class="c">33</span></td><td><span class="rk">E-7</span><span class="c">70</span></td><td><span class="rk">W-1</span><span class="c">30</span></td><td><span class="rk">E-7</span><span class="c">69</span></td></tr><tr><th>控制减速</th><td><span class="rk">W-1</span><span class="c">74</span></td><td><span class="rk">E-4</span><span class="c">123</span></td><td><span class="rk">W-1</span><span class="c">114</span></td><td><span class="rk">W-1</span><span class="c">110</span></td><td><span class="rk">W-1</span><span class="c">101</span></td></tr><tr><th>堵口嘲讽</th><td><span class="rk">W-1</span><span class="c">49</span></td><td><span class="rk">W-1</span><span class="c">36</span></td><td class="none">—</td><td><span class="rk">O-1</span><span class="c">12</span></td><td><span class="rk">O-1</span><span class="c">26</span></td></tr><tr><th>减伤护盾</th><td><span class="rk">E-4</span><span class="c">131</span></td><td><span class="rk">E-7</span><span class="c">112</span></td><td><span class="rk">E-7</span><span class="c">107</span></td><td><span class="rk">W-1</span><span class="c">117</span></td><td><span class="rk">E-4</span><span class="c">136</span></td></tr><tr><th>续航治疗</th><td><span class="rk">W-1</span><span class="c">23</span></td><td><span class="rk">E-7</span><span class="c">50</span></td><td><span class="rk">O-1</span><span class="c">11</span></td><td><span class="rk">E-4</span><span class="c">169</span></td><td><span class="rk">E-7</span><span class="c">49</span></td></tr><tr><th>远程射程</th><td><span class="rk">W-1</span><span class="c">25</span></td><td><span class="rk">E-4</span><span class="c">17</span></td><td><span class="rk">E-7</span><span class="c">106</span></td><td><span class="rk">E-7</span><span class="c">105</span></td><td><span class="rk">W-1</span><span class="c">36</span></td></tr><tr><th>机动突进</th><td><span class="rk">E-7</span><span class="c">103</span></td><td><span class="rk">E-4</span><span class="c">95</span></td><td><span class="rk">E-7</span><span class="c">94</span></td><td><span class="rk">E-7</span><span class="c">48</span></td><td><span class="rk">E-7</span><span class="c">94</span></td></tr><tr><th>召唤物</th><td><span class="rk">W-1</span><span class="c">46</span></td><td><span class="rk">W-1</span><span class="c">44</span></td><td><span class="rk">W-1</span><span class="c">23</span></td><td><span class="rk">O-7</span><span class="c">8</span></td><td><span class="rk">W-1</span><span class="c">46</span></td></tr><tr><th>标记易伤</th><td><span class="rk">O-4</span><span class="c">10</span></td><td><span class="rk">O-4</span><span class="c">30</span></td><td><span class="rk">O-4</span><span class="c">10</span></td><td><span class="rk">E-4</span><span class="c">65</span></td><td><span class="rk">O-1</span><span class="c">12</span></td></tr>
+</tbody></table></div></section>
+</div>
+<script>
+// 关系图悬停高亮
+const svg = document.querySelector('.graph svg');
+const on = (g) => {
+  const d = g.dataset.d, a = g.dataset.a;
+  svg.classList.add('hl');
+  svg.querySelectorAll('.e').forEach((e) => e.classList.toggle('on', d ? e.dataset.d === d : e.dataset.a === a));
+  const hit = new Set([...svg.querySelectorAll('.e.on')].flatMap((e) => ['d:' + e.dataset.d, 'a:' + e.dataset.a]));
+  svg.querySelectorAll('.n').forEach((n) => n.classList.toggle('on', n === g || hit.has(n.dataset.d ? 'd:' + n.dataset.d : 'a:' + n.dataset.a)));
+};
+const off = () => svg.classList.remove('hl');
+svg.querySelectorAll('.n').forEach((g) => { g.addEventListener('mouseenter', () => on(g)); g.addEventListener('focus', () => on(g)); g.addEventListener('mouseleave', off); g.addEventListener('blur', off); });
+</script>

@@ -19,3 +19,6 @@ npm-debug.log*
 
 # Claude Code 的本地权限设置（含本机绝对路径，不入库）
 .claude/settings.local.json
+
+# Python 缓存
+__pycache__/

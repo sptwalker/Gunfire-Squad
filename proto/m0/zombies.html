@@ -1,0 +1,261 @@
+<!-- M0 僵尸验证台（阶段 1）：9 种 + 分裂小、场景换色（05 §5.1）、300 只同屏压测。从仓库根目录起服务，打开 /proto/m0/zombies.html -->
+<meta charset="utf-8">
+<title>M0 僵尸验证台</title>
+<style>
+  :root { --bg: #1b1f1d; --fg: #d9e0dc; --dim: #8a968f; --acc: #9fbf6a; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.5 ui-monospace, Consolas, monospace; }
+  canvas { display: block; }
+  #hud { position: fixed; left: 16px; top: calc(12px + env(safe-area-inset-top, 0px)); display: grid; gap: 6px; max-width: calc(100% - 32px); }
+  #hud .row { display: flex; flex-wrap: wrap; gap: 6px; }
+  button { font: inherit; color: var(--fg); background: #2a302d; border: 1px solid #3b443f; border-radius: 3px; padding: 3px 8px; cursor: pointer; }
+  button[aria-pressed="true"] { border-color: var(--acc); color: var(--acc); }
+  button:focus-visible { outline: 2px solid var(--acc); }
+  #stat { color: var(--dim); font-variant-numeric: tabular-nums; }
+  .tag { position: fixed; transform: translate(-50%, 0); color: var(--fg); font-size: 12px; text-shadow: 0 1px 2px #000; pointer-events: none; white-space: nowrap; }
+</style>
+<div id="hud">
+  <div class="row" id="modes"></div>
+  <div class="row" id="states"></div>
+  <div class="row" id="scenes"></div>
+  <div id="stat">加载中…</div>
+</div>
+<div id="tags"></div>
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { bakeCrowd } from './crowd.js';
+
+// src/data/zombies.ts：名字、移速（格/秒）；skill = 专属动作。移动动作一律叫 walk（高速是冲刺、跳跃是蹲伏潜行，在 voxel.py 里区分）
+const ZOMBIES = [
+  ['normal', '普通', 2.2], ['runner', '高速', 5.0], ['brute', '高防胖', 1.2], ['toxic', '毒液', 2.0],
+  ['bomber', '爆炸', 2.6, 'swell'], ['splitter', '分裂', 2.2, 'split'], ['leaper', '跳跃', 3.0, 'leap'],
+  ['ward', '护盾', 1.8, 'block'], ['spitter', '喷吐', 1.6, 'spit'], ['spawnling', '分裂小', 3.2],
+].map(([id, name, speed, skill]) => ({ id, name, speed, skill, file: id === 'spawnling' ? 'splitter' : id, scale: id === 'spawnling' ? 0.4 : 1 }));
+const ZI = Object.fromEntries(ZOMBIES.map((z) => [z.id, z]));
+// 05 §5.1：只有"数量型"的普通僵尸跟场景换色；行为型保持全局主色（高速只在沼泽压暗 15%）
+const SCENES = {
+  city:     { name: '城市', ground: 0x4c4f52, tint: {} },
+  jungle:   { name: '丛林', ground: 0x33502c, tint: { normal: [0.88, 1.06, 1.06] } },
+  snow:     { name: '雪原', ground: 0xdde5ea, tint: { normal: [1.22, 1.25, 1.3] } },
+  desert:   { name: '荒漠', ground: 0xc4a268, tint: { normal: [1.1, 1.05, 0.82] } },
+  swamp:    { name: '沼泽', ground: 0x3b4230, tint: { normal: [0.95, 0.84, 0.7], runner: [0.85, 0.85, 0.85] } },
+  military: { name: '军事禁区', ground: 0x5a5a48, tint: {} },
+};
+// 攻击类状态：普通攻击统一扑抓，skill = 各自专属动作
+const STATES = ['idle', 'move', 'attack', 'skill', 'hit', 'death'];
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1b1f1d);
+scene.add(new THREE.HemisphereLight(0xdfe8e0, 0x30382f, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 2); sun.position.set(3, 6, 4); scene.add(sun);
+const groundMat = new THREE.MeshLambertMaterial({ color: 0x4c4f52 });
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), groundMat);
+ground.rotation.x = -Math.PI / 2; scene.add(ground);
+const grid = new THREE.GridHelper(120, 120, 0x000000, 0x000000); grid.material.opacity = 0.08; grid.material.transparent = true; scene.add(grid);
+
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 300);
+const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.mouseButtons = { LEFT: null, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE };
+renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+// front = 正视排队；game = 游戏相机（04 §7.4 俯仰 55°），距离调到僵尸在 720p 下约 60 像素高
+const VIEWS = { front: [[0, 2.4, 11], [0, 0.7, 0]], game: [[0, 17.5, 12.3], [0, 0, 0]], top: [[0, 13, 5], [0, 0, 0]] };
+function setView(v) { camera.position.set(...VIEWS[v][0]); orbit.target.set(...VIEWS[v][1]); orbit.update(); }
+
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const load = (f) => new Promise((ok, err) => loader.load(f, ok, undefined, err));
+const files = [...new Set(ZOMBIES.map((z) => z.file))];
+const [gl2, hero] = await Promise.all([Promise.all(files.map((f) => load(`assets/vox_z_${f}.glb`))), load('assets/vox_vera.glb')]);
+const SRC = Object.fromEntries(files.map((f, i) => [f, gl2[i]]));
+
+// 每种僵尸一套共享材质：_glow = 不受光（毒囊 / 裂纹 / 眼睛）、_glass = 半透明壳；场景换色改 base.color（乘在顶点色上）
+const MATS = {};
+for (const z of ZOMBIES) {
+  if (MATS[z.file]) continue;
+  const m = (MATS[z.file] = {});
+  SRC[z.file].scene.traverse((o) => {
+    if (!o.isMesh) return;
+    const n = o.material.name;
+    if (n.endsWith('_glow')) o.material = m.glow ||= new THREE.MeshBasicMaterial({ vertexColors: true });
+    else if (n.endsWith('_glass')) { o.material.transparent = true; o.material.opacity = 0.42; o.material.depthWrite = false; m.glass = o.material; }
+    else m.base = o.material;
+  });
+}
+const clipOf = (anims, name) => anims.find((a) => a.name === name || a.name.startsWith(name + '_'));
+
+// 一只 = 一份骨架 + 一个 mixer（验"300 只蒙皮撑不撑得住"，所以故意不做合批）
+function spawn(z) {
+  const src = SRC[z.file];
+  const root = SkeletonUtils.clone(src.scene);
+  root.scale.setScalar(z.scale);
+  root.traverse((o) => { if (o.isMesh) o.frustumCulled = false; });
+  const mixer = new THREE.AnimationMixer(root);
+  const u = { z, root, mixer, anims: src.animations, state: null, action: null, t: 0 };
+  mixer.addEventListener('finished', (e) => u.onDone && u.onDone(e));
+  scene.add(root);
+  return u;
+}
+function play(u, state, fade = 0.15) {
+  const name = state === 'move' ? 'walk' : state === 'skill' ? (u.z.skill || 'attack') : state === 'death' ? ['death', 'death2', 'death3'][Math.floor(Math.random() * 3)] : state;
+  const a = u.mixer.clipAction(clipOf(u.anims, name));
+  const once = ['hit', 'death', 'skill'].includes(state) && name !== 'block';
+  a.reset().setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
+  a.clampWhenFinished = once;
+  if (state === 'move') a.timeScale = 0.6 + u.z.speed * 0.18;
+  if (u.action && u.action !== a) a.crossFadeFrom(u.action, fade, false);
+  a.play(); u.action = a; u.state = state;
+}
+
+// ── 排队模式：10 种 + 一名英雄作比例尺 ──
+let units = [], mode = 'lineup', curState = 'idle';
+const tags = document.getElementById('tags');
+function clear() { units.forEach((u) => u.root && scene.remove(u.root)); units = []; tags.innerHTML = ''; for (const c of Object.values(CROWDS)) c.count = 0; }
+function lineup() {
+  clear();
+  ZOMBIES.forEach((z, i) => {
+    const u = spawn(z); u.root.position.set((i - 4.5) * 1.35, 0, 0); units.push(u); play(u, curState);
+    const t = document.createElement('div'); t.className = 'tag'; t.textContent = z.name; tags.append(t); u.tag = t;
+  });
+  const h = hero.scene; h.position.set(6.9, 0, 0); scene.add(h);
+  const hm = new THREE.AnimationMixer(h); hm.clipAction(clipOf(hero.animations, 'idle')).play();
+  units.push({ root: h, mixer: hm, hero: true });
+}
+function setState(s) { curState = s; units.forEach((u, i) => !u.hero && setTimeout(() => play(u, s), i * 60)); mark(sBtns, s); }
+
+// ── 压测模式：300 只从外圈涌向中心；喷吐停在射程外吐，跳跃隔一阵扑一下，爆炸贴脸就胀 ──
+// 配比按中期关卡的刷怪表估的（普通占多数）。渲染走 crowd.js（烘焙 + 实例化）：
+// 逐只蒙皮实测 GPU 4.8 ms / 638 draw call，超 4 ms 预算——瓶颈是 draw call，不是三角面
+const MIX = { normal: 110, runner: 35, brute: 18, toxic: 22, bomber: 18, splitter: 20, leaper: 22, ward: 20, spitter: 20, spawnling: 15 };
+const R_OUT = 26, R_IN = 1.6;
+const CROWDS = {};
+function crowdOf(file) {
+  if (CROWDS[file]) return CROWDS[file];
+  const names = ['walk', 'attack', ...ZOMBIES.filter((z) => z.file === file && z.skill).map((z) => z.skill)];
+  const c = (CROWDS[file] = bakeCrowd(SRC[file], names, 400));
+  c.n = 0; scene.add(c.group); return c;
+}
+function hordePlay(u, state) {
+  u.state = state; u.t = 0;
+  u.clip = state === 'move' ? 'walk' : state === 'skill' ? u.z.skill : state;
+  u.dur = u.crowd.clips[u.clip].dur;
+}
+function horde(n = 300) {
+  clear(); scene.add(hero.scene); hero.scene.position.set(0, 0, 0);
+  const hm = new THREE.AnimationMixer(hero.scene); hm.clipAction(clipOf(hero.animations, 'idle')).play();
+  units.push({ root: hero.scene, mixer: hm, hero: true });
+  for (const c of Object.values(CROWDS)) c.n = c.count = 0;
+  const pool = Object.entries(MIX).flatMap(([id, k]) => Array(Math.round(k * n / 300)).fill(id));
+  for (const id of pool) {
+    const z = ZI[id], crowd = crowdOf(z.file);
+    const a = Math.random() * Math.PI * 2, r = R_IN + 2 + Math.random() * (R_OUT - R_IN - 2);
+    const u = { z, crowd, slot: crowd.n++, pos: new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r), crowdUnit: true };
+    hordePlay(u, 'move'); u.t = Math.random() * u.dur;
+    units.push(u);
+  }
+  for (const c of Object.values(CROWDS)) c.count = c.n;
+}
+const tmp = new THREE.Vector3();
+const respawn = (p) => { const a = Math.random() * Math.PI * 2; p.set(Math.cos(a) * R_OUT, 0, Math.sin(a) * R_OUT); };
+function steer(u, dt) {
+  const p = u.pos, d = Math.hypot(p.x, p.z);
+  u.t += u.state === 'move' ? dt * (0.6 + u.z.speed * 0.18) : dt;
+  const done = u.t >= u.dur;
+  if (u.state === 'move') {
+    if (u.t >= u.dur) u.t %= u.dur;
+    const hold = u.z.id === 'spitter' ? 7 : R_IN;
+    if (d > hold) { const k = Math.min(u.z.speed * 0.5 * dt, d - hold); p.x -= p.x / d * k; p.z -= p.z / d * k; }
+    else hordePlay(u, u.z.id === 'bomber' || u.z.id === 'spitter' ? 'skill' : 'attack');
+    if (u.z.id === 'leaper' && d > 5 && Math.random() < dt * 0.15) hordePlay(u, 'skill');
+  } else if (u.state === 'attack' && u.t > 0.85) { respawn(p); hordePlay(u, 'move'); }   // 近身打一下就绕回外圈，保持持续涌入
+  else if (u.state === 'skill' && done) {
+    if (u.z.id === 'bomber') respawn(p);
+    if (u.z.id === 'leaper') { const k = Math.min(1.0, d - R_IN); p.x -= p.x / d * k; p.z -= p.z / d * k; }
+    hordePlay(u, u.z.id === 'spitter' ? 'skill' : 'move');
+  }
+  u.crowd.set(u.slot, p, Math.atan2(-p.x, -p.z), u.z.scale, u.clip, u.t);   // 面朝中心
+}
+
+// ── 界面 ──
+const btn = (parent, label, on) => { const b = document.createElement('button'); b.textContent = label; b.onclick = on; parent.append(b); return b; };
+function mark(map, cur) { for (const [k, b] of Object.entries(map)) b.setAttribute('aria-pressed', k === cur); }
+const mBtns = {}, sBtns = {}, cBtns = {};
+const MODES = { lineup: '排队 · 正视', lineupGame: '排队 · 游戏相机', horde: '300 只压测' };
+function setMode(m) {
+  mode = m;
+  if (m === 'horde') { horde(); setView('game'); } else { lineup(); setState(curState); setView(m === 'lineup' ? 'front' : 'game'); }
+  mark(mBtns, m); states.style.display = m === 'horde' ? 'none' : '';
+}
+for (const [k, v] of Object.entries(MODES)) mBtns[k] = btn(modes, v, () => setMode(k));
+const SNAME = { idle: '待机', move: '移动', attack: '扑抓', skill: '专属动作', hit: '受击', death: '死亡' };
+for (const s of STATES) sBtns[s] = btn(states, SNAME[s], () => setState(s));
+function setScene(id) {
+  const s = SCENES[id]; groundMat.color.setHex(s.ground);
+  for (const [f, m] of Object.entries(MATS)) m.base.color.setRGB(...(s.tint[f] || [1, 1, 1]));
+  for (const [f, c] of Object.entries(CROWDS)) for (const [src, mat] of c.mats) if (src === MATS[f].base) mat.color.copy(src.color);
+  mark(cBtns, id);
+}
+for (const [k, v] of Object.entries(SCENES)) cBtns[k] = btn(scenes, v.name, () => setScene(k));
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+// 屏幕上的高度（像素）：量包围盒 8 个角投影后的 y 跨度——验"60 像素高时两两可分"用
+const box3 = new THREE.Box3();
+function screenH(u) {
+  box3.setFromObject(u.root, true); let lo = 1e9, hi = -1e9;
+  for (let i = 0; i < 8; i++) {
+    tmp.set(i & 1 ? box3.max.x : box3.min.x, i & 2 ? box3.max.y : box3.min.y, i & 4 ? box3.max.z : box3.min.z).project(camera);
+    const y = (1 - tmp.y) / 2 * innerHeight; lo = Math.min(lo, y); hi = Math.max(hi, y);
+  }
+  return hi - lo;
+}
+
+// ── 计时：GPU 用 EXT_disjoint_timer_query_webgl2，CPU 只量动画更新（mixer + 骨骼）──
+const gl = renderer.getContext();
+const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+const pending = [], gpu = [], cpu = [];
+let frames = 0, t0 = performance.now();
+const stats = (window.__z = { gpuMs: null, cpuMs: null, fps: 0, tris: 0, calls: 0, get units() { return units; }, setMode, setState, setScene, setView, camera, screenH, play, ZOMBIES });
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const c0 = performance.now();
+  for (const u of units) { if (u.crowdUnit) steer(u, dt); else u.mixer.update(dt); }
+  for (const c of Object.values(CROWDS)) c.commit();
+  cpu.push(performance.now() - c0); if (cpu.length > 120) cpu.shift();
+  let q;
+  if (tq) { q = gl.createQuery(); gl.beginQuery(tq.TIME_ELAPSED_EXT, q); }
+  renderer.render(scene, camera);
+  if (tq) { gl.endQuery(tq.TIME_ELAPSED_EXT); pending.push(q); }
+  while (pending.length && gl.getQueryParameter(pending[0], gl.QUERY_RESULT_AVAILABLE)) {
+    const p = pending.shift();
+    if (!gl.getParameter(tq.GPU_DISJOINT_EXT)) gpu.push(gl.getQueryParameter(p, gl.QUERY_RESULT) / 1e6);
+    gl.deleteQuery(p); if (gpu.length > 120) gpu.shift();
+  }
+  if (mode !== 'horde') for (const u of units) if (u.tag) {
+    tmp.setFromMatrixPosition(u.root.matrixWorld).project(camera);
+    u.tag.style.left = (tmp.x + 1) / 2 * innerWidth + 'px'; u.tag.style.top = (1 - tmp.y) / 2 * innerHeight + 8 + 'px';
+  }
+  frames++;
+  const now = performance.now();
+  if (now - t0 > 500) {
+    stats.fps = frames * 1000 / (now - t0); frames = 0; t0 = now;
+    stats.tris = renderer.info.render.triangles; stats.calls = renderer.info.render.calls;
+    stats.gpuMs = gpu.length ? gpu.reduce((a, b) => a + b, 0) / gpu.length : null;
+    stats.cpuMs = cpu.reduce((a, b) => a + b, 0) / cpu.length;
+    const n = units.filter((u) => !u.hero).length;
+    stat.textContent = `${n} 只 · ${stats.tris} 三角面 · ${stats.calls} draw call · ${stats.fps.toFixed(0)} FPS · GPU ${stats.gpuMs == null ? '不可测' : stats.gpuMs.toFixed(2) + ' ms'} · 动画 CPU ${stats.cpuMs.toFixed(2)} ms`;
+  }
+});
+setScene('city'); setMode('lineup');
+</script>

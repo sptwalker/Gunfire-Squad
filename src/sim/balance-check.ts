@@ -14,7 +14,7 @@ import {
 } from '../data/characters.ts';
 import { derive, pointBudget, POINT_TOTAL, PRIMARY_KEYS, PRIMARY_LABEL } from '../data/attributes.ts';
 import { SAME_CLASS_DPS_CAP, TEMP_WEAPON_DROPS, WEAPONS, WEAPON_CLASS_NAME, tempWeaponSeconds, type WeaponId } from '../data/weapons.ts';
-import { ZOMBIES, ZOMBIE_LIST, stageMods } from '../data/zombies.ts';
+import { ANTI_HEAL_MUL, ZOMBIES, ZOMBIE_LIST, stageMods } from '../data/zombies.ts';
 import { CLASS_BY_ID, CLASS_TREES, SKILL_SLOTS, expandTree } from '../data/classes.ts';
 import { BOSSES, BOSS_TIMEOUT, RUN_DURATION } from '../data/run.ts';
 import {
@@ -45,16 +45,23 @@ import {
   totalUnlockCost,
 } from '../data/progression.ts';
 import {
+  ANSWER_BY_TAG,
   ANSWER_DIMS,
+  ANSWER_LIST,
   DIMENSION_BY_ID,
+  DIM_ALTS,
+  DIM_KEYS,
   DIFFICULTIES,
   DIMENSIONS,
+  KEY_LIST,
   MIN_ANSWERS_PER_DIM,
-  MIN_ROLES_PER_DIM,
+  MIN_KEYS_PER_DIM,
+  MIN_TREES_PER_KEY,
   OBSTACLES,
   OBSTACLE_KINDS,
   SCENES,
   TOTAL_LEVELS,
+  ZOMBIES_OF_DIM,
   expandScene,
   type AnswerTag,
   type DimensionId,
@@ -71,6 +78,7 @@ import {
   knockChance,
   squadDps,
   squadEhp,
+  zombieEhp,
   tauntLands,
   ttk,
   heroEhp,
@@ -480,67 +488,98 @@ const SQUADS: [string, string[]][] = [
 hr('═');
 line('  9. 挑战维度覆盖矩阵');
 hr();
-line('维度成立的判据之一：每个维度至少 3 个【答案形状】、至少 2 个不同定位能回答它。');
-line('达不到就说明这个维度只有一个阵容能解——那"多套阵容"就只是文案，不是设计。');
+line('维度成立的判据之一：每个维度至少 1 把【钥匙】、至少 2 个答案能回答它。');
+line('只数答案个数是不够的——一个维度可以凑够 4 个替代答案、0 把钥匙，');
+line('玩家就永远在硬扛，打不出"破解"的手感。所以钥匙与替代分开数。');
 hr();
-line('维度'.padEnd(14) + '族'.padEnd(11) + '答案'.padEnd(6) + '定位'.padEnd(6) + '地形要素 / 僵尸池');
+line(
+  '维度'.padEnd(14) + '族'.padEnd(10) + '钥匙'.padEnd(6) + '替代'.padEnd(6) +
+    '地形要素 / 僵尸池',
+);
 hr();
 /**
  * 一个维度的覆盖度。**必须用 `effectiveAnswers()`，不能用 `h.answers`。**
  *
  * 这里曾经读裸的 `answers`，于是同一节里出现了两个定义：
- * 上面的计数只算基础答案，下面的 12×12 矩阵走 `answersDimension()`（含专精）。
+ * 上面的计数只算基础答案，下面的 12×15 矩阵走 `answersDimension()`（含专精）。
  * 两者会静默分叉——专精新加的答案算进了矩阵、没算进门槛，
  * 一个维度可能明明靠专精达标，表格却报 ✗。
  * 现在两条路径共用这一个函数。
  */
 const dimCoverage = (d: (typeof DIMENSIONS)[number]) => {
   const answers = new Set<AnswerTag>();
-  const roles = new Set<string>();
   for (const h of HEROES) {
     for (const a of effectiveAnswers(h)) {
-      if (!ANSWER_DIMS[a].includes(d.id)) continue;
-      answers.add(a);
-      roles.add(h.role);
+      if (ANSWER_DIMS[a].includes(d.id)) answers.add(a);
     }
   }
-  return { answers, roles, ok: answers.size >= MIN_ANSWERS_PER_DIM && roles.size >= MIN_ROLES_PER_DIM };
+  const keys = new Set([...answers].filter((a) => KEY_LIST.includes(a)));
+  return {
+    answers,
+    keys,
+    ok: keys.size >= MIN_KEYS_PER_DIM && answers.size >= MIN_ANSWERS_PER_DIM,
+  };
 };
 for (const d of DIMENSIONS) {
-  const { answers, roles, ok } = dimCoverage(d);
+  const { answers, keys, ok } = dimCoverage(d);
   line(
     d.name.padEnd(14) +
-      d.family.padEnd(11) +
-      `${answers.size}${ok ? '' : ' ✗'}`.padEnd(6) +
-      String(roles.size).padEnd(6) +
-      `[${d.terrain.join(' ') || '—'}] ${d.zombies.join(' ')}`,
+      d.family.padEnd(10) +
+      `${keys.size}${ok ? '' : ' ✗'}`.padEnd(6) +
+      String(answers.size).padEnd(6) +
+      `[${d.terrain.join(' ') || '—'}] ${ZOMBIES_OF_DIM[d.id].join(' ') || '—'}`,
   );
 }
 line();
 
-// 12 维度 × 12 角色 明细矩阵
+// 15 维度 × 12 角色 明细矩阵
 const SHORT = HEROES.map((h) => h.name.split('·').at(-1)!);
-line('维度 \\ 角色'.padEnd(14) + SHORT.map((s) => ` ${s}`.padEnd(6)).join(''));
+line('维度 \\ 角色'.padEnd(16) + SHORT.map((s) => ` ${s}`.padEnd(6)).join(''));
 hr();
 for (const d of DIMENSIONS) {
   const row = HEROES.map((h) => (answersDimension(h, d.id) ? '  ●' : '  ·').padEnd(6)).join('');
-  line(d.name.padEnd(14) + row);
+  line(d.name.padEnd(16) + row);
 }
 line();
 
 let weakDims = 0;
 for (const d of DIMENSIONS) {
-  const { answers, roles } = dimCoverage(d);
-  if (!dimCoverage(d).ok) {
+  const { answers, keys, ok } = dimCoverage(d);
+  if (!ok) {
     weakDims++;
-    line(`✗ ${d.id}：答案 ${answers.size} / 定位 ${roles.size} 不足`);
+    line(`✗ ${d.id}：钥匙 ${keys.size} / 答案 ${answers.size} 不足`);
   }
 }
 line(
   weakDims === 0
-    ? `全部 ${DIMENSIONS.length} 个维度达标（≥${MIN_ANSWERS_PER_DIM} 答案 & ≥${MIN_ROLES_PER_DIM} 定位）`
+    ? `全部 ${DIMENSIONS.length} 个维度达标（≥${MIN_KEYS_PER_DIM} 钥匙 & ≥${MIN_ANSWERS_PER_DIM} 答案）`
     : `${weakDims} 个维度不达标——回去调 characters.ts 的 answers，不要放宽这个门槛`,
 );
+line();
+// 钥匙的【供给厚度】。上面数的是"这个维度有几把钥匙"，
+// 这里数的是"每把钥匙有几棵树能提供"——一把只有单职业能带的钥匙，
+// 实际等于"带钥匙"＝"带某个职业"，而场景是按维度组阵容的。
+{
+  const KEY_TREES: Record<string, Set<string>> = {};
+  for (const k of KEY_LIST) {
+    const trees = new Set<string>();
+    for (const c of Object.values(CLASS_BY_ID)) {
+      if (c.tags.includes(k)) trees.add(c.tree);
+    }
+    KEY_TREES[k] = trees;
+  }
+  const thin = KEY_LIST.filter((k) => (KEY_TREES[k]?.size ?? 0) < MIN_TREES_PER_KEY);
+  line(
+    thin.length === 0
+      ? `全部 ${KEY_LIST.length} 把钥匙都至少有 ${MIN_TREES_PER_KEY} 棵树能提供`
+      : `✗ 供给不足的钥匙（<${MIN_TREES_PER_KEY} 棵树）：` +
+        thin.map((k) => `${k}(${KEY_TREES[k]?.size ?? 0})`).join(' '),
+  );
+  line(
+    '  ' + KEY_LIST.map((k) => `${k}:${KEY_TREES[k]?.size ?? 0}`).join(' ') +
+      '   ← 数字是能提供该钥匙的职业树数量（共 5 棵）',
+  );
+}
 
 // ────────────────────────────────────────────────────────────
 // 10. 阵容多样性枚举
@@ -648,8 +687,11 @@ line(
 );
 line('所以【能不能进】这件事基本是免费的，二分覆盖数不能证明"阵容选择有后果"。');
 line();
-line('它仍然有价值的唯一理由在 §9：每个维度都至少有 3 种答案形状、2 个不同定位可回答，');
-line('即不存在"没有任何角色能应付的维度"。这是可玩性下限，不是深度证明。');
+line(`它仍然有价值的唯一理由在 §9：每个维度都至少有 ${MIN_KEYS_PER_DIM} 把钥匙（不用选目标的规矩）、`);
+line(`${MIN_ANSWERS_PER_DIM} 种答案形状（含替代答案）可回答，即不存在"没有任何角色能应付的维度"。`);
+line('注意"钥匙"与"答案"在这里是分开数的：一个维度可以有四五个替代答案却一把钥匙都没有，');
+line('那种维度玩家只能用蛮力硬扛，永远学不到"换手段"，所以门槛两条都要过。');
+line('这是可玩性下限，不是深度证明。');
 line();
 line('真正决定阵容区分度的，是【同一维度下不同答案的效率差】——');
 line('比如用穿透枪阵解潮涌，和用范围清场解潮涌，清怪速率差多少？');
@@ -821,42 +863,59 @@ hr();
 }
 line();
 line('艾拉的寒霜新星基础冻结 4 秒：对普通僵尸满 4 秒，对毒液僵尸只剩 1.60 秒，');
-line('对护盾僵尸 2.60 秒且它霸体——**冻结这条路的收益随目标不同掉得很厉害**。');
+line('对咒盾僵尸 2.60 秒且它霸体——**冻结这条路的收益随目标不同掉得很厉害**。');
 line();
 
-// ── 11d 第 13 维度的两段判据 ──
-line('11d 第 13 维度「控制抗性」的两段判据');
+// ── 11d 只有一把钥匙的维度：再生 ──
+line('11d 只有一把钥匙的维度「再生」—— 回血速率 vs 输出速率');
+hr();
+line('这一维的全部内容就是一个不等式：持续输出 > 回血 → 杀得死，否则永远杀不死。');
+line('它是 v3 里钥匙最少的一类（判据 5：硬锁只给一两把钥匙），所以也是最该被算一遍的。');
+line('下面不读任何既定常数，直接拿每个队员的单人 DPS 去撞它的回血线。');
 hr();
 {
-  const dim = DIMENSION_BY_ID['ctrlResist'];
-  const answers = new Map<AnswerTag, Set<string>>();
-  for (const h of HEROES) {
-    for (const a of effectiveAnswers(h)) {
-      if (!ANSWER_DIMS[a].includes('ctrlResist')) continue;
-      if (!answers.has(a)) answers.set(a, new Set());
-      answers.get(a)!.add(h.role);
-    }
-  }
-  const allRoles = new Set([...answers.values()].flatMap((s) => [...s]));
+  const z = ZOMBIES.regenerator;
+  const dim = DIMENSION_BY_ID.regen;
+  const ehp = zombieEhp(z, 1);
+  const healed = z.regen * ANTI_HEAL_MUL;
+  const { total, per } = squadDps(
+    squadHeroes(), 5, SQUAD_TIERS, z.armor, z.armorType, 1, 0, z.resist,
+  );
+  const kill = (dps: number, regen: number) =>
+    dps <= regen ? Infinity : ehp / (dps - regen);
+  const fmt = (t: number) => (Number.isFinite(t) ? `${t.toFixed(1)}s` : '打不死');
   line(`维度：${dim.name}（族 ${dim.family}）——${dim.feels}`);
-  line(`破解需要：${dim.needs}`);
+  line(`锁：${dim.lock}`);
+  line(`钥匙：${DIM_KEYS[dim.id].join(' ')}   替代答案：${DIM_ALTS[dim.id].join(' ') || '—'}`);
   line();
-  line('答案形状'.padEnd(16) + '来自定位');
+  line(`${z.name}：HP ${z.hp} → 有效生命 ${ehp}，回血 ${z.regen}/s（被重创后 ${healed}/s）`);
+  line();
+  line('成员'.padEnd(18) + '单人 DPS'.padEnd(12) + '无钥匙击杀'.padEnd(14) + '带重创击杀');
   hr();
-  for (const [a, roles] of answers) line(a.padEnd(16) + [...roles].join(' '));
-  const okA = answers.size >= MIN_ANSWERS_PER_DIM;
-  const okR = allRoles.size >= MIN_ROLES_PER_DIM;
+  for (const { hero, dps } of per) {
+    line(
+      hero.name.padEnd(18) +
+        num(dps).padEnd(12) +
+        fmt(kill(dps, z.regen)).padEnd(14) +
+        fmt(kill(dps, healed)),
+    );
+  }
   line();
   line(
-    `答案 ${answers.size} 个（门槛 ${MIN_ANSWERS_PER_DIM}）${okA ? '✓' : ' ✗'}` +
-      `   定位 ${allRoles.size} 种（门槛 ${MIN_ROLES_PER_DIM}）${okR ? '✓' : ' ✗'}  [${[...allRoles].join(' ')}]`,
+    `全队 ${num(total)}/s —— 无钥匙 ${fmt(kill(total, z.regen))}，带重创 ${fmt(kill(total, healed))}`,
   );
+  const stuck = per.filter((p) => p.dps <= z.regen);
+  const saved = stuck.filter((p) => p.dps > healed);
+  line();
+  line(`${per.length} 名队员里有 ${stuck.length} 人单靠自己打不死它——这就是"再生"作为维度成立的地方：`);
+  line('它不是"血更厚"（血厚只是多打两秒），而是"输出盖不过回血就永远打不完"。');
   line(
-    okA && okR
-      ? `✓ 达标。${answers.size} 个答案里，control（减速）自成一路——` +
-        '它是唯一不受抗性影响的那扇门，也就是这条轴上永远关不上的一格'
-      : '✗ 不达标，回去调 stab / cunning 曲线',
+    saved.length > 0
+      ? `带上重创后这 ${saved.length} 人的击杀时间从 ∞ 变成有限：钥匙打开的是通路，不是跳过按钮`
+      : '重创没有把任何人的击杀时间从 ∞ 拉回有限——这把钥匙只对输出本来就够的人有用，符合预期',
   );
+  line(`钥匙数 ${DIM_KEYS[dim.id].length}（门槛 ≥${MIN_KEYS_PER_DIM}）、答案数 ${DIM_KEYS[dim.id].length + DIM_ALTS[dim.id].length}（门槛 ≥${MIN_ANSWERS_PER_DIM}）——硬锁的"少"是有意的，`);
+  line('它只需要一个维度解就够通关，太多钥匙会让这只怪变成另一种杂兵。');
 }
 line();
 
@@ -1094,6 +1153,29 @@ hr('═');
 
 line('  14. 职业树（组合生成）');
 hr();
+/**
+ * 成员检查：每个技能标签都必须是 `ANSWERS` 里真实存在的答案。
+ *
+ * 为什么需要它：`AnswerTag` 是**编译期**的字符串联合类型，而模拟器跑在
+ * `node --experimental-strip-types` 下——类型在运行时被整个抹掉，
+ * 于是 `['aoeCleer']` 这种拼错的标签会像合法标签一样一路静默通过
+ * §9 的供给统计和 §14 的全部检查。它不会报错，只会让那把钥匙凭空少一棵树，
+ * 最后表现为"供给不足"这种离错误很远的现象。
+ *
+ * 这里用运行时白名单兜底：`ANSWERS` 是数据，逃不掉。
+ */
+function tagMembership(cs: { slots: { name: string; tags: string[] }[] }[]): [string, boolean] {
+  const bad = new Set<string>();
+  for (const c of cs) for (const s of c.slots) for (const g of s.tags) {
+    if (!ANSWER_BY_TAG[g]) bad.add(g);
+  }
+  return [
+    bad.size === 0
+      ? `标签全部是合法答案（${ANSWER_LIST.length} 个）`
+      : `标签全部是合法答案（${ANSWER_LIST.length} 个）——非法：${[...bad].join(' ')}`,
+    bad.size === 0,
+  ];
+}
 for (const t of Object.values(CLASS_TREES)) {
   const cs = expandTree(t!);
   const T = (k: number) => cs.filter((c) => c.tier === k);
@@ -1145,8 +1227,27 @@ for (const t of Object.values(CLASS_TREES)) {
       return cs.every((c) => c.slots.every((s) => (m.get(s.name) ?? s.skill) === s.skill && m.set(s.name, s.skill)));
     })()],
     ['每个技能都带答案标签', cs.every((c) => c.slots.every((s) => s.tags.length > 0))],
+    // 成员检查：`AnswerTag` 只是编译期类型，`node --experimental-strip-types` 在运行时把它抹掉，
+    // 于是打错的标签字符串会静默通过上面所有检查，还会漏过 §9 的供给统计。运行时白名单兜底。
+    tagMembership(cs),
     ['64 个五星特性各不相同（名字与描述）', new Set(T(7).map((u) => u.slots[3].name)).size === 64 && new Set(T(7).map((u) => u.slots[3].text)).size === 64],
     ['五星 = 英雄角色一对一升级（同路径、同武器）', T(7).every((u) => CLASS_BY_ID[u.id.slice(0, -1)].weaponClasses.join() === u.weaponClasses.join())],
+    // C7-25 修订：第 5 转起按流派分叉，同一条分线（前 3 转）内的专精光环 / 英雄号令两两不同。
+    // 比的是技能【名字】不是 key：`pick()` 兜底会给四棵树不同的 key 但相同的名字与文案，
+    // 用 key 比会永远通过，正是这个 bug（同流派第 5、第 6 转拿到同一个技能）漏网的原因。
+    ['同一分线内 4 个专精的光环两两不同', (() => {
+      const g = new Map<string, string[]>();
+      for (const c of T(5)) { const k = c.path.slice(0, 3).join(''); g.set(k, [...(g.get(k) ?? []), c.slots[2].name]); }
+      return [...g.values()].every((v) => new Set(v).size === 4);
+    })()],
+    ['同一分线内 4 个英雄的号令两两不同', (() => {
+      const g = new Map<string, string[]>();
+      for (const c of T(6)) { const k = c.path.slice(0, 3).join(''); g.set(k, [...(g.get(k) ?? []), c.slots[3].name]); }
+      return [...g.values()].every((v) => new Set(v).size === 4);
+    })()],
+    // 第 5 转起才有协同说明：tier5=C 槽、tier6=D 槽、tier7=五星（第 4 槽）。A/B 槽不强制。
+    ['第 5 转起的专精 / 号令 / 五星都写了协同说明', [5, 6, 7].every((n) => T(n).every((c) => c.slots.at(-1)!.link))
+      && T(5).every((c) => c.slots[2].link)],
   ];
   for (const [n, ok] of checks) line(`${ok ? '✓' : '✗'} ${n}`);
   const skills = new Set(cs.flatMap((c) => c.slots.map((s) => s.skill)));

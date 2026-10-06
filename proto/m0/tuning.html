@@ -1,0 +1,123 @@
+<!-- 调参台：改 gamedata.js 的数值，存进 localStorage['gs.tuning']；开着的战斗页原地生效 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>调参台</title>
+<style>
+  :root { --bg: #1b1f1d; --card: #232826; --fg: #d9e0dc; --dim: #8a968f; --acc: #9fbf6a; --mod: #e0b04a; --bad: #e0705a; --line: #3b443f; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.5 ui-monospace, Consolas, monospace; }
+  main { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; display: grid; gap: 16px; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+  h1 { margin: 0; font-size: 18px; } h2 { margin: 0 0 8px; font-size: 14px; color: var(--acc); } h3 { margin: 0; font-size: 13px; }
+  a { color: var(--acc); }
+  button { background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 3px; padding: 3px 10px; font: inherit; cursor: pointer; }
+  button:hover, button:focus-visible { border-color: var(--acc); outline: none; }
+  button.on { border-color: var(--acc); color: var(--acc); }
+  .dim { color: var(--dim); } .modc { color: var(--mod); }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; display: grid; gap: 8px; }
+  .card > header { justify-content: space-between; }
+  .form { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 10px; }
+  label.pf { display: grid; grid-template-columns: 1fr 72px; align-items: center; gap: 6px; color: var(--dim); }
+  label.pf.wide { grid-column: 1 / -1; grid-template-columns: 1fr; }
+  label.pf input, label.pf textarea { background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 2px; font: inherit; padding: 1px 4px; width: 100%; box-sizing: border-box; }
+  label.pf.mod span { color: var(--mod); } label.pf.mod input, label.pf.mod textarea { border-color: var(--mod); }
+  .tbl { overflow-x: auto; }
+  table { border-collapse: collapse; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th, td { padding: 2px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; } th { color: var(--dim); font-weight: normal; }
+  td.hot { color: var(--bad); } td.good { color: var(--acc); }
+  textarea#io { width: 100%; height: 120px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); font: inherit; box-sizing: border-box; }
+</style>
+<main>
+  <header>
+    <h1>调参台</h1>
+    <span class="dim">改动即时保存到本机，已打开的 <a href="battle.html" target="gs-battle">实战模拟</a> / <a href="battle.html?lab" target="gs-lab">技能台</a> / 关卡试玩会原地生效</span>
+    <span id="nmod" class="modc"></span>
+  </header>
+  <nav id="tabs"></nav>
+  <div class="cols">
+    <section id="forms" class="card" style="background:none;border:0;padding:0"></section>
+    <section id="metrics" class="card"></section>
+  </div>
+  <section class="card">
+    <h2>导入 / 导出改动</h2>
+    <p class="dim" style="margin:0">只存改过的项（路径 → 值）。复制给别人，或贴进来覆盖当前改动。</p>
+    <textarea id="io"></textarea>
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button id="exp">导出当前改动</button><button id="imp">导入（覆盖）</button><button id="resetAll">全部恢复默认</button></div>
+  </section>
+</main>
+<script type="module">
+import { T, DEF, readOver, writeOver, paramForm, avgThreat, STAGES, PICK0, HIDS, ZIDS, CELL } from './gamedata.js';
+const $ = (id) => document.getElementById(id), el = (tag, html = '', cls = '') => { const e = document.createElement(tag); e.innerHTML = html; if (cls) e.className = cls; return e; };
+const TABS = { G: '全局规则', ZT: '僵尸', W: '武器', HERO: '队员技能' };
+let tab = new URLSearchParams(location.search).get('tab') || 'G';
+
+// ── 速算：武器对每种僵尸的有效 DPS / TTK（护甲 K/(K+甲) × (1-减伤)，不含暴击、标记、易伤、击退打断）──
+const eff = (w, z) => w.dmg * w.rate * (w.cleave ?? 1) * T.G.armorK / (T.G.armorK + z.armor) * (1 - (z.dr ?? 0));
+const f0 = (v) => (v >= 100 ? v.toFixed(0) : v.toFixed(1));
+function metrics() {
+  const m = $('metrics'); m.innerHTML = '';
+  if (tab === 'W' || tab === 'ZT' || tab === 'G') {
+    m.append(el('h2', '武器 × 僵尸：击杀用时 s（单发对单体，横扫按满目标计）'));
+    let h = '<tr><th>武器 \\ 僵尸</th>' + ZIDS.map((k) => `<th>${T.ZT[k].name}</th>`).join('') + '<th>裸 DPS</th></tr>';
+    for (const id in T.W) { const w = T.W[id];
+      h += `<tr><td>${w.name}</td>` + ZIDS.map((k) => { const t = T.ZT[k].hp / eff(w, T.ZT[k]); return `<td class="${t > 10 ? 'hot' : t < 1 ? 'good' : ''}">${f0(t)}</td>`; }).join('') + `<td>${f0(w.dmg * w.rate)}</td></tr>`; }
+    m.append(el('div', `<table>${h}</table>`, 'tbl'));
+    m.append(el('p', '红 = 超过 10 秒，绿 = 不到 1 秒。范围武器（手雷 / 喷火 / 激光链跳）实际按群伤算会更快。', 'dim'));
+  }
+  if (tab === 'ZT' || tab === 'G') {
+    m.append(el('h2', '僵尸：对队员的威胁'));
+    let h = '<tr><th>僵尸</th><th>普攻每秒</th><th>到 10 m 用时</th><th>威胁值</th><th>每威胁点血量</th></tr>';
+    for (const k of ZIDS) { const z = T.ZT[k], dps = z.atk * T.G.meleeMul / z.ai, v = z.spd * CELL * T.G.zspd;
+      h += `<tr><td>${z.name}</td><td>${f0(dps)}</td><td>${f0(10 / v)}</td><td>${z.th}</td><td>${z.th ? f0(z.hp / z.th) : '—'}</td></tr>`; }
+    m.append(el('div', `<table>${h}</table>`, 'tbl'));
+  }
+  if (tab === 'HERO' || tab === 'G') {
+    m.append(el('h2', '队员：普攻对普通僵尸 DPS / 生命 / 被 5 只普通围殴能撑几秒'));
+    const zn = T.ZT.normal, inDps = 5 * zn.atk * T.G.meleeMul / zn.ai;
+    let h = '<tr><th>队员</th><th>武器</th><th>DPS</th><th>生命</th><th>撑 s</th><th>技能冷却</th></tr>';
+    for (const id of HIDS) { const d = T.HERO[id], w = T.W[d.weapon];
+      h += `<tr><td>${d.name}</td><td>${w.name}</td><td>${f0(eff(w, zn))}</td><td>${d.hp}</td><td>${f0(d.hp / inDps)}</td><td>${d.sk.map((s) => s.cd).join(' / ')}</td></tr>`; }
+    m.append(el('div', `<table>${h}</table>`, 'tbl'));
+  }
+  // 出怪：每阶段只数 / 秒、涌入血量 / 秒 对比 默认小队对普通的普攻 DPS
+  const squad = PICK0.reduce((s, id) => s + eff(T.W[T.HERO[id].weapon], T.ZT.normal), 0);
+  m.append(el('h2', `出怪压力（默认小队普攻 ≈ ${f0(squad)} DPS）`));
+  let h = '<tr><th>阶段</th><th>平均威胁</th><th>只 / 秒</th><th>涌入血量 / 秒</th><th>占小队 DPS</th></tr>';
+  for (const st of STAGES) { const a = avgThreat(st.mix), tot = Object.values(st.mix).reduce((s, v) => s + v, 0), hp = Object.entries(st.mix).reduce((s, [k, v]) => s + v / tot * T.ZT[k].hp, 0);
+    const n0 = st.r0 / a, n1 = st.r1 / a, load = n1 * hp / squad;
+    h += `<tr><td>${st.name}</td><td>${a.toFixed(2)}</td><td>${n0.toFixed(2)} → ${n1.toFixed(2)}</td><td>${f0(n0 * hp)} → ${f0(n1 * hp)}</td><td class="${load > 1 ? 'hot' : ''}">${(load * 100).toFixed(0)}%</td></tr>`; }
+  m.append(el('div', `<table>${h}</table>`, 'tbl'));
+  m.append(el('p', '占比超过 100% = 光靠普攻清不完，要靠技能与群伤；关卡里的阶段数值在编辑器里另调，这里是默认三阶段。', 'dim'));
+}
+
+// ── 表单 ──
+function card(title, path, opt) {
+  const c = el('div', '', 'card'), hd = el('header'), f = el('div', '', 'form'), rs = el('button', '恢复');
+  hd.append(el('h3', title), rs); c.append(hd, f);
+  rs.onclick = () => { const o = readOver(); for (const p in o) if (p === path || p.startsWith(path + '.')) delete o[p]; writeOver(o); render(); };
+  paramForm(f, path, { ...opt, onChange: () => { metrics(); count(); } }); return c;
+}
+function render() {
+  $('tabs').innerHTML = '';
+  for (const k in TABS) { const b = el('button', TABS[k], k === tab ? 'on' : ''); b.onclick = () => { tab = k; history.replaceState(null, '', '?tab=' + k); render(); }; $('tabs').append(b); }
+  const F = $('forms'); F.innerHTML = '';
+  if (tab === 'G') F.append(card('全局规则', 'G'));
+  if (tab === 'ZT') for (const k of ZIDS) { F.append(card(T.ZT[k].name, 'ZT.' + k)); if (T.ZB[k]) F.append(card(T.ZT[k].name + ' · 特殊行为', 'ZB.' + k)); }
+  if (tab === 'W') for (const k in T.W) F.append(card(T.W[k].name, 'W.' + k, { skip: ['name', 'kind', 'grip'] }));
+  if (tab === 'HERO') for (const id of HIDS) { const d = T.HERO[id];
+    F.append(card(`${d.name} · ${T.W[d.weapon].name}`, 'HERO.' + id));
+    d.sk.forEach((s, k) => F.append(card(`　${k ? '高级' : '低级'} · ${s.name}`, `HERO.${id}.sk.${k}`))); }
+  metrics(); count();
+}
+const count = () => { const n = Object.keys(readOver()).length; $('nmod').textContent = n ? `已改 ${n} 项` : ''; };
+$('exp').onclick = () => ($('io').value = JSON.stringify(readOver(), null, 1));
+$('imp').onclick = () => { try { const o = JSON.parse($('io').value || '{}'); writeOver(o); render(); $('io').value = `已导入 ${Object.keys(o).length} 项`; } catch (e) { $('io').value = 'JSON 解析失败：' + e.message; } };
+$('resetAll').onclick = () => { if ($('resetAll').dataset.arm) { writeOver({}); render(); delete $('resetAll').dataset.arm; $('resetAll').textContent = '全部恢复默认'; }
+  else { $('resetAll').dataset.arm = 1; $('resetAll').textContent = '再点一次确认'; setTimeout(() => { delete $('resetAll').dataset.arm; $('resetAll').textContent = '全部恢复默认'; }, 3000); } };
+addEventListener('storage', () => render());
+render();
+window.__tuning = { T, DEF };
+</script>

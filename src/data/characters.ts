@@ -24,8 +24,13 @@
  *
  * ── 第二轮新增 ──
  * 一级属性从四维扩到六维（见约束 1）、技能分基础/高级两档（`tier`）、
- * 高级技能要两把钥匙（军衔 + 技能点，见 `progression.ts`）、
- * 以及第四个 AI 旋钮来源：玩家的 `SQUAD_COMMANDS`。
+ * 高级技能随转职替换升级、以及第四个 AI 旋钮来源：玩家的 `SQUAD_COMMANDS`。
+ *
+ * ── 第三轮新增 ──
+ * 队伍的控制方式整体换了：队长由**鼠标点地**驱动（不再只靠 WASD），
+ * `SQUAD_COMMANDS` 由四个开关式命令重构成**三个互斥阵型**。
+ * 阵型不再是 `AIProfile` 的覆盖那么简单——它还决定**站位锚点怎么算**
+ * （`FormationRing`），并且第一次真正用上了早就定义好的 `HeroRole`。
  */
 
 import type { Primary } from './attributes.ts';
@@ -208,11 +213,11 @@ export const HEROES: Hero[] = [
       note: '向前冲撞，正面敌人被推开并强制嘲讽 4 秒——把已经在贴脸的怪群推回外圈',
     },
     ai: { aggroRange: 14, leashRange: 22, engageDistanceMul: 1.2, targetPriority: 'closest', retreatHpPct: 0 },
-    answers: ['taunt', 'mitigate', 'aoeClear'],
+    answers: ['taunt', 'mitigate', 'aoeClear', 'deflect'],
     specialization: [
       { id: 'ron-1', name: '负重训练', cost: 1, effect: { kind: 'attr', attr: 'tgh', amount: 6 }, note: '嘲讽期间站得更稳' },
       { id: 'ron-2', name: '壁垒延展', cost: 2, requires: 'ron-1', effect: { kind: 'skill', field: 'duration', amount: 2, mode: 'add' }, note: '减伤窗口 6s → 8s' },
-      { id: 'ron-3', name: '不屈壁垒', cost: 3, requires: 'ron-2', effect: { kind: 'answer', add: 'sustain' }, note: '技能窗口内自身持续回复，队伍能在最差的地形上原地死守（迟滞）' },
+      { id: 'ron-3', name: '不屈壁垒', cost: 3, requires: 'ron-2', effect: { kind: 'answer', add: 'sustain' }, note: '技能窗口内自身持续回复，队伍能在最差的地形上原地死守（毒区 / 远程压制）' },
     ],
   },
   {
@@ -231,11 +236,11 @@ export const HEROES: Hero[] = [
       note: '投出长枪贯穿一整条直线，完全无视护甲并连续命中 4 次',
     },
     ai: { aggroRange: 16, leashRange: 24, engageDistanceMul: 1.0, targetPriority: 'closest', retreatHpPct: 0 },
-    answers: ['pierce', 'aoeClear'],
+    answers: ['block', 'aoeClear', 'deflect'],
     specialization: [
       { id: 'gwen-1', name: '枪术精研', cost: 1, effect: { kind: 'attr', attr: 'str', amount: 6 }, note: '贯穿伤害的基础值' },
       { id: 'gwen-2', name: '破阵', cost: 2, requires: 'gwen-1', effect: { kind: 'skill', field: 'mul', amount: 2.5, mode: 'mul' }, note: '倍率 2.2 → 5.5，全部押在技能窗口' },
-      { id: 'gwen-3', name: '铁壁枪阵', cost: 3, requires: 'gwen-2', effect: { kind: 'answer', add: 'taunt' }, note: '长枪立阵钉住正面，为全队制造集火窗口（围猎）' },
+      { id: 'gwen-3', name: '铁壁枪阵', cost: 3, requires: 'gwen-2', effect: { kind: 'answer', add: 'taunt' }, note: '长枪立阵钉住正面，为全队制造集火窗口（号令 / 招魂）' },
     ],
   },
 
@@ -260,7 +265,7 @@ export const HEROES: Hero[] = [
     specialization: [
       { id: 'kai-1', name: '轻身', cost: 1, effect: { kind: 'attr', attr: 'agi', amount: 6 }, note: '暴击与闪避的基础' },
       { id: 'kai-2', name: '连斩不止', cost: 2, requires: 'kai-1', effect: { kind: 'skill', field: 'duration', amount: 2, mode: 'add' }, note: '爆发窗口 3s → 5s' },
-      { id: 'kai-3', name: '疾风不息', cost: 3, requires: 'kai-2', effect: { kind: 'answer', add: 'sustainedDps' }, note: '连斩的攻速加成不再依赖技能窗口，持续压制（潮涌）' },
+      { id: 'kai-3', name: '疾风不息', cost: 3, requires: 'kai-2', effect: { kind: 'answer', add: 'aoeClear' }, note: '连斩的攻速加成不再依赖技能窗口，持续压制（潮涌）' },
     ],
   },
   {
@@ -279,11 +284,11 @@ export const HEROES: Hero[] = [
       note: '跃起砸地，范围内敌人被击倒并撕裂护甲——清场与开团两用',
     },
     ai: { aggroRange: 15, leashRange: 22, engageDistanceMul: 1.2, targetPriority: 'strongest', retreatHpPct: 0.2 },
-    answers: ['aoeClear', 'control', 'armorShred'],
+    answers: ['aoeClear', 'control', 'shred'],
     specialization: [
       { id: 'bull-1', name: '蛮力', cost: 1, effect: { kind: 'attr', attr: 'str', amount: 6 }, note: '' },
       { id: 'bull-2', name: '震波', cost: 2, requires: 'bull-1', effect: { kind: 'skill', field: 'mul', amount: 1.5, mode: 'mul' }, note: '倍率 3.0 → 4.5' },
-      { id: 'bull-3', name: '山崩', cost: 3, requires: 'bull-2', effect: { kind: 'answer', add: 'explosive' }, note: '裂地斩的冲击波无视护甲，碎石把敌人压在原地（卡口）' },
+      { id: 'bull-3', name: '山崩', cost: 3, requires: 'bull-2', effect: { kind: 'answer', add: 'seismic' }, note: '裂地斩的冲击波穿透地面，碎石把敌人压在原地（潮涌 / 遁地）' },
     ],
   },
 
@@ -304,11 +309,11 @@ export const HEROES: Hero[] = [
       note: '蓄力一击，无视 80% 护甲。专治高防与霸体目标',
     },
     ai: { aggroRange: 40, leashRange: 55, engageDistanceMul: 0.8, targetPriority: 'strongest', retreatHpPct: 0.3 },
-    answers: ['debuff', 'ranged', 'singleTarget', 'burst'],
+    answers: ['shred', 'ranged', 'singleTarget', 'burst', 'antiAir'],
     specialization: [
       { id: 'vera-1', name: '稳定射击', cost: 1, effect: { kind: 'attr', attr: 'agi', amount: 6 }, note: '' },
       { id: 'vera-2', name: '致命一击', cost: 2, requires: 'vera-1', effect: { kind: 'skill', field: 'cooldown', amount: -4, mode: 'add' }, note: '标记冷却 18s → 14s，窗口更密' },
-      { id: 'vera-3', name: '贯日狙击', cost: 3, requires: 'vera-2', effect: { kind: 'answer', add: 'pierce' }, note: '蓄力后沿直线打出一发超远程穿甲弹（射程 60 格，全图级），一路穿透所有目标并击退——击退走 knockChance 对撞稳固，霸体只吃伤害不被推开（重甲 / 卡口）' },
+      { id: 'vera-3', name: '贯日狙击', cost: 3, requires: 'vera-2', effect: { kind: 'answer', add: 'physical' }, note: '蓄力后沿直线打出一发超远程穿甲弹（射程 60 格，全图级），一路穿透所有目标并击退——击退走 knockChance 对撞稳固，霸体只吃伤害不被推开（物抗 / 魔抗）' },
     ],
   },
   {
@@ -327,11 +332,11 @@ export const HEROES: Hero[] = [
       note: '把弹幕铺满一整片地面，持续压制的区域里敌人寸步难行',
     },
     ai: { aggroRange: 24, leashRange: 32, engageDistanceMul: 0.85, targetPriority: 'closest', retreatHpPct: 0.3 },
-    answers: ['sustainedDps', 'control', 'burst'],
+    answers: ['aoeClear', 'control', 'burst', 'antiAir'],
     specialization: [
       { id: 'jet-1', name: '压枪', cost: 1, effect: { kind: 'attr', attr: 'agi', amount: 6 }, note: '' },
       { id: 'jet-2', name: '弹链改造', cost: 2, requires: 'jet-1', effect: { kind: 'skill', field: 'duration', amount: 3, mode: 'add' }, note: '压制窗口 5s → 8s，接近常驻' },
-      { id: 'jet-3', name: '天降火雨', cost: 3, requires: 'jet-2', effect: { kind: 'answer', add: 'explosive' }, note: '召唤一片火雨覆盖目标区域（半径 6 格、持续 8 秒），灼烧伤害不吃护甲减免，区域内持续打击（重甲 / 卡口 / 潮涌）' },
+      { id: 'jet-3', name: '天降火雨', cost: 3, requires: 'jet-2', effect: { kind: 'answer', add: 'magic' }, note: '召唤一片火雨覆盖目标区域（半径 6 格、持续 8 秒），灼烧伤害不吃护甲减免，区域内持续打击（物抗 / 电磁场 / 潮涌）' },
     ],
   },
 
@@ -352,7 +357,7 @@ export const HEROES: Hero[] = [
       note: '以自身为中心扩散的冻结波，被控住的敌人解冻后仍被减速',
     },
     ai: { aggroRange: 20, leashRange: 28, engageDistanceMul: 0.8, targetPriority: 'closest', retreatHpPct: 0.35 },
-    answers: ['control', 'aoeClear', 'debuff'],
+    answers: ['control', 'aoeClear', 'magic', 'calm'],
     specialization: [
       { id: 'ella-1', name: '寒气精研', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '' },
       { id: 'ella-2', name: '极寒延展', cost: 2, requires: 'ella-1', effect: { kind: 'skill', field: 'duration', amount: 2, mode: 'add' }, note: '冻结 3s → 5s，集火窗口翻倍' },
@@ -375,11 +380,11 @@ export const HEROES: Hero[] = [
       note: '呼叫炮击覆盖一整片区域，持续击倒并燃烧',
     },
     ai: { aggroRange: 26, leashRange: 34, engageDistanceMul: 0.9, targetPriority: 'closest', retreatHpPct: 0.3 },
-    answers: ['explosive', 'aoeClear', 'control'],
+    answers: ['summon', 'aoeClear', 'control'],
     specialization: [
       { id: 'bom-1', name: '装药强化', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '' },
       { id: 'bom-2', name: '多投', cost: 2, requires: 'bom-1', effect: { kind: 'attr', attr: 'agi', amount: 8 }, note: '投掷节奏更快，三雷覆盖更宽' },
-      { id: 'bom-3', name: '破片装药', cost: 3, requires: 'bom-2', effect: { kind: 'answer', add: 'armorShred' }, note: '手雷破片削减护甲并标记目标，全队受益（精英护盾 / 围猎）' },
+      { id: 'bom-3', name: '破片装药', cost: 3, requires: 'bom-2', effect: { kind: 'answer', add: 'shred' }, note: '手雷破片削减目标抗性并标记，全队受益（物抗 / 魔抗）' },
     ],
   },
 
@@ -401,7 +406,7 @@ export const HEROES: Hero[] = [
       note: '展开持续治疗领域，范围内的队员同时获得减伤',
     },
     ai: { aggroRange: 22, leashRange: 30, engageDistanceMul: 0.75, targetPriority: 'weakest', retreatHpPct: 0.4 },
-    answers: ['sustain', 'mitigate', 'singleTarget'],
+    answers: ['sustain', 'mitigate', 'singleTarget', 'dispel'],
     specialization: [
       { id: 'lian-1', name: '医理', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '治疗量随智力走' },
       { id: 'lian-2', name: '涌流不止', cost: 2, requires: 'lian-1', effect: { kind: 'skill', field: 'cooldown', amount: -6, mode: 'add' }, note: '冷却 20s → 14s，续航覆盖全程' },
@@ -425,11 +430,11 @@ export const HEROES: Hero[] = [
       note: '图腾涌出熔岩，覆盖的地面持续灼烧并拖慢敌人',
     },
     ai: { aggroRange: 18, leashRange: 26, engageDistanceMul: 1.0, targetPriority: 'closest', retreatHpPct: 0.3 },
-    answers: ['explosive', 'sustainedDps', 'debuff'],
+    answers: ['aoeClear', 'magic', 'mitigate', 'dispel'],
     specialization: [
       { id: 'shaman-1', name: '火种', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '' },
       { id: 'shaman-2', name: '图腾延烧', cost: 2, requires: 'shaman-1', effect: { kind: 'skill', field: 'duration', amount: 4, mode: 'add' }, note: '光环 8s → 12s' },
-      { id: 'shaman-3', name: '熔甲', cost: 3, requires: 'shaman-2', effect: { kind: 'answer', add: 'singleTarget' }, note: '火焰从范围压制转为定点熔甲，烧穿单个目标（分裂）' },
+      { id: 'shaman-3', name: '熔甲', cost: 3, requires: 'shaman-2', effect: { kind: 'answer', add: 'antiHeal' }, note: '火焰从范围压制转为定点熔甲，被烧穿的目标无法回复（再生 / 招魂）' },
     ],
   },
 
@@ -450,11 +455,11 @@ export const HEROES: Hero[] = [
       note: '召唤一只大型傀儡，血量与伤害远超普通傀儡，能独立顶住一条线',
     },
     ai: { aggroRange: 20, leashRange: 28, engageDistanceMul: 0.9, targetPriority: 'closest', retreatHpPct: 0.3 },
-    answers: ['summon', 'singleTarget', 'aoeClear'],
+    answers: ['summon', 'singleTarget', 'cleanse', 'calm'],
     specialization: [
       { id: 'nox-1', name: '傀儡加固', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '傀儡属性随智力走' },
       { id: 'nox-2', name: '双生', cost: 2, requires: 'nox-1', effect: { kind: 'attr', attr: 'tgh', amount: 8 }, note: '本体更耐打，傀儡不需要保护召唤者' },
-      { id: 'nox-3', name: '亡者军团', cost: 3, requires: 'nox-2', effect: { kind: 'answer', add: 'mitigate' }, note: '把周围（半径 8 格）地上的敌方尸体唤起为傀儡军团，至多 12 具、持续 30 秒、血量为原僵尸的 50%；精英与 BOSS 的尸体唤不起。军团是一堵会走的肉墙，替小队吃突进与喷吐（突进 / 毒区 / 远程压制）' },
+      { id: 'nox-3', name: '亡者军团', cost: 3, requires: 'nox-2', effect: { kind: 'answer', add: 'mitigate' }, note: '把周围（半径 8 格）地上的敌方尸体唤起为傀儡军团，至多 12 具、持续 30 秒、血量为原僵尸的 50%；精英与 BOSS 的尸体唤不起。军团是一堵会走的肉墙，替小队吃突进与喷吐（突进 / 遁地 / 空中）' },
     ],
   },
   {
@@ -473,11 +478,11 @@ export const HEROES: Hero[] = [
       note: '蜂群扩散至全场，链式跳跃到 12 个目标并深度腐蚀护甲',
     },
     ai: { aggroRange: 28, leashRange: 36, engageDistanceMul: 0.85, targetPriority: 'weakest', retreatHpPct: 0.35 },
-    answers: ['aoeClear', 'armorShred', 'sustainedDps', 'summon'],
+    answers: ['aoeClear', 'electric', 'detect', 'summon'],
     specialization: [
       { id: 'sif-1', name: '蜂群增殖', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '' },
       { id: 'sif-2', name: '跳数增加', cost: 2, requires: 'sif-1', effect: { kind: 'skill', field: 'mul', amount: 1.4, mode: 'mul' }, note: '链式每跳伤害 ×1.4，清潮涌更干净' },
-      { id: 'sif-3', name: '蜂群缠附', cost: 3, requires: 'sif-2', effect: { kind: 'answer', add: 'control' }, note: '纳米蜂群黏附目标，普攻附带减速——自爆兵在贴身之前就被拖住（分裂 / 自爆）' },
+      { id: 'sif-3', name: '蜂群缠附', cost: 3, requires: 'sif-2', effect: { kind: 'answer', add: 'control' }, note: '纳米蜂群黏附目标，普攻附带减速——自爆兵在贴身之前就被拖住（自爆 / 突进）' },
     ],
   },
 ];
@@ -489,56 +494,90 @@ export const HEROES_BY_ID: Record<string, Hero> = Object.fromEntries(
 export const SQUAD_SIZE = 5;
 
 /**
- * 玩家的三个小队命令（第二轮新增）。
+ * 三种小队阵型（第三轮重构，取代第二轮的四个命令按钮）。
  *
- * 命令是 AI 的**输入**，不是新的 AI 代码——每个命令只改 `AIProfile` 的字段取值，
- * 与 `spec` 树里 `{kind:'ai'}` 的节点走同一条通路。这是刻意的：
- * 命令栏给玩家的是"我现在想让队伍怎么打"，不是第四个技能。
+ * 阵型是 AI 的**输入**，不是新的 AI 代码——每一档只决定队员的**站位锚点**
+ * （原型里的 `h.home`）怎么算：谁站外圈、谁站中心、离队长多远、朝哪边展开。
+ * 索敌 / 拴绳 / 走位 / 开火全部复用队员自己的 `aiProfile`。
+ * 阵型管的是"队伍长什么形状"，不管"队员怎么打架"。
  *
- * **默认「自由」必须能通关。** 三个命令都是效率旋钮，不是门槛——
- * 若某一关【必须】切到集火才打得过，那关就是设计失败，
- * 因为这意味着关卡在考操作而不是考阵容，而本作的前提是后者。
+ * 三档**互斥**，是同一条轴上的三个档位。互斥不是限制，是减负：
+ * 不存在"集火的同时紧密跟随"这类叠加态，玩家脑子里只需要维持一个位。
+ * 命令栏因此仍然是**效率旋钮**，不是操作门槛（`00-决策清单.md` A29）——
+ * 压舱石依旧是"**不碰阵型也能通关**"。
  *
- * 覆盖规则：命令的乘区叠在角色自己的 `ai` 之上，取两者中更激进的约束
- * （集火覆盖索敌方式，紧密跟随收窄 leash 与交战距离，重整阵型是即时动作）。
+ * 覆盖规则：阵型的 `overrides` 叠在角色自己的 `ai` 之上。
+ * 默认档 `defend` 的 `overrides` 是 `{}`——**默认值必须是"什么都不覆盖"**，
+ * 否则"不碰阵型也能通关"这条无法成立。
  */
+export interface FormationRing {
+  /** 这一层站哪些定位。`HeroRole` 早就在数据里了，阵型是它第一次真正被 AI 用上 */
+  roles: HeroRole[];
+  /** 站位锚点距队长的半径，格 */
+  radius: number;
+  /** 相对阵型朝向的方位角，弧度：0 = 正前，π = 正后。`spread` 为 2π 时无意义 */
+  bearing: number;
+  /** 该层展开的总张角，弧度；2π = 铺满一圈（环形阵） */
+  spread: number;
+  /** 最大活动半径，格。**硬约束**：超出即强制回位。
+   *  地面画出来的近战活动圈读的就是这个数——可视化和约束同源，不许有两份。 */
+  tether: number;
+}
+
 export interface SquadCommand {
   id: SquadCommandId;
   name: string;
-  /** toggle = 常驻状态切换；action = 即时动作，有冷却 */
-  kind: 'toggle' | 'action';
-  /** action 专用：冷却秒数 */
-  cooldown?: number;
-  /** 切到这个命令时，队员 AI 的覆盖值 */
+  /** 这一档吃不吃玩家指定的朝向。false = 环形，朝向无意义 */
+  facing: boolean;
+  /** 从外到内排列，先铺前面的层 */
+  rings: FormationRing[];
+  /** 切到这一档时，队员 AI 的覆盖值 */
   overrides: Partial<AIProfile>;
-  /** 集火：索敌目标改为"队长当前攻击/标记的目标" */
-  focusFire?: boolean;
   note: string;
 }
 
-export type SquadCommandId = 'free' | 'focus' | 'regroup' | 'tight';
+export type SquadCommandId = 'defend' | 'ring' | 'advance';
+
+/** 近战层：坦克排在前面，所以 `roles` 的顺序就是槽位的顺序，重剑士跟在坦克后面 */
+const MELEE: HeroRole[] = ['tank', 'meleeDps'];
+/** 中心层：辅助与控制都不顶前排，站在队长身边 */
+const CORE: HeroRole[] = ['support', 'control', 'summoner'];
+/** 后排层：纯输出，站最后面 */
+const BACK: HeroRole[] = ['rangedDps'];
 
 export const SQUAD_COMMANDS: SquadCommand[] = [
   {
-    id: 'free', name: '自由索敌', kind: 'toggle',
+    id: 'defend', name: '普通防御阵型', facing: true,
+    // 最紧的一档：近战铺一道扇形挡在阵前，远程缩在队长身后，辅助在中心
+    rings: [
+      { roles: MELEE, radius: 2.2, bearing: 0, spread: Math.PI * 1.1, tether: 7 },
+      { roles: BACK, radius: 4.4, bearing: Math.PI, spread: Math.PI * 0.9, tether: 2.5 },
+      { roles: CORE, radius: 1.3, bearing: Math.PI, spread: Math.PI * 2, tether: 2.5 },
+    ],
     overrides: {},
-    note: '默认状态。每个队员按自己的 aiProfile 独立索敌，覆盖最大面积',
+    note: '默认档。最紧密的站位，有朝向。近战在前、远程在后、辅助在中心，全员收在队长周围',
   },
   {
-    id: 'focus', name: '集火进攻', kind: 'toggle',
-    overrides: { targetPriority: 'strongest' },
-    focusFire: true,
-    note: '全队改打队长正在打的那个目标。单体伤害集中，但清场范围会变窄',
+    id: 'ring', name: '环形防御阵型', facing: false,
+    // 无朝向：近战铺满外圈防 360°，远程同样环视射击，辅助在内圈游走
+    rings: [
+      { roles: MELEE, radius: 3.0, bearing: 0, spread: Math.PI * 2, tether: 7 },
+      { roles: BACK, radius: 5.2, bearing: 0, spread: Math.PI * 2, tether: 2.5 },
+      { roles: CORE, radius: 1.6, bearing: 0, spread: Math.PI * 2, tether: 3 },
+    ],
+    overrides: { engageDistanceMul: 0.9 },
+    note: '被包围时用。没有朝向，近战在外圈防四面来敌，远程环视射击，辅助在内圈按需游走',
   },
   {
-    id: 'regroup', name: '重整阵型', kind: 'action', cooldown: 25,
-    overrides: {},
-    note: '即时动作：全员脱战回到队长周围的标准阵位。用来把被冲散或被卡住的队员拉回来',
-  },
-  {
-    id: 'tight', name: '紧密跟随', kind: 'toggle',
-    overrides: { leashRange: 12, engageDistanceMul: 0.7 },
-    note: '收窄脱战半径与交战距离，全队贴着队长走。窄道与室内用，代价是火力覆盖变窄',
+    id: 'advance', name: '搜索推进阵型', facing: true,
+    // 松散：近战可以前置得更远，整层的活动半径也跟着放大
+    rings: [
+      { roles: MELEE, radius: 4.0, bearing: 0, spread: Math.PI * 1.4, tether: 10 },
+      { roles: BACK, radius: 5.5, bearing: Math.PI, spread: Math.PI * 1.2, tether: 3.5 },
+      { roles: CORE, radius: 2.0, bearing: 0, spread: Math.PI * 2, tether: 4 },
+    ],
+    overrides: { aggroRange: 6, engageDistanceMul: 1.15 },
+    note: '推进与清图用。站位更松散，近战可以前置得更远、活动范围更大，代价是收不紧',
   },
 ];
 

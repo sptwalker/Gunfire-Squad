@@ -1,0 +1,227 @@
+<!-- M0 压力测试：同屏 N 只僵尸（9 种轮流、边走边播）+ 5 名队员 + M 件场景物件，分项测帧时间找显示上限。从仓库根目录起服务：python -m http.server，打开 /proto/m0/stress.html -->
+<meta charset="utf-8">
+<title>M0 压力测试</title>
+<style>
+  :root { --bg: #1b1f1d; --fg: #d9e0dc; --dim: #8a968f; --acc: #9fbf6a; --bad: #e0705a; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.5 ui-monospace, Consolas, monospace; }
+  canvas { display: block; }
+  #hud { position: fixed; left: 16px; top: calc(12px + env(safe-area-inset-top, 0px)); display: grid; gap: 6px; max-width: calc(100% - 32px);
+         background: #1b1f1dcc; padding: 8px 10px; border-radius: 4px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button, input, select { font: inherit; color: var(--fg); background: #2a302d; border: 1px solid #3b443f; border-radius: 3px; padding: 3px 8px; }
+  input { width: 5em; }
+  button { cursor: pointer; } button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--acc); }
+  #stat { color: var(--dim); font-variant-numeric: tabular-nums; white-space: pre; }
+  table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  td, th { padding: 1px 8px; text-align: right; border-bottom: 1px solid #2f3632; }
+  th { color: var(--dim); font-weight: normal; }
+  tr.over td { color: var(--bad); }
+  [hidden] { display: none !important; }
+</style>
+<div id="hud">
+  <div class="row">
+    <label for="nz">僵尸</label><input id="nz" type="number" min="0" max="5000" step="50" value="300">
+    <label for="np">物件</label><input id="np" type="number" min="0" max="3000" step="20" value="60">
+    <label for="mode">骨架</label>
+    <select id="mode"><option value="own">每只独立骨架（M0 现状）</option><option value="shared">同种共享 8 套骨架</option></select>
+    <button id="ramp">自动爬坡</button>
+  </div>
+  <div id="stat">加载中…</div>
+  <table id="log" hidden><thead><tr><th>僵尸</th><th>draw call</th><th>三角面</th><th>动画</th><th>逻辑</th><th>提交</th><th>CPU 合计</th><th>GPU</th><th>FPS</th></tr></thead><tbody></tbody></table>
+</div>
+<script type="importmap">
+{ "imports": {
+  "three": "../../node_modules/three/build/three.module.js",
+  "three/addons/": "../../node_modules/three/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const ZIDS = ['normal', 'runner', 'brute', 'toxic', 'bomber', 'splitter', 'leaper', 'ward', 'spitter'];
+const HERO5 = [['ron', 'greatsword'], ['vera', 'sniper'], ['jet', 'smg'], ['ella', 'freezer'], ['bom', 'grenade']];
+const PIDS = ['ruin', 'shop', 'car', 'fence', 'partition', 'barrel', 'crate', 'ammo', 'rubble', 'tree', 'palm', 'grass', 'hay',
+  'deadtree', 'stump', 'rock_moss', 'cactus', 'cactus_ball', 'mesa', 'pine', 'snowpile', 'rock_ice', 'bunker', 'sandbag', 'wire', 'woodwall'];
+const AREA = 36, G = 8;   // 僵尸活动范围 36×36 m（≈ 04 §7.1 俯视可视 40×40 格）；共享模式每种 8 套骨架、相位错开
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1b1f1d);
+scene.add(new THREE.HemisphereLight(0xdfe8e0, 0x30382f, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 2); sun.position.set(3, 6, 4); scene.add(sun);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), new THREE.MeshLambertMaterial({ color: 0x3a4238 }));
+ground.rotation.x = -Math.PI / 2; scene.add(ground);
+// 机位：俯仰约 55°，画面宽约 40 m——正式游戏的典型缩放
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 300);
+camera.position.set(0, 34, 24);
+const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.mouseButtons = { LEFT: null, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE };
+renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const load = (f) => new Promise((ok, err) => loader.load(f, ok, undefined, err));
+const [zgl, hgl, wgl, pgl] = await Promise.all([
+  Promise.all(ZIDS.map((id) => load(`assets/vox_z_${id}.glb`))),
+  Promise.all(HERO5.map(([id]) => load(`assets/vox_${id}.glb`))),
+  Promise.all(HERO5.map(([, w]) => load(`assets/vox_${w}.glb`))),
+  Promise.all(PIDS.map((id) => load(`assets/prop_${id}.glb`))),
+]);
+const glow = new THREE.MeshBasicMaterial({ vertexColors: true });
+for (const g of [...zgl, ...pgl]) g.scene.traverse((o) => {
+  if (!o.isMesh) return;
+  if (o.material.name.endsWith('_glow')) o.material = glow;
+  else if (o.material.name.endsWith('_glass')) Object.assign(o.material, { transparent: true, opacity: 0.42, depthWrite: false });
+});
+const clipOf = (anims, name) => anims.find((a) => a.name === name || a.name.startsWith(name + '_'));
+const skinned = (root) => { const r = []; root.traverse((o) => o.isSkinnedMesh && r.push(o)); return r; };
+
+// ── 队员：5 名站在中间，拿各自武器（挂点变换同 index.html）──
+const GRIP = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+const heroMixers = hgl.map((g, i) => {
+  const root = g.scene; root.position.set((i - 2) * 1.4, 0, 0); scene.add(root); root.updateMatrixWorld(true);
+  const socket = root.getObjectByName('socket_hand_r'), w = wgl[i].scene, s = new THREE.Vector3();
+  socket.getWorldScale(s); w.quaternion.copy(GRIP); w.scale.setScalar(1 / s.x); socket.add(w);
+  const m = new THREE.AnimationMixer(root); m.clipAction(clipOf(g.animations, 'idle')).play(); return m;
+});
+
+// ── 共享骨架的驱动者：每种 G 套，藏起来只负责摆骨头 ──
+// 实例网格绑到驱动者的骨架上、bindMode = detached：蒙皮结果 = 驱动者（站原点）的世界空间姿态，已含骨架的 0.01 缩放，
+// 所以网格自身变换留单位阵，只由外层 Group 摆位置 / 朝向
+const drivers = zgl.map((g) => Array.from({ length: G }, () => {
+  const root = SkeletonUtils.clone(g.scene); root.visible = false; scene.add(root);
+  const mixer = new THREE.AnimationMixer(root), clip = clipOf(g.animations, 'walk');
+  const a = mixer.clipAction(clip); a.play(); a.time = Math.random() * clip.duration;
+  return { mixer, meshes: skinned(root) };
+}));
+const srcMeshes = zgl.map((g) => { g.scene.updateMatrixWorld(true); return skinned(g.scene); });
+
+let mode = 'own';
+const zs = [];
+const rnd = (a) => (Math.random() - 0.5) * a;
+function spawn(i) {
+  const zi = i % ZIDS.length, g = zgl[zi];
+  let root, mixer = null;
+  if (mode === 'own') {
+    root = SkeletonUtils.clone(g.scene);
+    mixer = new THREE.AnimationMixer(root);
+    const clip = clipOf(g.animations, 'walk'), a = mixer.clipAction(clip); a.play(); a.time = Math.random() * clip.duration;
+  } else {
+    root = new THREE.Group();
+    const d = drivers[zi][i % G];
+    srcMeshes[zi].forEach((src, k) => {
+      const m = src.clone(); m.position.set(0, 0, 0); m.quaternion.identity(); m.scale.setScalar(1);
+      m.bindMode = 'detached'; m.bind(d.meshes[k].skeleton, src.bindMatrix); root.add(m);
+    });
+  }
+  let x, z;
+  do { x = rnd(AREA); z = rnd(AREA); } while (Math.abs(x) < 4 && Math.abs(z) < 2);
+  root.position.set(x, 0, z); scene.add(root);
+  return { root, mixer, tx: rnd(AREA), tz: rnd(AREA), speed: 0.8 + Math.random() * 0.8 };
+}
+function despawn(u) {
+  scene.remove(u.root);
+  if (u.mixer) { u.mixer.stopAllAction(); u.root.traverse((o) => o.isSkinnedMesh && o.skeleton.dispose()); }
+}
+function setN(n) { while (zs.length > n) despawn(zs.pop()); while (zs.length < n) zs.push(spawn(zs.length)); nz.value = n; }
+function setMode(m) { const n = zs.length; setN(0); mode = m; setN(n); modeSel.value = m; }
+
+// ── 物件：散落在活动范围外圈与内部，避开中间队员 ──
+const props = [];
+function setProps(m) {
+  while (props.length > m) scene.remove(props.pop());
+  while (props.length < m) {
+    const o = pgl[Math.floor(Math.random() * PIDS.length)].scene.clone();
+    let x, z;
+    do { x = rnd(AREA + 16); z = rnd(AREA + 16); } while (Math.abs(x) < 6 && Math.abs(z) < 4);
+    o.position.set(x, 0, z); o.rotation.y = Math.floor(Math.random() * 4) * Math.PI / 2;
+    scene.add(o); props.push(o);
+  }
+  np.value = m;
+}
+
+const modeSel = document.getElementById('mode');
+nz.onchange = () => setN(Math.max(0, +nz.value | 0));
+np.onchange = () => setProps(Math.max(0, +np.value | 0));
+modeSel.onchange = () => setMode(modeSel.value);
+
+// ── 计时：CPU 分三段（动画 / 移动逻辑 / render 提交），GPU 用 timer query ──
+const gl = renderer.getContext();
+const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+const pending = [];
+let win = [];   // 近期帧 { anim, logic, sub, gpu, dt }
+function summary() {
+  const n = win.length || 1, avg = (k) => win.reduce((s, f) => s + (f[k] ?? 0), 0) / n;
+  const g = win.filter((f) => f.gpu != null);
+  const cpu = win.map((f) => f.anim + f.logic + f.sub).sort((a, b) => a - b);
+  return { n: zs.length, calls: renderer.info.render.calls, tris: renderer.info.render.triangles,
+    anim: avg('anim'), logic: avg('logic'), sub: avg('sub'), cpu: avg('anim') + avg('logic') + avg('sub'),
+    cpuP99: cpu[Math.floor(cpu.length * 0.99)] ?? 0,
+    gpu: g.length ? g.reduce((s, f) => s + f.gpu, 0) / g.length : null, fps: 1000 / avg('dt') };
+}
+const f2 = (v) => (v == null ? '—' : v.toFixed(2));
+
+let last = performance.now(), hudT = 0;
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const now = performance.now(), frameDt = now - last; last = now;
+  const dt = Math.min(clock.getDelta(), 0.1);
+  const t0 = performance.now();
+  heroMixers.forEach((m) => m.update(dt));
+  if (mode === 'own') for (const u of zs) u.mixer.update(dt);
+  else for (const d of drivers.flat()) d.mixer.update(dt);
+  const t1 = performance.now();
+  for (const u of zs) {
+    const p = u.root.position, dx = u.tx - p.x, dz = u.tz - p.z, d = Math.hypot(dx, dz);
+    if (d < 0.5) { u.tx = rnd(AREA); u.tz = rnd(AREA); continue; }
+    const s = u.speed * dt / d; p.x += dx * s; p.z += dz * s;
+    u.root.rotation.y = Math.atan2(dx, dz);   // 模型正面朝 +Z
+  }
+  const t2 = performance.now();
+  let q;
+  if (tq) { q = gl.createQuery(); gl.beginQuery(tq.TIME_ELAPSED_EXT, q); }
+  renderer.render(scene, camera);
+  if (tq) { gl.endQuery(tq.TIME_ELAPSED_EXT); pending.push(q); }
+  const t3 = performance.now();
+  const f = { anim: t1 - t0, logic: t2 - t1, sub: t3 - t2, gpu: null, dt: frameDt };
+  while (pending.length && gl.getQueryParameter(pending[0], gl.QUERY_RESULT_AVAILABLE)) {
+    const p = pending.shift();
+    if (!gl.getParameter(tq.GPU_DISJOINT_EXT)) f.gpu = gl.getQueryParameter(p, gl.QUERY_RESULT) / 1e6;
+    gl.deleteQuery(p);
+  }
+  win.push(f); if (win.length > 90) win.shift();
+  if (now - hudT > 500) {
+    hudT = now; const s = summary();
+    stat.textContent = `僵尸 ${s.n} · 物件 ${props.length} · 队员 5 · draw call ${s.calls} · 三角面 ${s.tris} · ${s.fps.toFixed(0)} FPS\n` +
+      `CPU 动画 ${f2(s.anim)} + 逻辑 ${f2(s.logic)} + 提交 ${f2(s.sub)} = ${f2(s.cpu)} ms（P99 ${f2(s.cpuP99)}） · GPU ${tq ? f2(s.gpu) + ' ms' : '不可测'}`;
+  }
+});
+
+// ── 自动爬坡：每档稳 1 s、测 2 s；CPU 合计或 GPU 任一超过 16.6 ms（60 FPS 帧预算）即停 ──
+const rows = [];
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function ramp(max = 5000) {
+  rows.length = 0; log.hidden = false; log.tBodies[0].innerHTML = ''; rampBtn.disabled = true;
+  for (let n = 50; n <= max; n += n < 500 ? 50 : n < 1500 ? 100 : 250) {
+    setN(n); await sleep(1000); win = []; await sleep(2000);
+    const s = summary(); rows.push(s);
+    const over = s.cpu > 16.6 || (s.gpu ?? 0) > 16.6;
+    const tr = log.tBodies[0].insertRow(); if (over) tr.className = 'over';
+    for (const v of [s.n, s.calls, s.tris, f2(s.anim), f2(s.logic), f2(s.sub), f2(s.cpu), f2(s.gpu), s.fps.toFixed(0)]) tr.insertCell().textContent = v;
+    if (over) break;
+  }
+  rampBtn.disabled = false; return rows;
+}
+const rampBtn = document.getElementById('ramp');
+rampBtn.onclick = () => ramp();
+
+setProps(60); setN(300);
+window.__stress = { setN, setMode, setProps, ramp, rows, summary, reset: () => (win = []), scene, THREE };
+</script>

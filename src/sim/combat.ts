@@ -4,7 +4,16 @@
  */
 
 import { derive, type Derived } from '../data/attributes.ts';
-import { ARMOR_MATRIX, armorRetention, expectedDamage, type ArmorType, type DamageType } from '../data/damage.ts';
+import {
+  ARMOR_MATRIX,
+  SCHOOL_OF,
+  armorRetention,
+  expectedDamage,
+  resistMul,
+  type ArmorType,
+  type DamageType,
+  type Resistances,
+} from '../data/damage.ts';
 import { tierBonus, WEAPONS, type WeaponId } from '../data/weapons.ts';
 import { skillAvgMul, type Hero } from '../data/characters.ts';
 import type { Zombie } from '../data/zombies.ts';
@@ -36,6 +45,14 @@ export function heroRawDps(
   dtype: DamageType,
   /** 目标抗暴击 0-1。不传 = 0，即打一个没有韧性的目标。 */
   targetAntiCrit = 0,
+  /**
+   * 目标三系抗性。**不传 = 无抗性**，所以旧调用点全部保持原值——
+   * 但凡是"打某个具体僵尸"的调用点都必须显式传 `z.resist`，
+   * 否则物抗/魔抗/电磁场这三个维度在读数里根本不存在。
+   */
+  resist?: Resistances,
+  /** 攻方破抗 0-1，同时降物抗与魔抗 */
+  shred = 0,
 ): number {
   const w = WEAPONS[hero.weapon];
   const d = derive(hero.primary, level);
@@ -51,6 +68,8 @@ export function heroRawDps(
     critRate: d.critRate + w.critBonus,
     critDmg: d.critDmg,
     targetAntiCrit,
+    resist,
+    shred,
   });
 
   // 攻速乘区（敏捷）必须作用在【频率】上，不能乘进单发伤害——
@@ -78,9 +97,13 @@ export function heroEffectiveDps(
   dtype: DamageType,
   targets = 1,
   targetAntiCrit = 0,
+  resist?: Resistances,
+  shred = 0,
 ): number {
   const w = WEAPONS[hero.weapon];
-  const single = heroRawDps(hero, level, tier, targetArmor, targetArmorType, dtype, targetAntiCrit);
+  const single = heroRawDps(
+    hero, level, tier, targetArmor, targetArmorType, dtype, targetAntiCrit, resist, shred,
+  );
   // 单体武器 targets 再大也只有 1 倍收益
   const hitMul = w.hitsPerAttack === 1 ? 1 : Math.min(targets, w.hitsPerAttack) / 1;
   return single * (w.hitsPerAttack === 1 ? 1 : hitMul);
@@ -94,6 +117,8 @@ export function squadDps(
   targetArmorType: ArmorType,
   targets = 1,
   targetAntiCrit = 0,
+  resist?: Resistances,
+  shred = 0,
 ): { total: number; per: { hero: Hero; dps: number }[] } {
   const per = heroes.map((h) => ({
     hero: h,
@@ -106,6 +131,8 @@ export function squadDps(
       WEAPONS[h.weapon].dtype,
       targets,
       targetAntiCrit,
+      resist,
+      shred,
     ),
   }));
   return { total: per.reduce((s, x) => s + x.dps, 0), per };
@@ -129,6 +156,12 @@ export function retention(rawArmor: number, pierce: number): number {
 /**
  * 击杀单个僵尸所需时间（TTK）。
  * 用来判断"这群怪是不是清得动"——TTK 超过僵尸走到脸上的时间，就是防线告急。
+ *
+ * ── 第三轮修正：护甲只对物理生效 ──
+ * 旧版把 `retention(z.armor, pierce)` 乘在所有伤害系别上，于是法术和电磁
+ * 也在被目标的"护甲值"减伤——那让三系变成同一个问题。
+ * 现在护甲只削物理，法术与电磁各自走 `z.resist` 的 magicRes / energyField。
+ * `z.resist` 是僵尸身上的字段，所以这里不需要调用方传抗性，维度自动生效。
  */
 export function ttk(
   dps: number,
@@ -136,9 +169,13 @@ export function ttk(
   stage: number,
   pierce: number,
   dtype: DamageType,
+  /** 攻方破抗 0-1，降物抗与魔抗 */
+  shred = 0,
 ): number {
+  const school = SCHOOL_OF[dtype];
+  const physical = school === 'physical' ? retention(z.armor, pierce) : 1;
   const effectiveDps =
-    dps * retention(z.armor, pierce) * ARMOR_MATRIX[dtype][z.armorType];
+    dps * physical * ARMOR_MATRIX[dtype][z.armorType] * resistMul(school, z.resist, shred);
   return effectiveDps <= 0 ? Infinity : zombieEhp(z, stage) / effectiveDps;
 }
 

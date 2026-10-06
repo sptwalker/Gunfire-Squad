@@ -43,6 +43,13 @@ export interface Derived {
   critDmg: number;
   maxHp: number;
   armor: number;
+  /**
+   * 魔抗（意志）：法术伤害的减免比例，同时降低恐惧与混乱的概率与时长。
+   *
+   * 与僵尸侧的 `Resistances.magicRes` 同语义、同量纲——同一个属性，两边各有一份。
+   * 上限见 `MAGIC_RES_CAP`，理由与 `ANTI_CRIT_CAP` 完全相同：留一半地板。
+   */
+  magicRes: number;
   /** 能量上限 */
   energy: number;
   /** 技能强度乘区 */
@@ -87,6 +94,7 @@ export const K = {
   energyPerInt: 6,
   intSkill: 0.02, // 每点智力 +2% 技能强度
   intCdr: 0.005, // 每点智力 +0.5% 冷却缩减
+  intMagicRes: 0.003, // 每点（已缩放的）智力 +0.3% 魔抗与意志，上限见 MAGIC_RES_CAP
 
   /** 每级 +8% 基础属性（作用于生命/护甲/能量等生存与资源维度） */
   levelGrowth: 0.08,
@@ -116,6 +124,20 @@ const CDR_CAP = 0.8;
 export const ANTI_CRIT_CAP = 0.5;
 
 /**
+ * 魔抗（意志）的硬上限。
+ *
+ * 与 `ANTI_CRIT_CAP` 同一条理由：法术是三个伤害系别之一，一旦有人能把它减到 0，
+ * 全法术阵容对他就彻底作废了。0.5 = "堆智力砍得掉一半法术，砍不干净"。
+ *
+ * 恐惧与混乱的抵抗共用这个值，所以这条地板同时守住了精神维度的下限——
+ * 宁神（K17）永远是最优解，意志只是没有钥匙时的减损。
+ *
+ * 智力因此有了第三个用途（前两个是能量与技能强度），
+ * 这正是它被选来派生魔抗的原因：一级属性的 150 点预算不用重配。
+ */
+export const MAGIC_RES_CAP = 0.5;
+
+/**
  * @param level 关卡内等级 1-5，每级 +8% 全属性
  */
 export function derive(p: Primary, level = 1): Derived {
@@ -137,6 +159,7 @@ export function derive(p: Primary, level = 1): Derived {
     critDmg: CRIT_DMG_BASE,
     maxHp: K.hpBase + con * K.hpPerCon,
     armor: tgh * K.armorPerTgh,
+    magicRes: Math.min(MAGIC_RES_CAP, intel * K.intMagicRes),
     energy: K.energyBase + intel * K.energyPerInt,
     skillPow: 1 + intel * K.intSkill,
     cdr: Math.min(CDR_CAP, intel * K.intCdr),

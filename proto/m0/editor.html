@@ -1,0 +1,211 @@
+<!-- 关卡编辑器：俯视 2D 网格，画地块 / 摆物件 / 放刷怪点 / 编出怪时间线；存进 localStorage['gs.levels']，「试玩」打开 battle.html?level=名字 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>关卡编辑器</title>
+<style>
+  :root { --bg: #1b1f1d; --card: #232826; --fg: #d9e0dc; --dim: #8a968f; --acc: #9fbf6a; --mod: #e0b04a; --bad: #e0705a; --line: #3b443f; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 13px/1.5 ui-monospace, Consolas, monospace; }
+  body { display: grid; grid-template-columns: minmax(0, 1fr) 380px; }
+  @media (max-width: 900px) { body { grid-template-columns: 1fr; height: auto; } #view { height: 70vh; } }
+  #view { position: relative; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+  #hint { position: absolute; left: 10px; bottom: 8px; color: var(--dim); background: #1b1f1dcc; padding: 2px 8px; border-radius: 3px; pointer-events: none; }
+  aside { border-left: 1px solid var(--line); overflow-y: auto; padding: 10px 12px 40px; display: grid; gap: 12px; align-content: start; }
+  h2 { margin: 0; font-size: 13px; color: var(--acc); }
+  a { color: var(--acc); }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  button, select, input, textarea { background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 3px; font: inherit; padding: 2px 8px; }
+  button { cursor: pointer; } button:hover, button:focus-visible { border-color: var(--acc); outline: none; }
+  button.on { border-color: var(--acc); color: var(--acc); }
+  input[type=number] { width: 60px; } input.wide, textarea { width: 100%; box-sizing: border-box; }
+  .dim { color: var(--dim); } .bad { color: var(--bad); } .ok { color: var(--acc); }
+  #pal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  #pal button { padding: 2px 4px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #pal i { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border-radius: 1px; }
+  .st { display: grid; grid-template-columns: 1fr 52px 52px 52px auto; gap: 4px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+  .st input { width: 100%; box-sizing: border-box; padding: 1px 4px; } .st .full { grid-column: 1 / -1; }
+  section { display: grid; gap: 6px; }
+</style>
+<div id="view"><canvas id="cv"></canvas><div id="hint"></div></div>
+<aside>
+  <div class="row"><a href="home.html">← 测试首页</a><a href="tuning.html">调参台</a><b>关卡编辑器</b></div>
+
+  <section>
+    <h2>关卡</h2>
+    <div class="row"><input id="name" class="wide" title="关卡名（存档键）"></div>
+    <div class="row"><button id="save">保存</button><button id="play">保存并试玩</button><select id="lib" title="本地关卡库"></select><button id="load">打开</button><button id="del">删除</button></div>
+    <div class="row"><label>同屏上限 <input id="cap" type="number" min="10" max="400" step="10"></label><label>威胁倍率 <input id="threatMul" type="number" min=".1" max="5" step=".1"></label></div>
+    <div class="row"><label style="flex:1">小队 <input id="squad" class="wide" title="5 个队员 id，空格分隔"></label></div>
+    <p id="reach" class="dim" style="margin:0"></p>
+  </section>
+
+  <section>
+    <h2>生成</h2>
+    <div class="row"><select id="gScene"></select><label>种子 <input id="gSeed" type="number" value="1"></label><button id="gRand" title="随机种子">🎲</button></div>
+    <div class="row"><label>尺寸 <input id="gSize" type="number" min="24" max="160" step="8" value="64"></label><label>密度 <input id="gDen" type="number" min=".2" max="2" step=".1" value="1"></label><button id="gen">生成（覆盖当前）</button></div>
+    <p class="dim" style="margin:0">同一场景 + 种子永远生成同一张图。生成后会自动拆掉堵死刷怪点的物件。</p>
+  </section>
+
+  <section>
+    <h2>工具</h2>
+    <div class="row" id="tools"></div>
+    <div class="row" id="tileRow"></div>
+    <div id="pal"></div>
+    <p class="dim" style="margin:0" id="toolHelp"></p>
+    <div class="row"><label><input type="checkbox" id="showMask" checked> 碰撞格</label><label><input type="checkbox" id="showFlow"> 寻路距离</label></div>
+  </section>
+
+  <section>
+    <h2>出怪时间线 <span id="flowSum" class="dim"></span></h2>
+    <p class="dim" style="margin:0">每阶段：时长 s / 起止威胁速率（威胁点 / 秒，阶段内线性）。构成写 <code>normal:75 runner:25</code>，开场突袭同格式（进入阶段瞬间额外刷）。</p>
+    <div id="stages"></div>
+    <div class="row"><button id="addSt">+ 阶段</button></div>
+  </section>
+
+  <section>
+    <h2>JSON</h2>
+    <textarea id="io" rows="4" placeholder="导出的关卡 JSON；贴进来点导入"></textarea>
+    <div class="row"><button id="exp">导出</button><button id="imp">导入</button></div>
+  </section>
+</aside>
+<script type="module">
+import { T, PROPS, OB, SCENES, TILES, ZIDS, PICK0, generate, buildMask, flowField, cellOf, unreachable, listLevels, saveLevel, deleteLevel, mixStr, parseMix, avgThreat, flowLen, STAGES } from './gamedata.js';
+const $ = (id) => document.getElementById(id), cv = $('cv'), cx = cv.getContext('2d');
+let lv, tiles, mask, ff, sel = -1, tool = 'prop', brush = 1, tileV = 1, propId = 'car', propRy = 0, hover = null, drag = null;
+
+// ── 关卡 ⇄ 编辑状态 ──
+function setLevel(l) {
+  lv = structuredClone(l); lv.stages ??= structuredClone(STAGES).map((s) => ({ ...s, dur: 300 }));
+  tiles = Uint8Array.from({ length: lv.size * lv.size }, (_, c) => (lv.tiles?.charCodeAt(c) ?? 48) - 48);
+  sel = -1; $('name').value = lv.name; $('cap').value = lv.cap ?? 120; $('threatMul').value = lv.threatMul ?? 1; $('squad').value = (lv.squad ?? PICK0).join(' ');
+  $('gScene').value = lv.scene; $('gSeed').value = lv.seed ?? 1; $('gSize').value = lv.size;
+  palette(); stagesUI(); changed();
+}
+function out() {
+  return { ...lv, name: $('name').value.trim() || '未命名', cap: +$('cap').value || 120, threatMul: +$('threatMul').value || 1,
+    squad: $('squad').value.split(/\s+/).filter((id) => T.HERO[id]).slice(0, 5), tiles: Array.from(tiles).join('') };
+}
+function changed() {
+  lv.tiles = Array.from(tiles).join(''); mask = buildMask(lv); ff = flowField(mask, [lv.start]);
+  const bad = unreachable(lv);
+  $('reach').innerHTML = `${SCENES[lv.scene]?.name} · ${lv.size} m · ${lv.props.length} 物件 · ${lv.spawns.length} 刷怪点 · ` +
+    (bad.length ? `<span class="bad">${bad.length} 个刷怪点走不到出生点</span>` : '<span class="ok">全部刷怪点可达</span>');
+  draw();
+}
+
+// ── 画布：世界 x → 右，z → 下；1 m = S 像素 ──
+let S = 10, ox = 0, oy = 0;
+function fit() { const r = cv.parentElement.getBoundingClientRect(), d = devicePixelRatio || 1; cv.width = r.width * d; cv.height = r.height * d;
+  S = Math.min(cv.width, cv.height) / (lv.size + 2); ox = cv.width / 2; oy = cv.height / 2; draw(); }
+const W2C = (x, z) => [ox + x * S, oy + z * S], C2W = (px, py) => [(px - ox) / S, (py - oy) / S];
+const corners = (id, x, z, ry) => { const [, w, d] = PROPS[id], c = Math.cos(ry), s = Math.sin(ry);   // local → world：x = lx·c + lz·s，z = −lx·s + lz·c
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => W2C(x + a * w / 2 * c + b * d / 2 * s, z - a * w / 2 * s + b * d / 2 * c)); };
+function poly(pts, fill, stroke) { cx.beginPath(); pts.forEach(([a, b], i) => (i ? cx.lineTo(a, b) : cx.moveTo(a, b))); cx.closePath(); if (fill) { cx.fillStyle = fill; cx.fill(); } if (stroke) { cx.strokeStyle = stroke; cx.stroke(); } }
+function draw() {
+  if (!lv) return; const N = lv.size, h = N / 2, sc = SCENES[lv.scene] ?? SCENES.city;
+  cx.fillStyle = '#111412'; cx.fillRect(0, 0, cv.width, cv.height);
+  const [x0, y0] = W2C(-h, -h); cx.fillStyle = sc.ground; cx.fillRect(x0, y0, N * S, N * S);
+  const maxD = Math.max(1, ...ff.dist);
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const c = j * N + i, [px, py] = W2C(i - h, j - h);
+    if (tiles[c] && TILES[tiles[c]][1]) { cx.fillStyle = TILES[tiles[c]][1]; cx.fillRect(px, py, S + .5, S + .5); }
+    if ($('showFlow').checked && ff.dist[c] >= 0) { cx.fillStyle = `hsla(${120 - ff.dist[c] / maxD * 120},70%,50%,.35)`; cx.fillRect(px, py, S, S); }
+    else if (!mask.mv[c] && ff.dist[c] < 0) { cx.fillStyle = '#e0705a55'; cx.fillRect(px, py, S, S); }   // 走不到的空地
+    if ($('showMask').checked && mask.mv[c]) { cx.fillStyle = mask.shot[c] ? '#ff3b3b40' : '#ffb03b38'; cx.fillRect(px, py, S, S); }
+  }
+  cx.strokeStyle = '#ffffff10'; cx.lineWidth = 1; cx.beginPath();
+  for (let k = 0; k <= N; k += 4) { cx.moveTo(x0 + k * S, y0); cx.lineTo(x0 + k * S, y0 + N * S); cx.moveTo(x0, y0 + k * S); cx.lineTo(x0 + N * S, y0 + k * S); } cx.stroke();
+  lv.props.forEach(([id, x, z, ry], i) => { if (!PROPS[id]) return; const ob = OB[PROPS[id][3]];
+    cx.lineWidth = i === sel ? 2.5 : 1; poly(corners(id, x, z, ry), ob.color + (ob.mv ? 'dd' : '88'), i === sel ? '#fff' : '#0008');
+    const [px, py] = W2C(x, z), c = Math.cos(ry), s = Math.sin(ry); cx.strokeStyle = '#fff6'; cx.beginPath(); cx.moveTo(px, py); cx.lineTo(px + s * S * .6, py + c * S * .6); cx.stroke(); });   // 朝向（局部 +z）
+  for (const sp of lv.spawns) { const [px, py] = W2C(sp.x, sp.z), bad = ff.dist[cellOf(mask, sp.x, sp.z)] < 0;
+    cx.beginPath(); cx.arc(px, py, sp.r * S, 0, 6.283); cx.fillStyle = bad ? '#ff000055' : '#aa332255'; cx.fill(); cx.strokeStyle = bad ? '#f00' : '#e0705a'; cx.lineWidth = 2; cx.stroke(); }
+  { const [px, py] = W2C(...lv.start); cx.beginPath(); cx.arc(px, py, 1.6 * S, 0, 6.283); cx.strokeStyle = '#9fbf6a'; cx.lineWidth = 3; cx.stroke(); cx.fillStyle = '#9fbf6a'; cx.font = `${Math.max(10, S)}px monospace`; cx.fillText('出生', px - S, py + S * .4); }
+  if (hover && tool === 'prop' && PROPS[propId]) { cx.lineWidth = 1; poly(corners(propId, hover[0], hover[1], propRy), '#ffffff30', '#fff'); }
+  if (hover && tool === 'tile') { const [px, py] = W2C(Math.floor(hover[0]) - brush + 1, Math.floor(hover[1]) - brush + 1); cx.strokeStyle = '#fff'; cx.strokeRect(px, py, (brush * 2 - 1) * S, (brush * 2 - 1) * S); }
+}
+
+// ── 工具 ──
+const TOOLS = { prop: ['摆物件', '左键放置（按 R / 滚轮转向）；点中已有物件 = 选中，拖动挪位，Delete 删除，R 旋转选中'], tile: ['画地块', '左键涂，右键擦回地面；[ ] 调笔刷'],
+  spawn: ['刷怪点', '左键加一个刷怪点（点中已有的 = 删除），滚轮调半径'], start: ['出生点', '左键把小队出生点放到这里'] };
+for (const k in TOOLS) { const b = document.createElement('button'); b.textContent = TOOLS[k][0]; b.dataset.t = k; b.onclick = () => setTool(k); $('tools').append(b); }
+function setTool(k) { tool = k; for (const b of $('tools').children) b.classList.toggle('on', b.dataset.t === k); $('toolHelp').textContent = TOOLS[k][1]; $('pal').hidden = k !== 'prop'; $('tileRow').hidden = k !== 'tile'; hint(); draw(); }
+TILES.forEach(([n], v) => { const b = document.createElement('button'); b.textContent = n; b.dataset.v = v; b.onclick = () => { tileV = v; for (const e of $('tileRow').querySelectorAll('[data-v]')) e.classList.toggle('on', +e.dataset.v === v); }; $('tileRow').append(b); });
+$('tileRow').insertAdjacentHTML('beforeend', '<label>笔刷 <input id="brush" type="number" min="1" max="8" value="1"></label>'); $('brush').onchange = (e) => (brush = +e.target.value || 1);
+$('tileRow').querySelector('[data-v="1"]').classList.add('on');
+function palette() {   // 当前场景的物件排前面
+  const sc = SCENES[lv.scene], mine = [...new Set([...sc.build, ...sc.cover, ...sc.deco])], rest = Object.keys(PROPS).filter((id) => !mine.includes(id));
+  $('pal').innerHTML = ''; for (const id of [...mine, ...rest]) { const [n, w, d, o] = PROPS[id], b = document.createElement('button');
+    b.innerHTML = `<i style="background:${OB[o].color}"></i>${n}`; b.title = `${id} · ${w}×${d} m · ${OB[o].name}${OB[o].shot ? '（挡子弹）' : ''}`; b.className = id === propId ? 'on' : '';
+    if (!mine.includes(id)) b.style.opacity = .55; b.onclick = () => { propId = id; sel = -1; palette(); draw(); }; $('pal').append(b); }
+}
+const hint = () => ($('hint').textContent = (hover ? `x ${hover[0].toFixed(1)}  z ${hover[1].toFixed(1)}   ` : '') + (sel >= 0 ? `选中 ${PROPS[lv.props[sel][0]][0]}（Delete 删除 / R 旋转）` : TOOLS[tool][0]));
+const pick = (x, z) => { for (let i = lv.props.length - 1; i >= 0; i--) { const [id, px, pz, ry] = lv.props[i], [, w, d] = PROPS[id] ?? [0, 0, 0], c = Math.cos(ry), s = Math.sin(ry), dx = x - px, dz = z - pz;
+  if (Math.abs(dx * c - dz * s) < Math.max(w / 2, .4) && Math.abs(dx * s + dz * c) < Math.max(d / 2, .4)) return i; } return -1; };
+function paint(x, z, v) { const N = lv.size, h = N / 2, i0 = Math.floor(x + h), j0 = Math.floor(z + h);
+  for (let j = j0 - brush + 1; j < j0 + brush; j++) for (let i = i0 - brush + 1; i < i0 + brush; i++) if (i >= 0 && j >= 0 && i < N && j < N) tiles[j * N + i] = v; }
+const r2 = (v) => +v.toFixed(2);
+cv.oncontextmenu = (e) => e.preventDefault();
+cv.onpointerdown = (e) => {
+  const [x, z] = C2W(e.offsetX * devicePixelRatio, e.offsetY * devicePixelRatio); cv.setPointerCapture(e.pointerId);
+  if (tool === 'prop') { const i = pick(x, z); if (i >= 0) { sel = i; drag = [x - lv.props[i][1], z - lv.props[i][2]]; } else { lv.props.push([propId, r2(x), r2(z), r2(propRy)]); sel = lv.props.length - 1; drag = [0, 0]; } changed(); }
+  if (tool === 'tile') { drag = e.button === 2 ? 0 : tileV; paint(x, z, drag); changed(); }
+  if (tool === 'spawn') { const k = lv.spawns.findIndex((s) => Math.hypot(s.x - x, s.z - z) < s.r); if (k >= 0) lv.spawns.splice(k, 1); else lv.spawns.push({ x: r2(x), z: r2(z), r: 2 }); changed(); }
+  if (tool === 'start') { lv.start = [r2(x), r2(z)]; changed(); }
+};
+cv.onpointermove = (e) => {
+  hover = C2W(e.offsetX * devicePixelRatio, e.offsetY * devicePixelRatio); hint();
+  if (drag !== null && tool === 'prop' && sel >= 0) { lv.props[sel][1] = r2(hover[0] - drag[0]); lv.props[sel][2] = r2(hover[1] - drag[1]); draw(); }
+  else if (drag !== null && tool === 'tile') { paint(...hover, drag); draw(); } else draw();
+};
+cv.onpointerup = () => { if (drag !== null) { drag = null; changed(); } };
+cv.onpointerleave = () => { hover = null; draw(); };
+cv.onwheel = (e) => { e.preventDefault(); const d = Math.sign(e.deltaY);
+  if (tool === 'prop') { if (sel >= 0) { lv.props[sel][3] = r2(lv.props[sel][3] + d * Math.PI / 12); changed(); } else { propRy += d * Math.PI / 12; draw(); } }
+  if (tool === 'spawn' && hover) { const s = lv.spawns.find((s) => Math.hypot(s.x - hover[0], s.z - hover[1]) < s.r + 1); if (s) { s.r = Math.max(1, Math.min(8, s.r - d * .5)); changed(); } } };
+addEventListener('keydown', (e) => { if (e.target.matches('input, textarea')) return;
+  if ((e.key === 'Delete' || e.key === 'Backspace') && sel >= 0) { lv.props.splice(sel, 1); sel = -1; changed(); }
+  if (e.key === 'r' || e.key === 'R') { if (sel >= 0) { lv.props[sel][3] = r2(lv.props[sel][3] + Math.PI / 2); changed(); } else { propRy += Math.PI / 2; draw(); } }
+  if (e.key === 'Escape') { sel = -1; draw(); }
+  if (e.key === '[' || e.key === ']') { brush = Math.max(1, Math.min(8, brush + (e.key === ']' ? 1 : -1))); $('brush').value = brush; draw(); } });
+
+// ── 出怪时间线 ──
+function stagesUI() {
+  const box = $('stages'); box.innerHTML = '';
+  lv.stages.forEach((st, i) => { const d = document.createElement('div'); d.className = 'st';
+    d.innerHTML = `<input data-k="name" value="${st.name}" title="阶段名"><input data-k="dur" type="number" min="5" step="10" value="${st.dur}" title="时长 s"><input data-k="r0" type="number" step=".1" value="${st.r0}" title="起始威胁速率"><input data-k="r1" type="number" step=".1" value="${st.r1}" title="结束威胁速率"><button title="删除这个阶段">×</button>
+      <input class="full" data-k="mix" value="${mixStr(st.mix)}" title="构成：类型:权重"><input class="full" data-k="burst" value="${mixStr(st.burst)}" placeholder="开场突袭（可空）" title="进入阶段瞬间额外刷：类型:只数"><span class="full dim" data-info></span>`;
+    d.querySelector('button').onclick = () => { lv.stages.splice(i, 1); stagesUI(); };
+    for (const inp of d.querySelectorAll('input')) inp.onchange = () => { const k = inp.dataset.k; st[k] = k === 'name' ? inp.value : k === 'mix' ? parseMix(inp.value) : k === 'burst' ? (Object.keys(parseMix(inp.value)).length ? parseMix(inp.value) : null) : +inp.value; stagesUI(); };
+    const a = avgThreat(st.mix), bad = Object.keys(st.mix).length ? '' : ' <span class="bad">构成为空，不会刷怪</span>';
+    d.querySelector('[data-info]').innerHTML = `平均威胁 ${a.toFixed(2)} → ${(st.r0 * (+$('threatMul').value || 1) / a).toFixed(2)}–${(st.r1 * (+$('threatMul').value || 1) / a).toFixed(2)} 只/秒，约 ${Math.round((st.r0 + st.r1) / 2 * (+$('threatMul').value || 1) / a * st.dur)} 只${bad}`;
+    box.append(d); });
+  const t = flowLen(lv); $('flowSum').textContent = `共 ${(t / 60) | 0}:${String(t % 60 | 0).padStart(2, '0')}`;
+}
+$('addSt').onclick = () => { lv.stages.push({ name: `阶段 ${lv.stages.length + 1}`, dur: 120, r0: 4, r1: 5, mix: { normal: 60, runner: 20, brute: 20 }, burst: null }); stagesUI(); };
+$('threatMul').onchange = stagesUI;
+
+// ── 存取 ──
+function libUI() { const L = listLevels(); $('lib').innerHTML = ''; for (const n in L) $('lib').add(new Option(n, n, false, n === lv?.name)); if (!$('lib').options.length) $('lib').add(new Option('（本地库为空）', '')); }
+function save() { const o = out(); lv.name = o.name; saveLevel(o); libUI(); flashBtn($('save'), '已保存'); return o; }
+const flashBtn = (b, t) => { const o = b.textContent; b.textContent = t; setTimeout(() => (b.textContent = o), 1200); };
+$('save').onclick = save;
+$('play').onclick = () => { const o = save(); window.open(`battle.html?level=${encodeURIComponent(o.name)}`, 'gs-play'); };
+$('load').onclick = () => { const l = listLevels()[$('lib').value]; if (l) setLevel(l); };
+$('del').onclick = () => { if (!$('lib').value) return; if ($('del').dataset.arm !== $('lib').value) { $('del').dataset.arm = $('lib').value; flashBtn($('del'), '再点确认'); setTimeout(() => delete $('del').dataset.arm, 1200); return; }
+  deleteLevel($('lib').value); delete $('del').dataset.arm; libUI(); };
+$('exp').onclick = () => ($('io').value = JSON.stringify(out()));
+$('imp').onclick = () => { try { const l = JSON.parse($('io').value); if (!l.size || !Array.isArray(l.props)) throw new Error('缺 size / props'); setLevel(l); } catch (e) { $('io').value = '导入失败：' + e.message; } };
+for (const k in SCENES) $('gScene').add(new Option(SCENES[k].name, k));
+$('gRand').onclick = () => ($('gSeed').value = (Math.random() * 1e5) | 0);
+$('gen').onclick = () => { const sc = $('gScene').value, seed = +$('gSeed').value || 1;
+  setLevel(generate({ scene: sc, seed, size: Math.max(24, +$('gSize').value || 64), density: +$('gDen').value || 1, name: `${SCENES[sc].name}·${seed}` })); fit(); };
+for (const id of ['showMask', 'showFlow']) $(id).onchange = draw;
+addEventListener('resize', fit);
+
+// 起步：?level=名字 → 本地库；否则示例关卡文件；再不行就现场生成
+const q = new URLSearchParams(location.search).get('level');
+let first = q && listLevels()[q];
+if (!first) try { first = await (await fetch('levels/city-1.json')).json(); } catch {}
+setLevel(first || generate({ scene: 'city', seed: 1 })); libUI(); setTool('prop'); fit();
+window.__editor = { get lv() { return out(); }, setLevel, save, changed };
+</script>

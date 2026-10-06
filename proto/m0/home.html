@@ -1,0 +1,36 @@
+<!-- M0 测试首页：集合各个原型测试页的入口。从仓库根目录起服务：python -m http.server，打开 /proto/m0/home.html -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M0 测试台</title>
+<style>
+  :root { --bg: #1b1f1d; --card: #232826; --fg: #d9e0dc; --dim: #8a968f; --acc: #9fbf6a; --line: #3b443f; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.6 ui-monospace, Consolas, monospace; }
+  main { max-width: 960px; margin: 0 auto; padding: 40px 16px; display: grid; gap: 24px; }
+  h1 { margin: 0; font-size: 22px; letter-spacing: .04em; }
+  header p { margin: 4px 0 0; color: var(--dim); }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  a.card { display: grid; gap: 6px; padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; color: inherit; text-decoration: none; height: 100%; box-sizing: border-box; }
+  a.card:hover, a.card:focus-visible { border-color: var(--acc); outline: none; }
+  a.card b { color: var(--acc); font-size: 15px; }
+  a.card span { color: var(--dim); font-size: 13px; }
+  code { color: var(--dim); font-size: 12px; }
+  footer { color: var(--dim); font-size: 12px; }
+</style>
+<main>
+  <header>
+    <h1>Gunfire Squad · M0 测试台</h1>
+    <p>体素资产与战斗原型的调试入口。从仓库根目录起服务：<code>python -m http.server</code></p>
+  </header>
+  <ul>
+    <li><a class="card" href="battle.html"><b>实战模拟</b><span>5 人小队守城市路口，多种僵尸四面涌来。自动索敌、24 个技能、击退与爆炸、死亡动画；调试台可换人、调僵尸种类与数量、调步幅。</span><code>battle.html</code></a></li>
+    <li><a class="card" href="battle.html?lab"><b>技能特效台</b><span>单个队员站中间，固定数量僵尸游走；24 个技能逐个点放、无视冷却，可定时重放、僵尸不死、慢放，单独看每个技能的特效与击退。</span><code>battle.html?lab</code></a></li>
+    <li><a class="card" href="battle.html?levelUrl=levels/city-1.json"><b>关卡试玩 · 街区 1</b><span>示例试玩关：64 m 城市街区，4 个路口刷怪，三阶段 15 分钟出怪时间线；僵尸沿流场绕障碍，子弹被墙挡住。</span><code>battle.html?levelUrl=levels/city-1.json</code></a></li>
+    <li><a class="card" href="battle.html?levelUrl=levels/v2-corridor.json"><b>关卡试玩 · V2 卡口走廊</b><span>实战测试关 V2：一条线性道路、两侧建筑墙，僵尸沿走廊单向推进；沿途 4 道关口由宽到窄（10 / 8 / 6 / 4 格），逼出卡口阵型与近战活动圈的硬约束。15 分钟三阶段，单点刷怪。</span><code>battle.html?levelUrl=levels/v2-corridor.json</code></a></li>
+    <li><a class="card" href="editor.html"><b>关卡编辑器</b><span>按场景 + 种子生成地图，再手改地块、物件、刷怪点与出怪阶段；检查可达性，存本地库后一键试玩。</span><code>editor.html</code></a></li>
+    <li><a class="card" href="tuning.html"><b>调参台</b><span>全局规则、僵尸、武器、12 名队员 24 个技能的全部数值；击杀用时 / 出怪压力速算；改了战斗页原地生效，可导出导入。</span><code>tuning.html</code></a></li>
+    <li><a class="card" href="index.html"><b>资产检查台</b><span>12 名队员 × 11 把武器、僵尸、3 个 BOSS、6 张地图的场景物件；逐个看动作与挂点。</span><code>index.html</code></a></li>
+    <li><a class="card" href="zombies.html"><b>僵尸动作</b><span>9 种僵尸的走、攻击、受击、死亡与专属技能；尸潮模式（实例化烘焙）。</span><code>zombies.html</code></a></li>
+    <li><a class="card" href="stress.html"><b>压力测试</b><span>同屏 N 只僵尸自动爬坡，对比独立骨架与共享骨架，分项测 CPU / GPU 帧时间。</span><code>stress.html</code></a></li>
+  </ul>
+  <footer>操作通用：右键拖动旋转，中键拖动平移，滚轮缩放。</footer>
+</main>

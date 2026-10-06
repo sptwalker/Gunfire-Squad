@@ -10,25 +10,46 @@
  *    否则近战群伤武器会直接碾压单体远程武器。
  */
 
-import type { DamageType } from './damage.ts';
+import type { DamageSchool, DamageType } from './damage.ts';
 
 /**
  * 武器类别（第三轮，C7-9）。**职业**定义自己能用哪些类别，类别跨职业共用。
- * 用户给的初始清单 + 第二轮的步枪类（C6 裁决，保留）= 15 类；名称与划分随后四棵树再调。
- * 刀盾 / 重锤 / 魔法 / 药水 暂无具体武器——军械库在 P2 末尾按职业树重建。
+ * 用户给的初始清单 + 第二轮的步枪类（C6 裁决，保留）+ 第三轮 P2 射手树扩展的投索 / 电磁 = 17 类。
+ * 刀盾 / 重锤 / 魔法 / 药水 / 投索 / 电磁 暂无具体武器——军械库在 P2 末尾按职业树重建。
  *
  * **同类武器的持续 DPS 跨度 ≤ 1.3 倍**（用户裁决，`SAME_CLASS_DPS_CAP`，哨兵 §13a 守线）。
  * 同类武器之间换的是手感与附加效果（冻结 / 灼烧 / 击退 / 射程），不是数字。
  */
 export const SAME_CLASS_DPS_CAP = 1.3;
 
+/**
+ * 三个伤害系别钥匙（K08 physical / K09 magic / K10 electric）的供给规则。
+ *
+ * **不手打标签，按武器类别派发。** 理由：系别是武器自己的属性（`dtype`），
+ * 一个职业能不能"换系别打铁甲"完全由它手里的武器决定，跟技能文案无关。
+ * 手打的结果是纯物理的剑士树反而没有 physical——那正是"派发"要消灭的错误。
+ *
+ * 判定是**并集**：`makeClass` 已经把主武器和所有轴分支解锁的武器类别并起来，
+ * 所以一个走到"换上手枪"分线的剑士自动拿到 physical，不需要单独记一笔。
+ * 三个系别都拿不到的职业（药水 / 魔法 / 投索三个纯增益类别）视为两种系别皆通，
+ * 由 `scenes.ts` 的 D06/D07 判据兜底，不在这里补假标签。
+ */
+export const SCHOOL_OF_CLASS: Partial<Record<WeaponClass, DamageSchool>> = {
+  blade: 'physical', shield: 'physical', polearm: 'physical', hammer: 'physical',
+  bow: 'physical', pistol: 'physical', smg: 'physical', rifle: 'physical',
+  sniper: 'physical', heavy: 'physical', thrown: 'physical',
+  magic: 'magic', sprayer: 'magic', potion: 'magic',
+  beam: 'electric', railgun: 'electric',
+};
+
 export type WeaponClass =
   | 'blade' | 'shield' | 'polearm' | 'hammer' | 'bow' | 'pistol' | 'smg' | 'rifle' | 'sniper'
-  | 'heavy' | 'thrown' | 'sprayer' | 'magic' | 'potion' | 'beam';
+  | 'heavy' | 'thrown' | 'sprayer' | 'magic' | 'potion' | 'beam' | 'lasso' | 'railgun';
 
 export const WEAPON_CLASS_NAME: Record<WeaponClass, string> = {
   blade: '刀剑', shield: '刀盾', polearm: '长枪', hammer: '重锤', bow: '弓箭', pistol: '手枪', smg: '冲锋枪',
   rifle: '步枪', sniper: '狙击枪', heavy: '重武器', thrown: '投掷', sprayer: '喷射', magic: '魔法', potion: '药水', beam: '光线',
+  lasso: '投索', railgun: '电磁',
 };
 
 export type WeaponId =
@@ -193,7 +214,7 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     note: '慢速高伤，击退',
   },
   laser: {
-    id: 'laser', name: '激光枪', category: 'ranged', dtype: 'impact',
+    id: 'laser', name: '激光枪', category: 'ranged', dtype: 'electric',
     base: 140, rate: 1.2, range: 40, pierce: 70, hitsPerAttack: 3,
     magazine: 8, reload: 2.4, aoe: 0, critBonus: 0.05,
     knockback: 12,
