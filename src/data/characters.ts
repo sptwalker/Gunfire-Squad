@@ -8,6 +8,8 @@
  *    每人多的 50 点全部进了幸运与体质两条新线，而暴击从敏捷、生命从韧性迁了出来，
  *    所以老四维都要下调。验收闸门是每个角色的 DPS 与有效生命相对旧版偏离 ≤10%，
  *    实测全部落在 ±7.5% 内（`_rebalance.ts` 是当时的草稿纸，跑完即弃）。
+ *    第三轮伤害分系后法术 / 电磁不再吃护甲，冷冻器 / 喷火器 / 激光枪三把的基础伤害随之下调，
+ *    把艾拉 / 萨满 / 西芙拉回闸门（见 `weapons.ts` 三把武器的注释），实测最大偏离 6.4%。
  *    这条闸门不是可选的——破了它，三个 BOSS 的血量锚点与 15 分钟曲线全部要重跑。
  * 2. 每个角色绑定一把主武器。武器不通用 → 玩家选角色时实际上在选武器组合，
  *    这是阵容深度的主要来源（不额外做羁绊系统）。
@@ -42,6 +44,12 @@ export type HeroRole = 'tank' | 'meleeDps' | 'rangedDps' | 'control' | 'support'
 
 export type TargetPriority = 'closest' | 'weakest' | 'strongest';
 
+/** 职业池的默认目标优先级：只由 `role` 决定，不逐职业手填。
+ *  英雄本体的 `ai.targetPriority` 是个体差异（断岳专挑最硬的、杰特扫最近的一群），可以偏离这张表。 */
+export const PRIORITY_OF_ROLE: Record<HeroRole, TargetPriority> = {
+  tank: 'closest', meleeDps: 'weakest', rangedDps: 'strongest', control: 'closest', support: 'weakest', summoner: 'weakest',
+};
+
 export interface AIProfile {
   /** 索敌半径，格 */
   aggroRange: number;
@@ -53,7 +61,35 @@ export interface AIProfile {
   targetPriority: TargetPriority;
   /** 血量低于该比例时后撤，0 表示永不后撤 */
   retreatHpPct: number;
+  /**
+   * 驻守策略：什么时候愿意拿机动性换站定。职业树里所有「站定 / 引导 / 开镜 / 扎根 / 架设」
+   * 类技能的 AI 时机都读这一个参数，不再各写一套。
+   *   - `never`   纯机动，永远不主动站定；这类技能只在队长停下时才放
+   *   - `safe`    最近敌人在「武器射程 × engageDistanceMul」之外才站定，被贴脸立即打断——
+   *               安全才敢停（狙击开镜、法师引导、架炮台）
+   *   - `engaged` 目标进射程就站定不走，被贴脸也不断——本来就是要顶上去站住（盾墙、扎根）
+   * 用一个枚举而不是血量阈值：引导该断是因为敌人在脸上，不是因为血少。
+   * 站定期间锚点 `home` 钉在脚下，拴绳不往回拽；队长移出 tether 时仍强制解除（tether 是硬约束）。
+   */
+  holdPolicy: HoldPolicy;
 }
+
+export type HoldPolicy = 'never' | 'safe' | 'engaged';
+
+/**
+ * 四把**共用选点工具**。它们不是角色参数（谁调都一样），所以不进 `AIProfile`；
+ * 职业树文案里的「指定位置 / 方向 / 队友」一律解释成其中一把，AI 队员与玩家操作的队长读同一个结果。
+ *   - `densestSpot`   射程内敌人最密的点（原型 `bestSpot`）。「指定位置 / 区域」
+ *   - `threatBearing` 敌人来袭的主方向：按「威胁值 ÷ 距离」加权的方位角均值，不是最近那一只——
+ *                     左边一只贴脸、右边三十只压上来时它指向右边。「指定方向 / 风向 / 朝敌阵」，
+ *                     以及无朝向阵型（环形防御）下技能的朝向
+ *   - `neediestAlly`  最需要帮助的队友：缺血比例最高者，同档时被近身敌人更多者优先，倒地者最优先。
+ *                     「冲到 / 指定 / 跟随一名队友」
+ *   - `priorityElite` 射程内威胁值最高的精英（`threat ≥ 3`），BOSS 永远最先；没有精英时返回空（技能不放，不退化成打杂兵）。
+ *                     「指定精英 / 斩首」（斩首行动、相位坍缩、大封印、蜂群围猎、宿命）
+ * 玩家**按住左键拖**指定了阵型朝向时，`threatBearing` 让位给玩家朝向；其余三把没有玩家输入，永远自动。
+ */
+export type AutoAim = 'densestSpot' | 'threatBearing' | 'neediestAlly' | 'priorityElite';
 
 /**
  * 技能的机械效果。
@@ -212,7 +248,7 @@ export const HEROES: Hero[] = [
       knockback: 3, teamDefMul: 0.7,
       note: '向前冲撞，正面敌人被推开并强制嘲讽 4 秒——把已经在贴脸的怪群推回外圈',
     },
-    ai: { aggroRange: 14, leashRange: 22, engageDistanceMul: 1.2, targetPriority: 'closest', retreatHpPct: 0 },
+    ai: { aggroRange: 14, leashRange: 22, engageDistanceMul: 1.2, targetPriority: 'closest', retreatHpPct: 0, holdPolicy: 'engaged' },
     answers: ['taunt', 'mitigate', 'aoeClear', 'deflect'],
     specialization: [
       { id: 'ron-1', name: '负重训练', cost: 1, effect: { kind: 'attr', attr: 'tgh', amount: 6 }, note: '嘲讽期间站得更稳' },
@@ -235,7 +271,7 @@ export const HEROES: Hero[] = [
       piercePct: 1.0, hitsPerCast: 4,
       note: '投出长枪贯穿一整条直线，完全无视护甲并连续命中 4 次',
     },
-    ai: { aggroRange: 16, leashRange: 24, engageDistanceMul: 1.0, targetPriority: 'closest', retreatHpPct: 0 },
+    ai: { aggroRange: 16, leashRange: 24, engageDistanceMul: 1.0, targetPriority: 'closest', retreatHpPct: 0, holdPolicy: 'engaged' },
     answers: ['block', 'aoeClear', 'deflect'],
     specialization: [
       { id: 'gwen-1', name: '枪术精研', cost: 1, effect: { kind: 'attr', attr: 'str', amount: 6 }, note: '贯穿伤害的基础值' },
@@ -260,7 +296,7 @@ export const HEROES: Hero[] = [
       moveMul: 2.0, critAdd: 0.5,
       note: '瞬移到威胁最高的目标背后连斩，期间攻速与暴击大幅提升',
     },
-    ai: { aggroRange: 18, leashRange: 26, engageDistanceMul: 1.1, targetPriority: 'weakest', retreatHpPct: 0.25 },
+    ai: { aggroRange: 18, leashRange: 26, engageDistanceMul: 1.1, targetPriority: 'weakest', retreatHpPct: 0.25, holdPolicy: 'never' },
     answers: ['burst', 'singleTarget', 'mobility'],
     specialization: [
       { id: 'kai-1', name: '轻身', cost: 1, effect: { kind: 'attr', attr: 'agi', amount: 6 }, note: '暴击与闪避的基础' },
@@ -283,7 +319,7 @@ export const HEROES: Hero[] = [
       knockback: 3, armorShredPct: 0.4,
       note: '跃起砸地，范围内敌人被击倒并撕裂护甲——清场与开团两用',
     },
-    ai: { aggroRange: 15, leashRange: 22, engageDistanceMul: 1.2, targetPriority: 'strongest', retreatHpPct: 0.2 },
+    ai: { aggroRange: 15, leashRange: 22, engageDistanceMul: 1.2, targetPriority: 'strongest', retreatHpPct: 0.2, holdPolicy: 'engaged' },
     answers: ['aoeClear', 'control', 'shred'],
     specialization: [
       { id: 'bull-1', name: '蛮力', cost: 1, effect: { kind: 'attr', attr: 'str', amount: 6 }, note: '' },
@@ -308,7 +344,7 @@ export const HEROES: Hero[] = [
       piercePct: 0.8, critAdd: 0.4,
       note: '蓄力一击，无视 80% 护甲。专治高防与霸体目标',
     },
-    ai: { aggroRange: 40, leashRange: 55, engageDistanceMul: 0.8, targetPriority: 'strongest', retreatHpPct: 0.3 },
+    ai: { aggroRange: 40, leashRange: 55, engageDistanceMul: 0.8, targetPriority: 'strongest', retreatHpPct: 0.3, holdPolicy: 'safe' },
     answers: ['shred', 'ranged', 'singleTarget', 'burst', 'antiAir'],
     specialization: [
       { id: 'vera-1', name: '稳定射击', cost: 1, effect: { kind: 'attr', attr: 'agi', amount: 6 }, note: '' },
@@ -331,7 +367,7 @@ export const HEROES: Hero[] = [
       rateMul: 1.6, slowPct: 0.5,
       note: '把弹幕铺满一整片地面，持续压制的区域里敌人寸步难行',
     },
-    ai: { aggroRange: 24, leashRange: 32, engageDistanceMul: 0.85, targetPriority: 'closest', retreatHpPct: 0.3 },
+    ai: { aggroRange: 24, leashRange: 32, engageDistanceMul: 0.85, targetPriority: 'closest', retreatHpPct: 0.3, holdPolicy: 'never' },
     answers: ['aoeClear', 'control', 'burst', 'antiAir'],
     specialization: [
       { id: 'jet-1', name: '压枪', cost: 1, effect: { kind: 'attr', attr: 'agi', amount: 6 }, note: '' },
@@ -356,7 +392,7 @@ export const HEROES: Hero[] = [
       freezeDuration: 4, slowPct: 0.6,
       note: '以自身为中心扩散的冻结波，被控住的敌人解冻后仍被减速',
     },
-    ai: { aggroRange: 20, leashRange: 28, engageDistanceMul: 0.8, targetPriority: 'closest', retreatHpPct: 0.35 },
+    ai: { aggroRange: 20, leashRange: 28, engageDistanceMul: 0.8, targetPriority: 'closest', retreatHpPct: 0.35, holdPolicy: 'safe' },
     answers: ['control', 'aoeClear', 'magic', 'calm'],
     specialization: [
       { id: 'ella-1', name: '寒气精研', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '' },
@@ -379,7 +415,7 @@ export const HEROES: Hero[] = [
       knockback: 2.5, burnPctPerSec: 0.015,
       note: '呼叫炮击覆盖一整片区域，持续击倒并燃烧',
     },
-    ai: { aggroRange: 26, leashRange: 34, engageDistanceMul: 0.9, targetPriority: 'closest', retreatHpPct: 0.3 },
+    ai: { aggroRange: 26, leashRange: 34, engageDistanceMul: 0.9, targetPriority: 'closest', retreatHpPct: 0.3, holdPolicy: 'safe' },
     answers: ['summon', 'aoeClear', 'control'],
     specialization: [
       { id: 'bom-1', name: '装药强化', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '' },
@@ -405,7 +441,7 @@ export const HEROES: Hero[] = [
       healPerSec: 0.09, teamDefMul: 0.8,
       note: '展开持续治疗领域，范围内的队员同时获得减伤',
     },
-    ai: { aggroRange: 22, leashRange: 30, engageDistanceMul: 0.75, targetPriority: 'weakest', retreatHpPct: 0.4 },
+    ai: { aggroRange: 22, leashRange: 30, engageDistanceMul: 0.75, targetPriority: 'weakest', retreatHpPct: 0.4, holdPolicy: 'safe' },
     answers: ['sustain', 'mitigate', 'singleTarget', 'dispel'],
     specialization: [
       { id: 'lian-1', name: '医理', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '治疗量随智力走' },
@@ -429,7 +465,7 @@ export const HEROES: Hero[] = [
       burnPctPerSec: 0.02, slowPct: 0.35,
       note: '图腾涌出熔岩，覆盖的地面持续灼烧并拖慢敌人',
     },
-    ai: { aggroRange: 18, leashRange: 26, engageDistanceMul: 1.0, targetPriority: 'closest', retreatHpPct: 0.3 },
+    ai: { aggroRange: 18, leashRange: 26, engageDistanceMul: 1.0, targetPriority: 'closest', retreatHpPct: 0.3, holdPolicy: 'safe' },
     answers: ['aoeClear', 'magic', 'mitigate', 'dispel'],
     specialization: [
       { id: 'shaman-1', name: '火种', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '' },
@@ -454,7 +490,7 @@ export const HEROES: Hero[] = [
       summons: 1,
       note: '召唤一只大型傀儡，血量与伤害远超普通傀儡，能独立顶住一条线',
     },
-    ai: { aggroRange: 20, leashRange: 28, engageDistanceMul: 0.9, targetPriority: 'closest', retreatHpPct: 0.3 },
+    ai: { aggroRange: 20, leashRange: 28, engageDistanceMul: 0.9, targetPriority: 'closest', retreatHpPct: 0.3, holdPolicy: 'safe' },
     answers: ['summon', 'singleTarget', 'cleanse', 'calm'],
     specialization: [
       { id: 'nox-1', name: '傀儡加固', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '傀儡属性随智力走' },
@@ -477,7 +513,7 @@ export const HEROES: Hero[] = [
       chainTargets: 12, armorShredPct: 0.35,
       note: '蜂群扩散至全场，链式跳跃到 12 个目标并深度腐蚀护甲',
     },
-    ai: { aggroRange: 28, leashRange: 36, engageDistanceMul: 0.85, targetPriority: 'weakest', retreatHpPct: 0.35 },
+    ai: { aggroRange: 28, leashRange: 36, engageDistanceMul: 0.85, targetPriority: 'weakest', retreatHpPct: 0.35, holdPolicy: 'never' },
     answers: ['aoeClear', 'electric', 'detect', 'summon'],
     specialization: [
       { id: 'sif-1', name: '蜂群增殖', cost: 1, effect: { kind: 'attr', attr: 'int', amount: 6 }, note: '' },
@@ -576,7 +612,8 @@ export const SQUAD_COMMANDS: SquadCommand[] = [
       { roles: BACK, radius: 5.5, bearing: Math.PI, spread: Math.PI * 1.2, tether: 3.5 },
       { roles: CORE, radius: 2.0, bearing: 0, spread: Math.PI * 2, tether: 4 },
     ],
-    overrides: { aggroRange: 6, engageDistanceMul: 1.15 },
+    // 不覆盖 aggroRange：英雄自己 14–40 格，写死 6 反而把推进时的索敌缩小了
+    overrides: { engageDistanceMul: 1.15 },
     note: '推进与清图用。站位更松散，近战可以前置得更远、活动范围更大，代价是收不紧',
   },
 ];

@@ -181,9 +181,10 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     class: 'heavy',
     note: '抛物线投掷，范围 4 格',
   },
+  // 第三轮分系：火 / 冰 / 电磁不再吃物理护甲，基础伤害按「对普通僵尸的 DPS 不变」回调（23→19、62→50、140→123），守住重配闸门
   flamer: {
     id: 'flamer', name: '喷火器', category: 'ranged', dtype: 'fire',
-    base: 23, rate: 8.0, range: 8, pierce: 20, hitsPerAttack: 4,
+    base: 19, rate: 8.0, range: 8, pierce: 20, hitsPerAttack: 4,
     magazine: 100, reload: 3.0, aoe: 0, critBonus: 0,
     knockback: 5,
     class: 'sprayer',
@@ -191,7 +192,7 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
   },
   freezer: {
     id: 'freezer', name: '冷冻器', category: 'ranged', dtype: 'frost',
-    base: 62, rate: 2.5, range: 10, pierce: 15, hitsPerAttack: 2,
+    base: 50, rate: 2.5, range: 10, pierce: 15, hitsPerAttack: 2,
     magazine: 20, reload: 2.0, aoe: 0, critBonus: 0,
     knockback: 10,
     class: 'sprayer',
@@ -215,7 +216,7 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
   },
   laser: {
     id: 'laser', name: '激光枪', category: 'ranged', dtype: 'electric',
-    base: 140, rate: 1.2, range: 40, pierce: 70, hitsPerAttack: 3,
+    base: 123, rate: 1.2, range: 40, pierce: 70, hitsPerAttack: 3,
     magazine: 8, reload: 2.4, aoe: 0, critBonus: 0.05,
     knockback: 12,
     class: 'beam',

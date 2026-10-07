@@ -29,7 +29,7 @@ src/sim/       纯 TS 数值模拟器（无渲染，node 直接跑）
 |---|---|
 | [00-决策清单](docs/00-决策清单.html) | 已定项 A1-A18 / 核心机制 B1-B7 / 已裁决 C1-C5 / 已知边界 D / 原型阶段待答问题 E |
 | [01-系统策划案](docs/01-系统策划案.html) | 核心玩法循环、战斗规则、AI 行为、经济、任务、6 个场景与地形 |
-| [02-数值表](docs/02-数值表.html) | 属性公式、13 武器表、9 僵尸表、12 角色表、82 子关卡推导、BOSS 反向校准、模拟器能力边界 |
+| [02-数值表](docs/02-数值表.html) | 属性公式、14 武器、17 僵尸、12 角色、82 子关卡推导、BOSS 反向校准、控制矩阵、军衔、模拟器能力边界，`node src/sim/numbers-doc.ts > docs/02-数值表.html` 生成，不手改 |
 | [03-计算演示](docs/03-计算演示.html) | 伤害 / DPS / TTK / 有效生命的手算全过程 |
 | [04-技术框架](docs/04-技术框架.html) | 项目结构、逻辑与渲染解耦、元层与存档、流场寻路、对账测试、性能预算 |
 | [05-资产清单](docs/05-资产清单.html) | 角色 / 僵尸 / 地形 / 特效清单 + Q 版体素部件规格 + 材质着色契约 |
@@ -59,7 +59,7 @@ BOSS DPS 锚点 / BOSS 血量反向校准 / 生存压力 / 15 分钟全程模拟
 ## 数值的两条入口
 
 - **改数字** → `src/data/*.ts`（`attributes` / `damage` / `weapons` / `zombies` / `characters` / `run` / `scenes` / `progression`）
-- **改图表** → `src/sim/balance-check.ts`，然后 `npm run sim`，再把输出同步进 `02-数值表.html`
+- **改图表** → `src/sim/numbers-doc.ts`，然后 `node src/sim/numbers-doc.ts > docs/02-数值表.html`；**改哨兵** → `src/sim/balance-check.ts`，`npm run sim`
 
 文档里的数字**全部**从模拟器导出，不手填——手填的表会和代码漂移，这一条已经被坑过一次。
 82 个子关卡的刷怪表同理：没有手写的关卡配置，全部由 `scenes.ts` 的 `expandScene()` 推导。

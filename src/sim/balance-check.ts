@@ -1231,6 +1231,9 @@ for (const t of Object.values(CLASS_TREES)) {
     // 于是打错的标签字符串会静默通过上面所有检查，还会漏过 §9 的供给统计。运行时白名单兜底。
     tagMembership(cs),
     ['64 个五星特性各不相同（名字与描述）', new Set(T(7).map((u) => u.slots[3].name)).size === 64 && new Set(T(7).map((u) => u.slots[3].text)).size === 64],
+    // 阵型要靠 role 分层、靠 holdPolicy 判站定时机：缺一个就有职业在场上没有位置
+    ['每个职业都有定位与 AI 参数，且 holdPolicy 合法', cs.every((c) => c.role && c.ai
+      && ['never', 'safe', 'engaged'].includes(c.ai.holdPolicy) && c.ai.aggroRange > 0 && c.ai.leashRange > 0)],
     ['五星 = 英雄角色一对一升级（同路径、同武器）', T(7).every((u) => CLASS_BY_ID[u.id.slice(0, -1)].weaponClasses.join() === u.weaponClasses.join())],
     // C7-25 修订：第 5 转起按流派分叉，同一条分线（前 3 转）内的专精光环 / 英雄号令两两不同。
     // 比的是技能【名字】不是 key：`pick()` 兜底会给四棵树不同的 key 但相同的名字与文案，

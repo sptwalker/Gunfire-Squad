@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>09 角色与成长</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="../index.html">← 策划文档首页</a><ol><li class="d2"><a href="#1.-这一轮到底改了什么-为什么">1. 这一轮到底改了什么，为什么</a></li><li class="d2"><a href="#2.-答案标签-能力的形状-不是强度">2. 答案标签：能力的形状，不是强度</a></li><li class="d2"><a href="#3.-12-名角色">3. 12 名角色</a></li><li class="d3"><a href="#3.1-六属性-每人合计恰好-150">3.1 六属性：每人合计恰好 150</a></li><li class="d3"><a href="#3.2-属性表-哨兵-§1-+-§2-直接输出">3.2 属性表（哨兵 §1 + §2 直接输出）</a></li><li class="d3"><a href="#3.3-技能层-上轮已定-此处只列">3.3 技能层（上轮已定，此处只列）</a></li><li class="d3"><a href="#坦克">坦克</a></li><li class="d3"><a href="#近战输出">近战输出</a></li><li class="d3"><a href="#远程输出">远程输出</a></li><li class="d3"><a href="#控制">控制</a></li><li class="d3"><a href="#辅助">辅助</a></li><li class="d3"><a href="#召唤">召唤</a></li><li class="d2"><a href="#4.-答案矩阵-机械校验结果">4. 答案矩阵（机械校验结果）</a></li><li class="d3"><a href="#4.1-稀有维度是真正的约束">4.1 稀有维度是真正的约束</a></li><li class="d3"><a href="#4.2-控制抗性-约束在判定-不在覆盖">4.2 控制抗性：约束在判定，不在覆盖</a></li><li class="d2"><a href="#5.-专精树-技能点花在这里-b4-b5-修订">5. 专精树：技能点花在这里（B4/B5 修订）</a></li><li class="d3"><a href="#5.1-硬约束-专精只能改公式的输入-不能新增乘区">5.1 硬约束：专精只能改公式的输入，不能新增乘区</a></li><li class="d3"><a href="#5.2-节点效果分五类-其中一类最重要">5.2 节点效果分五类，其中一类最重要</a></li><li class="d3"><a href="#5.3-12-棵专精树">5.3 12 棵专精树</a></li><li class="d3"><a href="#5.4-四个新本事-用户裁决-c6-#3">5.4 四个新本事（用户裁决 C6-#3）</a></li><li class="d3"><a href="#5.5-c2-落地-全游戏唯一的复活">5.5 C2 落地：全游戏唯一的复活</a></li><li class="d2"><a href="#6.-两条局外线-技能点与军衔">6. 两条局外线：技能点与军衔</a></li><li class="d3"><a href="#6.1-技能点-星级-用户裁决-#4">6.1 技能点：星级（用户裁决 #4）</a></li><li class="d3"><a href="#6.2-军衔-12-级-效果只含-skill-ai-tactic">6.2 军衔：12 级，效果只含 <code>skill</code> / <code>ai</code> / <code>tactic</code></a></li><li class="d3"><a href="#6.3-高级技能要两把钥匙">6.3 高级技能要两把钥匙</a></li><li class="d3"><a href="#6.4-三条线的时间成本">6.4 三条线的时间成本</a></li><li class="d2"><a href="#7.-多阵容的可验证性——诚实的结论">7. 多阵容的可验证性——诚实的结论</a></li><li class="d3"><a href="#7.1-哨兵-§10-做了什么">7.1 哨兵 §10 做了什么</a></li><li class="d3"><a href="#7.2-这个数字证明的事情比它听起来弱得多">7.2 这个数字证明的事情比它听起来弱得多</a></li><li class="d3"><a href="#7.3-真正该量的是什么-为什么现在量不了">7.3 真正该量的是什么，为什么现在量不了</a></li><li class="d3"><a href="#7.4-剩下三个能立刻做的方向">7.4 剩下三个能立刻做的方向</a></li><li class="d2"><a href="#8.-未定项">8. 未定项</a></li></ol></nav>
+<main class="doc">
+<h1 id="09-角色与成长"><a class="anchor" href="#09-角色与成长">#</a>09 角色与成长</h1>
+<blockquote>
+<p>12 名角色，从中选 5 人。<strong>身份、定位、绑定武器未改动</strong>；
+ &gt; 一级属性从<strong>四项合计 100</strong> 改成<strong>六项合计 150</strong>（新增幸运与体质，
+ &gt; 暴击率从敏捷迁出、生命上限从韧性迁出），技能层已在上轮变成字段。
+ &gt;
+ &gt; 本文覆盖三件事：<strong>属性（§3）· 答案（§4）· 两条局外线（§6）</strong>。
+ &gt;
+ &gt; 设计顺序接在 <code>08-关卡方案.html</code> 后面：<strong>先有 13 个维度，再有角色</strong>。
+ &gt; 本文每个角色的 <code>answers</code> 都是对着 <code>08</code> §2 那张维度表填的，不是反过来。
+ &gt;
+ &gt; 所有数字出自 <code>src/data/attributes.ts</code> / <code>characters.ts</code> / <code>progression.ts</code>
+ &gt; 与 <code>npm run sim</code> 的 §1/§2/§9/§11/§12，不手填。</p>
+</blockquote>
+<hr>
+<h2 id="1.-这一轮到底改了什么-为什么"><a class="anchor" href="#1.-这一轮到底改了什么-为什么">#</a>1. 这一轮到底改了什么，为什么</h2>
+<p>上一轮最大的空缺：<strong>技能与僵尸的关键机制只写在 <code>note</code> 文案里。</strong>
+&quot;无视 40% 目标护甲&quot;、&quot;冻结 3 秒&quot;、&quot;召唤 2 只傀儡&quot;——这些是散文。
+后果是&quot;这套阵容能不能破解这个挑战&quot;这类问题<strong>无法计算，只能靠嘴说</strong>。</p>
+<p>这一轮的改动只有一件事：<strong>把机制变成字段。</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>上一轮（文案）</th>
+<th>这一轮（字段）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&quot;无视 40% 目标护甲&quot;</td>
+<td><code>piercePct: 0.4</code></td>
+</tr>
+<tr>
+<td>&quot;冻结 3 秒&quot;</td>
+<td><code>freezeDuration: 3</code></td>
+</tr>
+<tr>
+<td>&quot;召唤 2 只傀儡&quot;</td>
+<td><code>summons: 2</code></td>
+</tr>
+<tr>
+<td>&quot;全队对其伤害 +35%&quot;</td>
+<td><code>vulnPct: 0.35</code></td>
+</tr>
+<tr>
+<td>&quot;投掷 3 枚手雷&quot;</td>
+<td><code>hitsPerCast: 3</code></td>
+</tr>
+<tr>
+<td>&quot;链式激光额外跳 5 目标&quot;</td>
+<td><code>chainTargets: 6</code></td>
+</tr>
+<tr>
+<td>&quot;令目标减速&quot;</td>
+<td><code>slowPct: 0.4</code></td>
+</tr>
+</tbody></table>
+</div>
+<p><code>Skill</code> 现在有 15 个机械字段（见 <code>characters.ts</code> 的 <code>Skill</code> 接口）。
+<strong>配平主乘区仍然只有三个</strong>：<code>mul</code> / <code>duration</code> / <code>cooldown</code>——
+<code>skillAvgMul()</code> 只读这三个，<strong>其余字段一律不改变技能的等效 DPS</strong>。</p>
+<p>那它们改的是什么？<strong>改的是这个技能能回答哪个维度。</strong></p>
+<p>举一个例子说明这个区分有多必要：</p>
+<blockquote>
+<p>薇拉的 <code>vulnPct: 0.35</code>（标记目标，全队增伤）和萨满的 <code>atkMul: 0.3</code>（光环全队加攻）
+在配平上是<strong>等价的</strong>——都是约 1.3 倍的队伍伤害乘区。
+但前者需要集火窗口、后者是常驻光环。
+所以一个回答【围猎】（BOSS 与小怪同时压上时要能分火集火），
+一个回答【开阔】（没有掩体、持续接战时要能一直打）。</p>
+</blockquote>
+<p><strong>同等的数值，不同的形状。</strong> 这就是&quot;维度&quot;和&quot;数值&quot;的分界线，
+也是同样两个角色在不同关卡里价值完全不同的原因。</p>
+<hr>
+<h2 id="2.-答案标签-能力的形状-不是强度"><a class="anchor" href="#2.-答案标签-能力的形状-不是强度">#</a>2. 答案标签：能力的形状，不是强度</h2>
+<p><code>AnswerTag</code> 有 15 个标签，定义在 <code>scenes.ts</code>（维度知识），赋值在 <code>characters.ts</code>（角色知识）。
+词表放 <code>scenes.ts</code> 是为了保持&quot;<code>scenes.ts</code> 不引用任何角色数据&quot;这条设计顺序。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>标签</th>
+<th>含义</th>
+<th>回答的维度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>aoeClear</code></td>
+<td>范围清场：一次攻击覆盖多个目标</td>
+<td>潮涌</td>
+</tr>
+<tr>
+<td><code>singleTarget</code></td>
+<td>单体点杀：不制造额外目标</td>
+<td>分裂 · 精英护盾</td>
+</tr>
+<tr>
+<td><code>sustainedDps</code></td>
+<td>持续输出：不需要窗口，一直在打</td>
+<td>开阔 · 围猎 · 潮涌</td>
+</tr>
+<tr>
+<td><code>burst</code></td>
+<td>爆发窗口：短时间把伤害集中砸出去</td>
+<td>围猎 · 精英护盾 · 突进 · 分裂</td>
+</tr>
+<tr>
+<td><code>pierce</code></td>
+<td>直线穿透：无视部分护甲，且吃站位</td>
+<td>重甲 · 卡口</td>
+</tr>
+<tr>
+<td><code>explosive</code></td>
+<td>爆炸灼烧：高额定值伤害，不吃护甲减免</td>
+<td>重甲 · 卡口 · 潮涌</td>
+</tr>
+<tr>
+<td><code>armorShred</code></td>
+<td>破甲腐蚀：把目标护甲降下来给全队用</td>
+<td>重甲 · 精英护盾 · 围猎</td>
+</tr>
+<tr>
+<td><code>control</code></td>
+<td>控制减速：限制移动</td>
+<td>突进 · 自爆 · 分裂</td>
+</tr>
+<tr>
+<td><code>taunt</code></td>
+<td>堵口嘲讽：把敌人固定在一点</td>
+<td>卡口 · 围猎</td>
+</tr>
+<tr>
+<td><code>mitigate</code></td>
+<td>减伤护盾：降低全队承伤</td>
+<td>突进 · 毒区 · 远程压制</td>
+</tr>
+<tr>
+<td><code>sustain</code></td>
+<td>续航治疗</td>
+<td>毒区 · 迟滞</td>
+</tr>
+<tr>
+<td><code>ranged</code></td>
+<td>远程射程：在威胁范围外解决战斗</td>
+<td>远程压制 · 自爆 · 迟滞 · 毒区</td>
+</tr>
+<tr>
+<td><code>mobility</code></td>
+<td>机动突进：走位成本对你更低</td>
+<td>迟滞 · 毒区 · 远程压制 · 开阔 · 自爆</td>
+</tr>
+<tr>
+<td><code>summon</code></td>
+<td>召唤物：用编制外的单位分摊</td>
+<td>突进 · 远程压制 · 围猎 · 卡口 · 开阔</td>
+</tr>
+<tr>
+<td><code>debuff</code></td>
+<td>标记易伤：为全队制造集火窗口</td>
+<td>围猎 · 精英护盾</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>为什么不直接让角色写 <code>answers: DimensionId[]</code>。</strong>
+那样&quot;两套阵容解同一个维度&quot;这件事就不可见了。
+<code>aoeClear</code> 和 <code>explosive</code> 都能回答潮涌，但前者怕分裂、后者怕贴身；
+<code>pierce</code> 和 <code>armorShred</code> 都能回答重甲，但一个吃站位、一个吃集火。
+<strong>用形状做标签，多解性才是数据，而不是文档里的一句声称。</strong></p>
+<p>注意几个标签刻意覆盖了看起来不相关的维度，这是设计意图：</p>
+<ul>
+<li><code>ranged</code> 一个人同时回答<strong>四件事</strong>：够得着远程、点得掉自爆、不用踩毒、不用走位。
+所以一个狙击手在四种完全不同的关卡里都有位置——<strong>这是&quot;通用性&quot;的正确形态</strong>，
+它不是&quot;数值高所以哪都能上&quot;，而是&quot;这一个形状恰好对上四种压力&quot;。</li>
+<li><code>mobility</code> 同理，覆盖五个维度。<strong>迟滞地形的答案不是&quot;走得快&quot;，是&quot;走位对你便宜&quot;</strong>，
+所以躲自爆、离毒区、脱迟滞、在开阔地重新站位，都是同一个能力的四种用法。</li>
+</ul>
+<hr>
+<h2 id="3.-12-名角色"><a class="anchor" href="#3.-12-名角色">#</a>3. 12 名角色</h2>
+<h3 id="3.1-六属性-每人合计恰好-150"><a class="anchor" href="#3.1-六属性-每人合计恰好-150">#</a>3.1 六属性：每人合计恰好 150</h3>
+<p><strong>一级属性：六项，每人合计恰好 150 点</strong>（哨兵 §1 机械校验）。
+旧版是四项合计 100，本轮把预算提到 150，并且<strong>把两个派生换了主人</strong>：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>一级属性</th>
+<th>提供</th>
+<th>从谁手里接过来的</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>力量 STR</td>
+<td>近战伤害乘区、近战击退力</td>
+<td>—</td>
+</tr>
+<tr>
+<td>敏捷 AGI</td>
+<td>攻速、移速、远程击退力</td>
+<td><del>暴击率</del></td>
+</tr>
+<tr>
+<td>韧性 TGH</td>
+<td>护甲、抗暴击、<strong>稳固</strong></td>
+<td><del>生命上限</del></td>
+</tr>
+<tr>
+<td>智力 INT</td>
+<td>能量、技能强度、冷却缩减</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>幸运 LUK</strong></td>
+<td><strong>暴击率</strong>、高级道具掉落权重</td>
+<td>从敏捷处接</td>
+</tr>
+<tr>
+<td><strong>体质 CON</strong></td>
+<td><strong>生命上限</strong></td>
+<td>从韧性处接</td>
+</tr>
+</tbody></table>
+</div>
+<p>两条迁移各自解决一个具体问题：</p>
+<ul>
+<li><strong>敏捷不再影响暴击。</strong> 旧版里敏高＝攻速高＋暴击高，两个乘区叠在一条属性上，
+于是&quot;敏&quot;是唯一值得堆的输出属性。拆开之后，攻速与暴击是<strong>两份要分别花出去的钱</strong>：
+凯（敏 28 幸 32）是暴击流，杰特（敏 38 幸 36）是攻速流，两人不再是同一种人。</li>
+<li><strong>韧性不再加生命，改为提供抗暴击与稳固。</strong> 韧性从&quot;更肉&quot;变成&quot;更难被暴击、更难被推动&quot;——
+它守的是控制对抗轴，不再是血条（见 §3.2）。</li>
+</ul>
+<p><strong>100 → 150 是重新参数化，不是加强。</strong> 每个角色的老四维都下调了，
+差额按定位分给幸运与体质。代价是哨兵 §2 要守住一条硬闸门：
+<strong>每个角色的 <code>heroEffectiveDps</code> 与 <code>heroEhp</code> 相对重配前的偏离 ≤10%</strong>。
+做不到这条，三个 BOSS 的血量与整条 15 分钟曲线都要一起重跑。
+实测最大偏离是艾拉的 +6.9%，闸门守住（哨兵 §2 第二张表，逐角色列出旧值/新值/Δ）。</p>
+<h3 id="3.2-属性表-哨兵-§1-+-§2-直接输出"><a class="anchor" href="#3.2-属性表-哨兵-§1-+-§2-直接输出">#</a>3.2 属性表（哨兵 §1 + §2 直接输出）</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>定位</th>
+<th>力</th>
+<th>敏</th>
+<th>韧</th>
+<th>智</th>
+<th>幸</th>
+<th>体</th>
+<th>合计</th>
+<th>暴击</th>
+<th>抗暴</th>
+<th>稳固</th>
+<th>DPS</th>
+<th>有效生命</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>铁壁·罗恩</td>
+<td>坦克</td>
+<td>28</td>
+<td>8</td>
+<td>42</td>
+<td>14</td>
+<td><strong>4</strong></td>
+<td><strong>54</strong></td>
+<td>150</td>
+<td>0.066</td>
+<td>0.126</td>
+<td>42</td>
+<td>187</td>
+<td>21,565</td>
+</tr>
+<tr>
+<td>磐石·格温</td>
+<td>坦克</td>
+<td>30</td>
+<td>12</td>
+<td>42</td>
+<td>10</td>
+<td>6</td>
+<td>50</td>
+<td>150</td>
+<td>0.074</td>
+<td>0.126</td>
+<td>42</td>
+<td>235</td>
+<td>20,240</td>
+</tr>
+<tr>
+<td>疾风·凯</td>
+<td>近战</td>
+<td>40</td>
+<td>28</td>
+<td>18</td>
+<td>10</td>
+<td>32</td>
+<td>22</td>
+<td>150</td>
+<td>0.228</td>
+<td>0.054</td>
+<td>18</td>
+<td>391</td>
+<td>8,106</td>
+</tr>
+<tr>
+<td>断岳·铁牛</td>
+<td>近战</td>
+<td>50</td>
+<td>16</td>
+<td>26</td>
+<td>10</td>
+<td>20</td>
+<td>28</td>
+<td>150</td>
+<td>0.130</td>
+<td>0.078</td>
+<td>26</td>
+<td>304</td>
+<td>10,701</td>
+</tr>
+<tr>
+<td>鹰眼·薇拉</td>
+<td>远程</td>
+<td>33</td>
+<td>34</td>
+<td>14</td>
+<td>16</td>
+<td>38</td>
+<td><strong>15</strong></td>
+<td>150</td>
+<td>0.352</td>
+<td>0.042</td>
+<td>14</td>
+<td>479</td>
+<td>6,016</td>
+</tr>
+<tr>
+<td>弹幕·杰特</td>
+<td>远程</td>
+<td>30</td>
+<td>38</td>
+<td>16</td>
+<td>14</td>
+<td>36</td>
+<td>16</td>
+<td>150</td>
+<td>0.194</td>
+<td>0.048</td>
+<td>16</td>
+<td>324</td>
+<td>6,442</td>
+</tr>
+<tr>
+<td>霜语·艾拉</td>
+<td>控制</td>
+<td>14</td>
+<td>22</td>
+<td>18</td>
+<td><strong>54</strong></td>
+<td>22</td>
+<td>20</td>
+<td>150</td>
+<td>0.138</td>
+<td>0.054</td>
+<td>18</td>
+<td>93</td>
+<td>7,616</td>
+</tr>
+<tr>
+<td>震地·博姆</td>
+<td>控制</td>
+<td>22</td>
+<td>20</td>
+<td>26</td>
+<td>34</td>
+<td>20</td>
+<td>28</td>
+<td>150</td>
+<td>0.130</td>
+<td>0.078</td>
+<td>26</td>
+<td>211</td>
+<td>10,701</td>
+</tr>
+<tr>
+<td>圣手·莉安</td>
+<td>辅助</td>
+<td>14</td>
+<td>20</td>
+<td>20</td>
+<td>52</td>
+<td>22</td>
+<td>22</td>
+<td>150</td>
+<td>0.138</td>
+<td>0.060</td>
+<td>20</td>
+<td>96</td>
+<td>8,344</td>
+</tr>
+<tr>
+<td>烈焰·萨满</td>
+<td>辅助</td>
+<td>20</td>
+<td>18</td>
+<td>24</td>
+<td>44</td>
+<td>18</td>
+<td>26</td>
+<td>150</td>
+<td>0.122</td>
+<td>0.072</td>
+<td>24</td>
+<td>264</td>
+<td>9,886</td>
+</tr>
+<tr>
+<td>傀儡师·诺克斯</td>
+<td>召唤</td>
+<td>22</td>
+<td>18</td>
+<td>22</td>
+<td>46</td>
+<td>20</td>
+<td>22</td>
+<td>150</td>
+<td>0.180</td>
+<td>0.066</td>
+<td>22</td>
+<td>253</td>
+<td>8,582</td>
+</tr>
+<tr>
+<td>蜂群·西芙</td>
+<td>召唤</td>
+<td>18</td>
+<td>22</td>
+<td>20</td>
+<td>44</td>
+<td>24</td>
+<td>22</td>
+<td>150</td>
+<td>0.196</td>
+<td>0.060</td>
+<td>20</td>
+<td>198</td>
+<td>8,344</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>六列数字的读法</strong>（这是 150 点比 100 点更值的地方）：</p>
+<ul>
+<li><strong>极值变干净了。</strong> 罗恩是&quot;幸 4 / 体 54&quot;，薇拉是&quot;幸 38 / 体 15&quot;——
+一个赌自己不会被打中，一个赌自己不会打偏。改成六项之后，
+同一个定位里的两个角色能靠幸运与体质彻底分开，而在四属性时代
+罗恩和格温的区别只有&quot;力 28 对 30&quot;这种看不出意思的差。</li>
+<li><strong>抗暴与稳固是韧性的两份产出，不是一份。</strong> 两个坦克的抗暴都是 0.126、
+稳固都是 42，薇拉是 0.042 / 14——差 3 倍。这意味着<strong>坦克不是&quot;血多的近战&quot;，
+是唯一能把敌人推开、且不会被暴击的定位</strong>。</li>
+<li><strong>DPS 区间 128 ~ 479（3.74×）</strong>。六属性重配时一度到 5.15×（幸运把暴击拉开了），
+同类武器拉平（≤×1.3）后艾拉 / 莉安的默认武器抬上来，收窄到 3.74×。
+这是刻意的：一个人的伤害该由他的属性分配决定，而不是由武器基础值决定。</li>
+</ul>
+<h3 id="3.3-技能层-上轮已定-此处只列"><a class="anchor" href="#3.3-技能层-上轮已定-此处只列">#</a>3.3 技能层（上轮已定，此处只列）</h3>
+<h3 id="坦克"><a class="anchor" href="#坦克">#</a>坦克</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>铁壁·罗恩</th>
+<th>磐石·格温</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>武器</td>
+<td>巨剑</td>
+<td>长枪</td>
+</tr>
+<tr>
+<td>定位</td>
+<td>坦克</td>
+<td>坦克</td>
+</tr>
+<tr>
+<td>技能</td>
+<td><strong>磐石壁垒</strong> 20s/6s ×1.4</td>
+<td><strong>穿刺阵列</strong> 16s/4s ×2.2</td>
+</tr>
+<tr>
+<td>机械字段</td>
+<td><code>teamDefMul: 0.5</code></td>
+<td><code>piercePct: 0.4</code></td>
+</tr>
+<tr>
+<td>答案</td>
+<td><code>taunt</code> <code>mitigate</code> <code>aoeClear</code></td>
+<td><code>pierce</code> <code>aoeClear</code></td>
+</tr>
+<tr>
+<td>覆盖维度</td>
+<td>7</td>
+<td><strong>4（全游戏最少）</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>罗恩是&quot;让队伍扛住&quot;的形状，格温是&quot;打穿一条线&quot;的形状。
+<strong>格温只覆盖 4 个维度，是有意为之</strong>——她是全游戏最专精的角色，
+在重甲/卡口关卡里是硬解，在别的场景里就是普通的坦克。
+阵容深度需要这种极端角色：如果每个角色都覆盖 7-8 个维度，
+选谁就都差不多了（这正是 §6 那个坏消息的根源）。</p>
+<h3 id="近战输出"><a class="anchor" href="#近战输出">#</a>近战输出</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>疾风·凯</th>
+<th>断岳·铁牛</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>武器</td>
+<td>长剑</td>
+<td>巨剑</td>
+</tr>
+<tr>
+<td>技能</td>
+<td><strong>疾风连斩</strong> 12s/3s ×2.6</td>
+<td><strong>裂地斩</strong> 14s/2s ×3.0</td>
+</tr>
+<tr>
+<td>机械字段</td>
+<td><code>rateMul: 2.0</code> <code>critAdd: 0.3</code> <code>moveMul: 1.4</code></td>
+<td><code>knockback: 2</code> <code>armorShredPct: 0.25</code></td>
+</tr>
+<tr>
+<td>答案</td>
+<td><code>burst</code> <code>singleTarget</code> <code>mobility</code></td>
+<td><code>aoeClear</code> <code>control</code> <code>armorShred</code></td>
+</tr>
+<tr>
+<td>覆盖维度</td>
+<td><strong>10（并列最多）</strong></td>
+<td>8</td>
+</tr>
+</tbody></table>
+</div>
+<p>凯是全游戏覆盖最广的角色，因为他一个人回答了&quot;爆发窗口&quot;和&quot;走位成本&quot;这两件
+分属不同族的事。<strong>这让他成为最万金油的第五人</strong>——也是配平上最需要盯的角色，
+万金油如果数值还高，别人就没位置了。所以他的武器是长剑（低基础伤害）。</p>
+<h3 id="远程输出"><a class="anchor" href="#远程输出">#</a>远程输出</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>鹰眼·薇拉</th>
+<th>弹幕·杰特</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>武器</td>
+<td>狙击枪</td>
+<td>冲锋枪</td>
+</tr>
+<tr>
+<td>技能</td>
+<td><strong>致命标记</strong> 18s/5s ×2.4</td>
+<td><strong>弹幕压制</strong> 15s/5s ×1.9</td>
+</tr>
+<tr>
+<td>机械字段</td>
+<td><code>vulnPct: 0.35</code></td>
+<td><code>reloadZero</code> <code>rateMul: 1.4</code></td>
+</tr>
+<tr>
+<td>答案</td>
+<td><code>debuff</code> <code>ranged</code> <code>singleTarget</code> <code>burst</code></td>
+<td><code>sustainedDps</code> <code>control</code> <code>burst</code></td>
+</tr>
+<tr>
+<td>覆盖维度</td>
+<td>8</td>
+<td>7</td>
+</tr>
+</tbody></table>
+</div>
+<p>薇拉是<strong>唯一自带 <code>ranged</code> 的角色</strong>——她是远程压制的正解。
+杰特的 <code>reloadZero</code> 让他在&quot;潮涌&quot;里能一直打，是 <code>sustainedDps</code> 的代表。</p>
+<h3 id="控制"><a class="anchor" href="#控制">#</a>控制</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>霜语·艾拉</th>
+<th>震地·博姆</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>武器</td>
+<td>冷冻枪</td>
+<td>榴弹</td>
+</tr>
+<tr>
+<td>技能</td>
+<td><strong>绝对零度</strong> 22s/3s ×1.5</td>
+<td><strong>连环爆破</strong> 18s/4s ×2.8</td>
+</tr>
+<tr>
+<td>机械字段</td>
+<td><code>freezeDuration: 3</code> <code>vulnPct: 0.5</code> <code>teamDefMul: 0</code></td>
+<td><code>knockback: 1.5</code> <code>slowPct: 0.4</code> <code>hitsPerCast: 3</code></td>
+</tr>
+<tr>
+<td>答案</td>
+<td><code>control</code> <code>aoeClear</code> <code>debuff</code></td>
+<td><code>explosive</code> <code>aoeClear</code> <code>control</code></td>
+</tr>
+<tr>
+<td>覆盖维度</td>
+<td>6</td>
+<td>8</td>
+</tr>
+</tbody></table>
+</div>
+<p>艾拉的 <code>teamDefMul: 0</code> 是全场<strong>完全免伤</strong> 3 秒，配合 <code>vulnPct: 0.5</code>
+——这 3 秒是明确告诉玩家的&quot;现在集火&quot;。她的形状是<strong>时间窗口</strong>。
+博姆是<strong>空间窗口</strong>：击退 + 减速把敌人推开，制造距离。
+两个人都在&quot;控制&quot;，但一个控制时间、一个控制空间。</p>
+<h3 id="辅助"><a class="anchor" href="#辅助">#</a>辅助</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>圣手·莉安</th>
+<th>烈焰·萨满</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>武器</td>
+<td>手枪</td>
+<td>火焰喷射器</td>
+</tr>
+<tr>
+<td>技能</td>
+<td><strong>生命涌流</strong> 20s/4s ×1.0</td>
+<td><strong>战意图腾</strong> 24s/8s ×1.7</td>
+</tr>
+<tr>
+<td>机械字段</td>
+<td><code>healPerSec: 0.06</code></td>
+<td><code>atkMul: 0.3</code> <code>rateMul: 1.2</code> <code>burnPctPerSec: 0.01</code></td>
+</tr>
+<tr>
+<td>答案</td>
+<td><code>sustain</code> <code>mitigate</code> <code>singleTarget</code></td>
+<td><code>explosive</code> <code>sustainedDps</code> <code>debuff</code></td>
+</tr>
+<tr>
+<td>覆盖维度</td>
+<td>6</td>
+<td>7</td>
+</tr>
+</tbody></table>
+</div>
+<p>莉安是<strong>全游戏唯一有 <code>sustain</code> 的角色</strong>（另一个来源是罗恩的专精顶层），
+而 <code>sustain</code> 是迟滞与毒区两个维度的答案之一。<strong>她是消耗战的钥匙。</strong>
+萨满的 <code>burnPctPerSec</code> 是<strong>按目标最大生命百分比</strong>的灼烧——
+百分比伤害对高血量单位收益更高，所以他在重甲关卡里有超线性价值。</p>
+<h3 id="召唤"><a class="anchor" href="#召唤">#</a>召唤</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>傀儡师·诺克斯</th>
+<th>蜂群·西芙</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>武器</td>
+<td>回旋镖</td>
+<td>激光</td>
+</tr>
+<tr>
+<td>技能</td>
+<td><strong>骸骨傀儡</strong> 26s/10s ×1.8</td>
+<td><strong>纳米蜂群</strong> 16s/6s ×2.1</td>
+</tr>
+<tr>
+<td>机械字段</td>
+<td><code>summons: 2</code></td>
+<td><code>chainTargets: 6</code> <code>armorShredPct: 0.2</code></td>
+</tr>
+<tr>
+<td>答案</td>
+<td><code>summon</code> <code>singleTarget</code> <code>aoeClear</code></td>
+<td><code>aoeClear</code> <code>armorShred</code> <code>sustainedDps</code> <code>summon</code></td>
+</tr>
+<tr>
+<td>覆盖维度</td>
+<td>8</td>
+<td><strong>10（并列最多）</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>诺克斯的 <code>summons: 2</code> 是<strong>编制外的单位</strong>——这是唯一能同时回答
+&quot;堵一个方向&quot;（卡口）和&quot;顶住突进&quot;的能力。西芙是唯一同时有
+<code>aoeClear</code> + <code>armorShred</code> + <code>sustainedDps</code> 的角色，清场与破甲一身，
+<strong>代价是她的武器基础伤害最低</strong>。</p>
+<hr>
+<h2 id="4.-答案矩阵-机械校验结果"><a class="anchor" href="#4.-答案矩阵-机械校验结果">#</a>4. 答案矩阵（机械校验结果）</h2>
+<p>哨兵 §9 每个维度检查两件事：<strong>至少 3 个答案形状、至少 2 个不同定位</strong>。
+两条都过，这个维度才算&quot;没有死胡同&quot;。</p>
+<pre><code>维度        族          答案  定位   能回答的角色
+潮涌        tempo      3    6     罗恩 格温 凯 铁牛 杰特 艾拉 博姆 萨满 诺克斯 西芙
+突进        tempo      4    6     罗恩 凯 铁牛 薇拉 杰特 艾拉 博姆 莉安 诺克斯 西芙
+围猎        tempo      6    6     罗恩 格温 凯 铁牛 薇拉 杰特 艾拉 博姆 萨满 诺克斯 西芙
+重甲        resist     3    5     格温 铁牛 博姆 萨满 西芙
+分裂        resist     3    5     凯 铁牛 薇拉 杰特 艾拉 博姆 莉安 萨满 诺克斯 西芙
+精英护盾      resist     4    5     凯 铁牛 薇拉 杰特 艾拉 博姆 莉安 萨满 诺克斯 西芙
+控制抗性      resist     6    6     罗恩 格温 凯 铁牛 薇拉 杰特 艾拉 博姆 莉安 萨满 诺克斯 西芙
+卡口        space      4    5     罗恩 格温 铁牛 博姆 萨满 诺克斯 西芙
+开阔        space      3    4     凯 杰特 萨满 诺克斯 西芙
+迟滞        space      3    4     罗恩 凯 薇拉 莉安
+毒区        attrition  4    4     罗恩 凯 薇拉 莉安
+自爆        attrition  3    4     凯 铁牛 薇拉 杰特 艾拉 博姆 西芙
+远程压制      attrition  4    5     罗恩 凯 薇拉 莉安 诺克斯 西芙
+</code></pre>
+<p><strong>13 个维度全部达标</strong>，且没有一个答案标签是无人使用的死标签。</p>
+<p>「控制抗性」是<strong>答案最宽的一个维度</strong>（6 个形状 / 6 种定位 / 全员 12 人可答）。
+这不矛盾，反而是本轮要证明的那件事：<strong>它的约束不在&quot;答不答得出来&quot;，
+在&quot;答得好不好&quot;</strong>——见 §4.2。</p>
+<blockquote>
+<p>这张表是<strong>含专精满点</strong>的（哨兵 §9 走 <code>effectiveAnswers()</code>）。
+只看基础 <code>answers</code> 会得到更小的数——两条路径曾经分叉过，
+现在哨兵里只有 <code>dimCoverage()</code> 一个定义，见该函数的注释。</p>
+</blockquote>
+<h3 id="4.1-稀有维度是真正的约束"><a class="anchor" href="#4.1-稀有维度是真正的约束">#</a>4.1 稀有维度是真正的约束</h3>
+<p>上表里 <code>定位</code> 那一列才是有信息量的：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>定位数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>迟滞</strong></td>
+<td><strong>4</strong></td>
+<td>只有机动力与治疗能答——<strong>全游戏最窄的维度</strong></td>
+</tr>
+<tr>
+<td><strong>重甲</strong></td>
+<td>5</td>
+<td>只有穿透/爆炸/削甲类，与&quot;堆攻击力&quot;完全隔离</td>
+</tr>
+<tr>
+<td><strong>开阔</strong></td>
+<td>4</td>
+<td>需要持续输出或编制外单位</td>
+</tr>
+<tr>
+<td><strong>毒区</strong></td>
+<td>4</td>
+<td>治疗、射程与机动</td>
+</tr>
+<tr>
+<td>其余 9 个</td>
+<td>5-6</td>
+<td>覆盖宽松</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>迟滞是最窄的维度</strong>，而且它的 4 名回答者（罗恩、凯、薇拉、莉安）与毒区<strong>完全重合</strong>：</p>
+<pre><code>迟滞 = 毒区 = { 罗恩, 凯, 薇拉, 莉安 }
+</code></pre>
+<p>这意味着<strong>任何要打沼泽疫地或雪原冻土的阵容，都必须在这 4 人里选人</strong>——
+而这两个场景的维度构成不同（一个是迟滞+毒区+远程压制，一个是迟滞+围猎+精英护盾），
+却指望同一批角色。<strong>这是&quot;阵容选择有后果&quot;目前唯一真正站得住的实例，
+同时也是它的上限：整个 13 维体系在【覆盖】这一层只收敛出这一条约束</strong>（见 §7.2）。</p>
+<h3 id="4.2-控制抗性-约束在判定-不在覆盖"><a class="anchor" href="#4.2-控制抗性-约束在判定-不在覆盖">#</a>4.2 控制抗性：约束在判定，不在覆盖</h3>
+<p>新维度的尺子不是&quot;谁能答&quot;，是<strong>同一种控制手段对不同僵尸的命中率差多少</strong>。
+三张判定表由 <code>npm run sim</code> §11 输出，详见 <code>08-关卡方案.html</code> §7.4。这里只留结论：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>目标</th>
+<th>位移命中率（铁牛·大刀，全队最强击退 96.8）</th>
+<th>冻结 4 秒实际</th>
+<th>嘲讽命中</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通僵尸</td>
+<td>0.75</td>
+<td>4.00s</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>毒液僵尸</td>
+<td>0.66</td>
+<td><strong>1.60s</strong></td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>跳跃僵尸</td>
+<td>0.75</td>
+<td>3.60s</td>
+<td><strong>0.40</strong></td>
+</tr>
+<tr>
+<td>护盾僵尸</td>
+<td><strong>霸体</strong></td>
+<td>2.60s</td>
+<td>0.70</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>全员可答，但没有人能一个人答完。</strong> 队伍里只有冻结就过不了毒液，
+只有嘲讽就过不了跳跃，只有击退就过不了霸体——
+所以这一维度真正的门槛是<strong>阵容里必须凑齐开不同门的手段</strong>。</p>
+<p><code>control</code>（减速）是唯一不受抗性影响的一格，<strong>它永远关不上</strong>。
+这是刻意留的地板：任何一层控制都能被完全免疫的话，控制流整体作废。</p>
+<hr>
+<h2 id="5.-专精树-技能点花在这里-b4-b5-修订"><a class="anchor" href="#5.-专精树-技能点花在这里-b4-b5-修订">#</a>5. 专精树：技能点花在这里（B4/B5 修订）</h2>
+<h3 id="5.1-硬约束-专精只能改公式的输入-不能新增乘区"><a class="anchor" href="#5.1-硬约束-专精只能改公式的输入-不能新增乘区">#</a>5.1 硬约束：专精只能改公式的输入，不能新增乘区</h3>
+<p><code>SpecEffect</code> 是一个刻意设计过的联合类型，里面<strong>没有</strong>&quot;新增伤害乘区&quot;这个变体：</p>
+<pre><code class="language-ts">export type SpecEffect =
+  | { kind: &#39;attr&#39;; attr: keyof Primary; amount: number }
+  | { kind: &#39;weaponTier&#39;; amount: number }
+  | { kind: &#39;skill&#39;; field: &#39;cooldown&#39; | &#39;duration&#39; | &#39;mul&#39; | &#39;healPerSec&#39; | &#39;teamDefMul&#39;; amount: number; mode: &#39;add&#39; | &#39;mul&#39; }
+  | { kind: &#39;ai&#39;; field: &#39;aggroRange&#39; | &#39;leashRange&#39; | &#39;engageDistanceMul&#39; | &#39;retreatHpPct&#39;; amount: number }
+  | { kind: &#39;answer&#39;; add: AnswerTag }
+  | { kind: &#39;revive&#39;; charges: number };
+</code></pre>
+<p>原因是一条已经付过代价的约束：<code>core.computeDamage</code> 与 <code>sim.computeDamage</code> 之间
+有一个 <strong>324 用例、1e-6 容差的对账测试</strong>，前提是两者签名一致。
+一旦专精能插乘区，<code>core</code> 就要多接一个参数，对账测试立刻失效。</p>
+<p><strong>这条约束由编译器执行，不是靠注释提醒。</strong></p>
+<h3 id="5.2-节点效果分五类-其中一类最重要"><a class="anchor" href="#5.2-节点效果分五类-其中一类最重要">#</a>5.2 节点效果分五类，其中一类最重要</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>作用</th>
+<th>是否改变&quot;这个角色能进哪些阵容&quot;</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>attr</code></td>
+<td>增减一级属性</td>
+<td>✗</td>
+</tr>
+<tr>
+<td><code>weaponTier</code></td>
+<td>解锁更高武器阶</td>
+<td>✗</td>
+</tr>
+<tr>
+<td><code>skill</code></td>
+<td>改技能参数</td>
+<td>✗</td>
+</tr>
+<tr>
+<td><code>ai</code></td>
+<td>改索敌/走位参数</td>
+<td>✗</td>
+</tr>
+<tr>
+<td><strong><code>answer</code></strong></td>
+<td><strong>新增维度答案</strong></td>
+<td><strong>✓ 唯一一类</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>只有 <code>answer</code> 类节点改变阵容可行性。</strong> 这正是用户要的&quot;build 小队不同维度战斗能力&quot;——
+其余四类都是数值强化，只有这一类是<strong>能力拼图</strong>。</p>
+<p>所以设计规则是：<strong>每个角色的专精顶层节点，原则上应该是 <code>answer</code> 类。</strong>
+下面是实际数据，以及它暴露的问题。</p>
+<h3 id="5.3-12-棵专精树"><a class="anchor" href="#5.3-12-棵专精树">#</a>5.3 12 棵专精树</h3>
+<p>每个角色 3 个节点，成本 1/2/3，按顺序解锁。顶层（cost 3）是决定性的那个。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>顶层节点</th>
+<th>效果</th>
+<th>新增答案</th>
+<th>覆盖维度（裸 → 点满）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>铁壁·罗恩</td>
+<td>不屈壁垒</td>
+<td><code>answer: sustain</code></td>
+<td>✓</td>
+<td>7 → 8</td>
+</tr>
+<tr>
+<td>磐石·格温</td>
+<td>铁壁枪阵</td>
+<td><code>answer: taunt</code></td>
+<td>✓</td>
+<td>3 → 5</td>
+</tr>
+<tr>
+<td>疾风·凯</td>
+<td>疾风不息</td>
+<td><code>answer: sustainedDps</code></td>
+<td>✓</td>
+<td>10 → 11</td>
+</tr>
+<tr>
+<td>断岳·铁牛</td>
+<td>山崩</td>
+<td><code>answer: explosive</code></td>
+<td>✓</td>
+<td>8 → 9</td>
+</tr>
+<tr>
+<td>鹰眼·薇拉</td>
+<td><strong>贯日狙击</strong></td>
+<td><code>answer: pierce</code></td>
+<td>✓</td>
+<td>9 → 11</td>
+</tr>
+<tr>
+<td>弹幕·杰特</td>
+<td><strong>天降火雨</strong></td>
+<td><code>answer: explosive</code></td>
+<td>✓</td>
+<td>8 → 10</td>
+</tr>
+<tr>
+<td>霜语·艾拉</td>
+<td><strong>永冻领域</strong></td>
+<td><code>answer: mitigate</code></td>
+<td>✓</td>
+<td>7 → 9</td>
+</tr>
+<tr>
+<td>震地·博姆</td>
+<td>破片装药</td>
+<td><code>answer: armorShred</code></td>
+<td>✓</td>
+<td>7 → 9</td>
+</tr>
+<tr>
+<td>圣手·莉安</td>
+<td>战地复活</td>
+<td><code>revive: 1</code></td>
+<td>✗（见 §5.5）</td>
+<td>7 → 7</td>
+</tr>
+<tr>
+<td>烈焰·萨满</td>
+<td>熔甲</td>
+<td><code>answer: singleTarget</code></td>
+<td>✓</td>
+<td>6 → 8</td>
+</tr>
+<tr>
+<td>傀儡师·诺克斯</td>
+<td><strong>亡者军团</strong></td>
+<td><code>answer: mitigate</code></td>
+<td>✓</td>
+<td>9 → 10</td>
+</tr>
+<tr>
+<td>蜂群·西芙</td>
+<td>蜂群缠附</td>
+<td><code>answer: control</code></td>
+<td>✓</td>
+<td>9 → 11</td>
+</tr>
+</tbody></table>
+</div>
+<p>&quot;覆盖维度&quot;按 <code>effectiveAnswers</code> × <code>ANSWER_DIMS</code> 现算（上一版这一列是手抄的旧值，本轮一并更正）。</p>
+<p><strong>11 / 12 个顶层节点是 <code>answer</code> 类</strong>，剩下 1 个是复活（莉安）。没有纯数值顶层了。</p>
+<h3 id="5.4-四个新本事-用户裁决-c6-#3"><a class="anchor" href="#5.4-四个新本事-用户裁决-c6-#3">#</a>5.4 四个新本事（用户裁决 C6-#3）</h3>
+<p>上一版这里记的是&quot;4 个顶层节点只加数值&quot;（薇拉 <code>mul ×1.5</code>、杰特 <code>mul ×1.6</code>、艾拉 <code>cooldown −6</code>、诺克斯 <code>duration +10</code>）。
+用户给了方案：<strong>全部改成新本事</strong>。每个都挑一个该角色<strong>原本没有</strong>的答案标签——给已有的标签等于没给。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>新本事</th>
+<th>形状</th>
+<th>标签</th>
+<th>新增维度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>薇拉</td>
+<td>贯日狙击</td>
+<td>直线超远程（60 格）穿透一切目标 + 击退</td>
+<td><code>pierce</code></td>
+<td>重甲 · 卡口</td>
+</tr>
+<tr>
+<td>杰特</td>
+<td>天降火雨</td>
+<td>半径 6 格、持续 8 秒的区域轰炸，灼烧不吃护甲</td>
+<td><code>explosive</code></td>
+<td>重甲 · 卡口</td>
+</tr>
+<tr>
+<td>艾拉</td>
+<td>永冻领域</td>
+<td>半径 10 格，普通僵尸冻成冰雕、<strong>永久</strong>退出战斗</td>
+<td><code>mitigate</code></td>
+<td>突进 · 远程压制</td>
+</tr>
+<tr>
+<td>诺克斯</td>
+<td>亡者军团</td>
+<td>唤起周围尸体为傀儡，≤12 具、30 秒、50% 血量</td>
+<td><code>mitigate</code></td>
+<td>突进 · 远程压制</td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>四条边界，都是为了不让&quot;新本事&quot;变回&quot;新数字&quot;：</strong></p>
+<ol>
+<li><strong>薇拉的击退走对撞判定</strong>（<code>knockChance</code>，击退力 vs 稳固）。霸体只免位移，所以打高防胖时穿透伤害照吃、人推不动——
+这让它是<strong>重甲的答案</strong>，不是控制抗性的答案。</li>
+<li><strong>艾拉的&quot;永久&quot;只对普通僵尸</strong>。冻结按 <code>freezeRes</code> 判定（毒液 0.6 大概率冻不住），
+精英与 BOSS 只冻 3 秒——否则一个技能就能跳过全部 BOSS 锚点。冰雕一击即碎，照常结算击杀与掉落。</li>
+<li><strong>诺克斯的军团需要尸体</strong>：开局与清场后没有料，精英与 BOSS 的尸体唤不起。它越打越强，但不能开局就用。</li>
+<li><strong>标签选的是&quot;它实际在做什么&quot;，不是名字像什么</strong>：艾拉的永冻本质是&quot;冻住的敌人不再造成伤害&quot;，
+诺克斯的军团本质是&quot;一堵替小队吃伤害的肉墙&quot;——都是减伤（<code>mitigate</code>）。诺克斯原先考虑给 <code>taunt</code>，
+但实测 0 个新维度（召唤已覆盖卡口 / 围猎），故改。</li>
+</ol>
+<p><strong>skillAvgMul 的变化</strong>：旧的数值节点让四人的技能平均倍率 ×1.02-1.29，答案节点不改倍率，
+所以四人点满后的<strong>持续 DPS 回到裸技能水平</strong>——新本事换走的是数字，换来的是形状。BOSS 锚点不受影响。</p>
+<h3 id="5.5-c2-落地-全游戏唯一的复活"><a class="anchor" href="#5.5-c2-落地-全游戏唯一的复活">#</a>5.5 C2 落地：全游戏唯一的复活</h3>
+<p>决策 C2 明确&quot;不做统一的队员复活机制&quot;。所以<strong>没有任何通用复活</strong>：
+队员阵亡就是阵亡，本局不再回来。</p>
+<p>唯一例外是<strong>莉安的顶层节点「战地复活」</strong>（<code>{ kind: &#39;revive&#39;, charges: 1 }</code>）：
+每局一次，把最近阵亡的队员以 50% 生命拉回战场。</p>
+<p><strong>为什么放在辅助位的专精顶层而不是做成通用机制</strong>：
+通用复活会让&quot;阵亡&quot;这个状态失去意义——所有人都能回来，等于没有阵亡。
+做成一个角色的一条专精，它就变成了<strong>阵容决策</strong>：你要不要为了这一条，
+占掉一个位置、并且把 3 点专精全押在莉安身上？</p>
+<hr>
+<h2 id="6.-两条局外线-技能点与军衔"><a class="anchor" href="#6.-两条局外线-技能点与军衔">#</a>6. 两条局外线：技能点与军衔</h2>
+<p>局外成长在本轮拆成<strong>三条产出条件互不重叠的线</strong>：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>线</th>
+<th>货币</th>
+<th>从哪来</th>
+<th>给什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>深度线</strong></td>
+<td>技能点</td>
+<td><strong>新星级</strong>（每颗新星 1 点，每关每档三星封顶）</td>
+<td>专精节点 · 高级技能</td>
+</tr>
+<tr>
+<td><strong>资历线</strong></td>
+<td>荣誉值 → 军衔</td>
+<td><strong>局内随机任务</strong></td>
+<td>更聪明的 AI · 低级技能增强 · <strong>战术动作</strong> · 高级技能资格</td>
+</tr>
+<tr>
+<td><strong>选项线</strong></td>
+<td>金钱</td>
+<td>局内击杀累积，结算带出</td>
+<td>武器 / 道具<strong>本身</strong>（买断、全队共享）</td>
+</tr>
+</tbody></table>
+</div>
+<p>三者的产出条件不同，所以<strong>不存在&quot;刷一个最优关卡同时喂满三条线&quot;</strong>。
+数据在 <code>src/data/progression.ts</code>，实测在哨兵 §12。</p>
+<p><strong>并且局内没有任何购买动作。</strong> 等级按秒表涨（<code>run.ts</code> 的 <code>LEVEL_TIME</code>：
+90s→2 级，240s→3 级，450s→4 级，660s→5 级满级），武器阶随等级涨。
+玩家在关卡里唯一要做的事是打——钱和荣誉都是<strong>带出去才生效</strong>的。</p>
+<h3 id="6.1-技能点-星级-用户裁决-#4"><a class="anchor" href="#6.1-技能点-星级-用户裁决-#4">#</a>6.1 技能点：星级（用户裁决 #4）</h3>
+<p>每个关卡的<strong>每档难度</strong>各自最多 3 颗星。<strong>第一次拿到某颗星给 1 点</strong>，
+三星之后这一关不再产出技能点。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>星</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>★</td>
+<td>通关</td>
+</tr>
+<tr>
+<td>★★</td>
+<td>通关，且<strong>最终全员存活</strong>（莉安战地复活拉回来的算活着）</td>
+</tr>
+<tr>
+<td>★★★</td>
+<td>★★，且<strong>完成本局全部局内任务</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>三颗星各是一道<strong>看得见的门槛</strong>，不是分数线——玩家读得懂&quot;差哪一颗、要怎么补&quot;。
+二星逼的是&quot;阵容能不能扛住&quot;，三星逼的是&quot;扛住的同时还能分心做任务&quot;，两条都指向换阵容。
+上一版的&quot;效率分&quot;（清怪速度 × 生存）随之废弃：分数线要解释，门槛不用。</p>
+<pre><code>供给上限：82 关 × 3 星 × 3 档 = 738 点
+全部需求：12 棵专精树 + 12 个高级技能 = 120 点     供给/需求 = 6.15
+</code></pre>
+<p><strong>技能点线上从此没有&quot;刷&quot;</strong>：重打一关唯一的收益是补上没拿到的星，
+而补星只能靠打得更好。供给是需求的 6 倍，所以不需要三星全收集也能点满——
+多出来的空间是给&quot;换阵容去补星&quot;留的，不是给&quot;刷&quot;留的。</p>
+<p>同一批点既升技能等级，也点专精树（<code>Profile.specPoints</code> 本轮改名 <code>skillPoints</code>，
+两套点合并成一套）。这样玩家不用在&quot;点技能&quot;和&quot;点专精&quot;之间做预算分配——
+<strong>它们本来就是同一件事的两面。</strong></p>
+<h3 id="6.2-军衔-12-级-效果只含-skill-ai-tactic"><a class="anchor" href="#6.2-军衔-12-级-效果只含-skill-ai-tactic">#</a>6.2 军衔：12 级，效果只含 <code>skill</code> / <code>ai</code> / <code>tactic</code></h3>
+<p>荣誉值来自<strong>局内随机任务</strong>（护送 / 守护 / 拾取三种，见 <code>01-系统策划案</code> §11），
+结算时<strong>平均分给所有参战队员</strong>：3 个任务 × 12 + 通关奖励 20 = <strong>56/局</strong>，
+÷ 5 人 = <strong>每人 +11.2/局</strong>。</p>
+<p>不分 MVP、不全给队长，是这一条的题眼：<strong>换阵容不会让某个角色落后。</strong>
+12 个角色一起长，玩家每换一套阵容都是拿一支成型的队伍去打，
+而不是在重新养一个白板。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>级</th>
+<th>军衔</th>
+<th>累计荣誉</th>
+<th>本级效果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>列兵</td>
+<td>0</td>
+<td>—（起点）</td>
+</tr>
+<tr>
+<td>2</td>
+<td>上等兵</td>
+<td>60</td>
+<td><code>ai.retreatHpPct +0.05</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>下士</td>
+<td>150</td>
+<td><code>cooldown ×0.92</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>中士</td>
+<td>260</td>
+<td><code>ai.aggroRange +2</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>上士</strong></td>
+<td><strong>400</strong></td>
+<td><code>duration ×1.15</code> <strong>← 同时是高级技能的门槛</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>准尉</td>
+<td>580</td>
+<td><code>mul ×1.12</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>少尉</td>
+<td>820</td>
+<td><code>ai.engageDistanceMul −0.1</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>中尉</td>
+<td>1,150</td>
+<td><code>cooldown ×0.88</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td>上尉</td>
+<td>1,600</td>
+<td><code>mul ×1.15</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td>少校</td>
+<td>2,200</td>
+<td><code>ai.aggroRange +3</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>中校</td>
+<td>3,000</td>
+<td><code>duration ×1.20</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td>上校</td>
+<td>4,000</td>
+<td><code>mul ×1.18</code> <code>cooldown ×0.90</code></td>
+</tr>
+</tbody></table>
+</div>
+<p><strong>军衔不直接加任何战斗属性，这一条由编译器执行：</strong></p>
+<pre><code class="language-ts">type RankEffect = Exclude&lt;SpecEffect, { kind: &#39;attr&#39; }&gt;
+</code></pre>
+<p>与&quot;别给 <code>SpecEffect</code> 加 <code>damageMul</code>&quot;是同一手法。12 条效果全部是 <code>skill</code> / <code>ai</code>，
+哨兵 §12d 是运行时的第二道保险。军衔明确<strong>不能</strong>给：
+<code>attr</code> / <code>answer</code> / <code>revive</code> / <code>weaponTier</code>。</p>
+<p>原因还是那句：<strong>它给的是新答案，不是新数字。</strong>
+更聪明的索敌（打威胁更大的、更及时地躲范围伤害）改变的是队伍的<strong>行为</strong>，
+不是同一套打法打得更疼。</p>
+<h3 id="6.3-高级技能要两把钥匙"><a class="anchor" href="#6.3-高级技能要两把钥匙">#</a>6.3 高级技能要两把钥匙</h3>
+<p>需求里有两句话：&quot;技能点解锁高级技能&quot;（P5）与&quot;军衔解锁高级技能&quot;（P6）。
+<strong>唯一能让两句同时为真的读法是两把钥匙都要：</strong></p>
+<pre><code>军衔到 5 级（上士）→ 拿到资格
+技能点花 4 点       → 买到手
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>军衔</th>
+<th>已购买</th>
+<th>高级技能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>—</td>
+<td>未解锁</td>
+</tr>
+<tr>
+<td>1</td>
+<td>✓</td>
+<td>未解锁</td>
+</tr>
+<tr>
+<td>4</td>
+<td>✓</td>
+<td>未解锁</td>
+</tr>
+<tr>
+<td>5</td>
+<td>—</td>
+<td>未解锁</td>
+</tr>
+<tr>
+<td>5</td>
+<td>✓</td>
+<td><strong>解锁</strong></td>
+</tr>
+</tbody></table>
+</div>
+<p>只有一把钥匙时，另一句需求就会落空。
+这也让军衔线有了一个<strong>具体的、能看见的目标</strong>：不是&quot;攒到 400 点&quot;，是
+&quot;攒到 400 点之后，我可以给我最缺的那个位置买一个新答案&quot;。</p>
+<h3 id="6.4-三条线的时间成本"><a class="anchor" href="#6.4-三条线的时间成本">#</a>6.4 三条线的时间成本</h3>
+<pre><code>满军衔（上校 4,000）      358 局 ≈ 90 小时
+  └ 到上士（高级技能门槛）  36 局 ≈  9 小时
+12 个高级技能（4 点 × 12） 24 局 ≈  6 小时
+解锁全部商品（142,800）    14 局 ≈  4 小时
+</code></pre>
+<p><strong>三条线的长度是刻意错开的</strong>：军衔 90h &gt; 高级技能 6h &gt; 商店 4h。
+最短的是商店，所以玩家最先到手的是<strong>选项与技能</strong>，长期投入的是军衔。
+顺序反过来的话，玩家会在没有选项的情况下被迫先做长期投入。</p>
+<blockquote>
+<p><strong>这中间有一条要盯的边界</strong>：军衔是唯一可能把&quot;打不过就回去刷&quot;这条路重新打开的系统。
+它的 12 条效果全部落在 <code>skill</code> / <code>ai</code> 上，这是守住的<strong>唯一</strong>手段——
+一旦为了让后段更有吸引力而给它加一条 <code>attr</code>，整个设计前提就塌了。</p>
+</blockquote>
+<hr>
+<h2 id="7.-多阵容的可验证性——诚实的结论"><a class="anchor" href="#7.-多阵容的可验证性——诚实的结论">#</a>7. 多阵容的可验证性——诚实的结论</h2>
+<p>这是用户明确要求的一条：<strong>&quot;每种挑战，玩家不止有单一的阵容方案，而是可以有
+非常多种不同的组合阵容方案。&quot;</strong> 这一条不能只靠声称，所以哨兵做了机械枚举。</p>
+<h3 id="7.1-哨兵-§10-做了什么"><a class="anchor" href="#7.1-哨兵-§10-做了什么">#</a>7.1 哨兵 §10 做了什么</h3>
+<p>枚举全部 C(12,5) = 792 套阵容，对每一关数&quot;有多少套阵容能覆盖该关的全部活跃维度&quot;。</p>
+<pre><code>阵容总数                                792
+能覆盖全部 13 个维度的阵容              693 套（占 87.5%）
+全 82 关里门槛最高的一关                736 套可行（占 92.9%）
+</code></pre>
+<h3 id="7.2-这个数字证明的事情比它听起来弱得多"><a class="anchor" href="#7.2-这个数字证明的事情比它听起来弱得多">#</a>7.2 这个数字证明的事情比它听起来弱得多</h3>
+<p><strong>覆盖门槛几乎不筛人。</strong> 最紧的一关也放行 92.9% 的阵容。
+原因是结构性的：5 名队员、每人平均能回答 <strong>8.4 个</strong>维度，并集自然铺满全集。</p>
+<p><strong>所以&quot;能不能进&quot;这件事基本是免费的。二分覆盖数不能证明&quot;阵容选择有后果&quot;。</strong></p>
+<p>而且 82 关里<strong>有 38 关并列同一个门槛</strong>（736 套）。按维度构成归并只有 7 组——
+门槛完全由「最稀有的那个维度」单方面决定：</p>
+<pre><code>含 sluggish  → 736 套，不管另外两个维度是什么
+含 poison    → 736 套，同理
+其余         → 760-771 套
+</code></pre>
+<p><strong>换句话说：13 个维度里，只有 2 个（迟滞、毒区）在覆盖层面真正约束阵容——
+而且约束的是同一批人（§4.1）。</strong> 所以两条约束实际只有一条。
+其余 10 个维度&quot;答不答得出来&quot;几乎不构成门槛。这是本轮设计的下限，
+必须说清楚，而不是拿 792 这个数字当背书。</p>
+<h3 id="7.3-真正该量的是什么-为什么现在量不了"><a class="anchor" href="#7.3-真正该量的是什么-为什么现在量不了">#</a>7.3 真正该量的是什么，为什么现在量不了</h3>
+<p><strong>决定阵容区分度的不是&quot;能不能答&quot;，是&quot;答得好不好&quot;——
+同一维度下不同答案的效率差。</strong></p>
+<p>具体地说：用穿透枪阵解潮涌，和用范围清场解潮涌，清怪速率差多少？
+如果差 5%，那两个答案其实是一个；如果差 40%，阵容选择才有后果。</p>
+<p>要量这个，必须把<strong>维度折进刷怪与承伤模型</strong>——让&quot;开阔&quot;真的改变刷怪方位分布、
+让&quot;迟滞&quot;真的改变走位时间、让&quot;潮涌&quot;真的改变同时接战数。
+这需要 M2 参数化 <code>run-sim.ts</code>（当前有 10 处硬编码的 3 阶段假设）。</p>
+<p><strong>当前模拟器结构上做不到，所以本轮不声称阵容已经有多样性。</strong>
+只声称一件事：<strong>维度没有死胡同</strong>——每个维度都有 ≥3 种答案形状、
+≥2 个不同定位可回答，不存在&quot;没有任何角色能应付的维度&quot;。这是可玩性下限。</p>
+<h3 id="7.4-剩下三个能立刻做的方向"><a class="anchor" href="#7.4-剩下三个能立刻做的方向">#</a>7.4 剩下三个能立刻做的方向</h3>
+<p>不在本轮范围，但记在这里避免遗忘：</p>
+<ol>
+<li><strong>加稀有维度</strong>：目前只有 2 个维度真正筛选阵容。把更多维度的答案面收窄
+（比如让&quot;开阔&quot;也只有 3 个定位能答），阵容选择才会真正有后果。</li>
+<li><strong>把&quot;答案数量&quot;换成&quot;答案效率&quot;</strong>：给每个 <code>AnswerTag</code> 对每个维度的
+效率系数，哨兵直接算加权值而不是布尔覆盖。这不需要动模拟器，
+只需要一张 15×12 系数表——<strong>这是当前架构下最便宜的下一步。</strong></li>
+<li><strong>M2 原型</strong>：让维度真正影响刷怪与走位，用实测数据回填第 2 步的系数表。</li>
+</ol>
+<hr>
+<h2 id="8.-未定项"><a class="anchor" href="#8.-未定项">#</a>8. 未定项</h2>
+<ol>
+<li><del>4 个纯数值顶层节点</del> <strong>已答（C6-#3）</strong>：全部改成新本事（贯日狙击 / 天降火雨 / 永冻领域 / 亡者军团），见 §5.4。</li>
+<li><del>专精点的获取曲线</del> <strong>已答（#4）</strong>：星级制，见 §6.1。</li>
+<li><del>局内换武器的规则</del> <strong>已答（#2）</strong>：局内拾取的是<strong>临时武器</strong>，主副皆可、弹药有限，
+打完切回原武器，不带出关卡。数据在 <code>weapons.ts</code> 的 <code>TEMP_WEAPON_DROPS</code>，实测见哨兵 §13b。</li>
+<li><del>&quot;效率&quot;的定义</del> <strong>已被星级新规则取代</strong>：星级改为 通关 / 全员存活 / 完成全部任务，见 §6.1。</li>
+<li><del>金钱买种类还是消耗品</del> <strong>已答（#1）</strong>：买的是<strong>非消耗品本身</strong>（武器 / 装备 / 法术 / 道具），
+<strong>一件可以同时装给多位会用这一类武器的角色</strong>（<code>Hero.weaponClasses</code>）。</li>
+<li><del>军衔后段的吸引力</del> <strong>已答（#9）</strong>：后 6 级改为解锁<strong>战术动作</strong>
+（构筑工事 / 布设地雷 / 埋设陷阱 / 架设堡垒 / 呼叫炮火），触发时 HUD 给文字提示（#10）。
+战术动作不给维度答案，<code>attr</code> 的边界没有动。</li>
+<li><del>同类武器之间的 DPS 跨度</del> <strong>已答：方案 B（同类 ≤×1.3）+ 新增步枪类。</strong>
+原问题（留档）：
+武器已按类别限制（刀剑 / 长柄 / 弓箭 / 短枪 / 狙击 / 爆炸 / 喷射 / 投掷 / 能量），
+角色只能换自己会用的类别。跨度从 ×3.80 收窄到 ×2.40，但没有消失（哨兵 §13a）：
+艾拉冷冻器 → 喷火器 ×2.40、莉安手枪 → 弓箭 ×2.39、博姆手雷 → 火箭筒 ×2.03。
+BOSS 血量按默认武器配平，所以这几组仍会让金钱买到数字。可选修法：<ul>
+<li><strong>A. 同类内按默认武器归一化</strong>：换武器只换伤害类型 / 射程 / AOE 形状，总输出按默认武器折算。</li>
+<li><strong>B. 同类武器直接配平</strong>：把同类内的 DPS 差压到 ≤1.3（改武器数值，而不是改规则）。</li>
+<li><strong>C. 接受并重锚</strong>：BOSS 血量按&quot;每人同类最优&quot;重配。
+落地（<code>weapons.ts</code>，闸门常量 <code>SAME_CLASS_DPS_CAP = 1.3</code>，哨兵 §13a 超标打 ✗）：</li>
+<li>手枪 65 → 88、冷冻器 45 → 62、喷火器 32 → 23、火箭筒 1100 → 680；冲锋枪不动。</li>
+<li><strong>新增突击步枪</strong>（步枪类，穿刺 58 × 3.0/s，射程 30、穿透 40，售价 7,200）：
+冲锋枪与狙击枪之间的中远距全自动。<strong>薇拉、杰特</strong>可用（杰特换步枪 ×1.08）。</li>
+<li><strong>莉安不再会用弓箭</strong>：弓箭与短枪不同类，拉平同类管不到跨类，她换弓箭仍是 ×2.00，会击穿 BOSS 锚点。</li>
+<li>实测同类跨度：刀剑 ×1.11、短枪 ×1.28、爆炸 ×1.26、喷射 ×1.25；最大换武器增益罗恩 → 长枪 ×1.27。</li>
+<li>代价：短枪与喷射的默认武器被改了，艾拉 / 莉安 / 萨满的 DPS 基线重取（93 / 96 / 264 → 128 / 130 / 190），
+BOSS 校准（±15%）仍全部达标。</li>
+</ul>
+</li>
+</ol>
+</main>
+</div>
+</body>
+</html>

@@ -89,10 +89,10 @@ for (const tree of Object.values(CLASS_TREES)) {
     p();
     p(`- **B 特色职业分线** ${sk(a.skill)}`);
     a.variants.forEach((v) => p(`- **B+ 职业流派 · ${v.title}**（${v.note}；${attr(v)}${v.weapons ? '；+' + wpn(v) : ''}）${sk(v.skill)}`));
-    // C7-25：光环 / 号令按 [流派][取向] 共 4 条；未迁移的树仍是 2 条（只按取向）。
-    const by = (n: number, k: number, ax: number) => (n === 4 ? a.variants[k >> 1].title + ' · ' : '') + t.axes[ax].sides[k & 1].name;
-    a.aura.forEach((s, k) => p(`- **C 职业专精 · ${by(a.aura.length, k, 2)}光环** ${sk(s)}`));
-    a.order.forEach((s, k) => p(`- **D 英雄角色 · ${by(a.order.length, k, 3)}号令** ${sk(s)}`));
+    // C7-25：光环 / 号令按 [流派][取向] 共 4 条。
+    const by = (k: number, ax: number) => a.variants[k >> 1].title + ' · ' + t.axes[ax].sides[k & 1].name;
+    a.aura.forEach((s, k) => p(`- **C 职业专精 · ${by(k, 2)}光环** ${sk(s)}`));
+    a.order.forEach((s, k) => p(`- **D 英雄角色 · ${by(k, 3)}号令** ${sk(s)}`));
     p();
     p('| 英雄角色 | 五星 | 路径 | 武器 | 力/敏/韧/智/幸/体 | B · C · D | 五星特性（号令强化） | 答案标签 |');
     p('|---|---|---|---|---|---|---|---|');

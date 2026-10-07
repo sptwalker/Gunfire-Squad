@@ -12,6 +12,7 @@
 import { ZOMBIES as SRC_Z } from '../../src/data/zombies.ts';
 import { WEAPONS as SRC_W } from '../../src/data/weapons.ts';
 import { STAGES as SRC_STAGES } from '../../src/data/run.ts';
+import { HEROES_BY_ID, SQUAD_COMMANDS } from '../../src/data/characters.ts';
 
 // 下标即身份：ZIDS[i] 对应 assets/vox_z_*.glb 载入顺序、battle.html 的 ZGV[i]。
 // src 的 key 顺序与原型不同，也随时可能被重排，所以顺序只由这里这两行说了算。第二步补新僵尸／武器时改这里。
@@ -94,22 +95,24 @@ export const T = {
   // 武器（伤害/攻速/射程/击退/表现类型/横扫数/穿透/爆炸半径/链跳）见文件顶部，数值映自 src/data
   W,
   // 队员：名 / 武器 / 生命 / [低级, 高级] 技能。技能里除 name / cd / desc 外都是该技能函数读的参数（距离 m、时长 s）
+  // stand: 1 = 站定类技能，AI 何时放由 AIProfile.holdPolicy 决定
   HERO: {
-    ron: { name: '罗恩', weapon: 'greatsword', hp: 1800, sk: [
-      { name: '磐石壁垒', cd: 20, desc: '全队减伤并嘲讽周围僵尸', dr: .5, dur: 6, tauntR: 8 },
-      { name: '铁壁冲锋', cd: 18, desc: '朝目标冲锋，撞飞沿途僵尸并嘲讽', dmg: 250, knock: 160, dashT: .45, dashSpd: 12, taunt: 4 }] },
+    // ── 测试职业（V2 走廊）：ron / ironbull / vera / lian / shaman 复用模型，技能换成职业树 L4 样板，验证朝向 / 范围 / 站定 ──
+    ron: { name: '巨剑御者', weapon: 'greatsword', hp: 1800, sk: [
+      { name: '巨剑化', cd: 14, desc: '飞剑合成一把巨剑，沿敌阵最密的方向直线贯穿（densestSpot 定方向）', dmg: 420, knock: 140, range: 14, w: 1.6 },
+      { name: '剑城', cd: 24, desc: '朝敌人来袭的主方向（threatBearing）插下一排巨剑高墙，只留正面开口：墙挡路，敌人只能挤开口', dur: 10, n: 6, gap: 1.2, dist: 3.5, hole: 2 }] },
     gwen: { name: '格温', weapon: 'spear', hp: 1300, sk: [
       { name: '穿刺阵列', cd: 16, desc: '前方一排地刺依次刺出', dmg: 180, knock: 60, n: 8, gap: .8 },
       { name: '万枪归一', cd: 20, desc: '掷出一杆贯穿全线的长枪', dmg: 600, knock: 90, range: 20 }] },
     kai: { name: '凯', weapon: 'sword', hp: 1200, sk: [
       { name: '疾风连斩', cd: 12, desc: '自身攻速与移速提升', rate: 1, move: .4, dur: 3 },
       { name: '残影斩', cd: 15, desc: '闪到目标身后连斩 n 次', dmg: 160, knock: 30, hits: 3, r: 1.8 }] },
-    ironbull: { name: '铁牛', weapon: 'greatsword', hp: 1800, sk: [
+    ironbull: { name: '堡垒兵', weapon: 'greatsword', hp: 1800, sk: [
       { name: '裂地斩', cd: 14, desc: '原地重砸，范围伤害并易伤', dmg: 350, knock: 160, r: 2.5, vuln: 2 },
-      { name: '崩山', cd: 22, desc: '跳向怪最密处砸地', dmg: 500, knock: 200, r: 3, range: 7 }] },
-    vera: { name: '薇拉', weapon: 'sniper', hp: 1000, sk: [
-      { name: '致命标记', cd: 18, desc: '标记血最厚的 n 只，被标记者受伤增加', n: 5, dur: 5, range: 25 },
-      { name: '穿甲狙击', cd: 24, desc: '蓄力后一发无视护甲、穿透全线', dmg: 2000, knock: 80 }] },
+      { name: '扎根', cd: 20, desc: '原地扎根成为堡垒：不能移动、减伤、嘲讽周围敌人（engaged：贴脸也不断）', dur: 6, dr: .6, tauntR: 6, stand: 1 }] },
+    vera: { name: '守望射手', weapon: 'sniper', hp: 1000, sk: [
+      { name: '据守', cd: 16, desc: '原地站定：射程提高、受到的伤害降低；一移动或被贴脸就解除（safe）', dur: 8, rangeMul: .5, dr: .3, stand: 1 },
+      { name: '穿甲狙击', cd: 20, desc: '先亮一条直线预警，蓄力后一发无视护甲、穿透全线（朝敌最密的直线）', dmg: 2000, knock: 80, range: 40, aim: .8 }] },
     jet: { name: '杰特', weapon: 'smg', hp: 1000, sk: [
       { name: '弹幕压制', cd: 15, desc: '自身攻速提升，子弹附带减速', rate: .4, slow: .3, dur: 5 },
       { name: '弹雨覆盖', cd: 20, desc: '在怪最密处落下持续弹雨', dps: 160, r: 2.5, dur: 6, slow: .3 }] },
@@ -119,11 +122,11 @@ export const T = {
     bom: { name: '博姆', weapon: 'grenade', hp: 1000, sk: [
       { name: '连环爆破', cd: 18, desc: '向怪群连扔 n 颗重雷', dmg: 400, knock: 110, r: 2, n: 3, slow: .4 },
       { name: '定点轰炸', cd: 24, desc: '指定区域落下 n 发炮弹', dmg: 450, knock: 120, n: 10, r: 3, blast: 1.6 }] },
-    lian: { name: '莉安', weapon: 'pistol', hp: 1100, sk: [
-      { name: '生命涌流', cd: 20, desc: '全队回复最大生命的一定比例', heal: .3 },
+    lian: { name: '军医', weapon: 'pistol', hp: 1100, sk: [
+      { name: '战地急救', cd: 12, desc: '冲到最需要帮助的队友身边（neediestAlly：倒地 > 缺血比例 > 被围）打一针：回血并套盾，倒地的直接扶起', heal: .45, shield: 300, dashSpd: 14, range: 16 },
       { name: '圣愈领域', cd: 28, desc: '队伍脚下展开治疗领域，并减伤', hps: 80, r: 3.5, dur: 8, dr: .3 }] },
-    shaman: { name: '萨满', weapon: 'flamer', hp: 1100, sk: [
-      { name: '战意图腾', cd: 24, desc: '插下图腾：全队增伤，周围僵尸灼烧', atk: .3, dur: 8, r: 3 },
+    shaman: { name: '星象家', weapon: 'flamer', hp: 1100, sk: [
+      { name: '星图', cd: 18, desc: '朝敌人来袭的主方向（threatBearing）横跨来路落下一排星，连成星座线；敌人越线时整条线亮起、伤害并减速；站在星点上的队友回血', n: 5, gap: 1.6, dist: 5, dur: 12, dmg: 160, slow: .4, hps: 40 },
       { name: '熔岩图腾', cd: 26, desc: '在怪最密处造熔岩，持续灼烧减速', dps: 180, r: 2.5, dur: 10, slow: .3 }] },
     nox: { name: '诺克斯', weapon: 'boomerang', hp: 1000, sk: [
       { name: '骸骨傀儡', cd: 26, desc: '召唤 n 只小傀儡替队伍挡怪', n: 2, hp: 1500, dmg: 90, life: 10, scale: .6 },
@@ -135,6 +138,17 @@ export const T = {
 };
 export const CELL = .5;   // 1 格 = 0.5 m（src 全程按格算，没有这个常量，是原型的显示单位）
 export const PICK0 = ['ron', 'vera', 'ella', 'bom', 'sif'];
+// AIProfile 直接读 src/data/characters.ts（原型读 holdPolicy / engageDistanceMul / targetPriority /
+// aggroRange / retreatHpPct，见 battle.html 的 AI 段）
+export const AI = Object.fromEntries(Object.keys(T.HERO).map((id) => [id, HEROES_BY_ID[id].ai]));
+// 职业定位与血量也从 src 读：role 决定站哪一层（= 该层的拴绳），maxHp 是 1 级派生血量（attributes.ts derive）。
+// 血量与 prototype 自己的伤害刻度（19 血僵尸 / 短 TTK）不是一套，先不接，只把 role 接上。
+export const ROLE = Object.fromEntries(Object.keys(T.HERO).map((id) => [id, HEROES_BY_ID[id].role]));
+// 阵型参数的同源导出：ORDERS 的站位半径与拴绳就是 SQUAD_COMMANDS 的 rings，不允许原型自己写一份。
+// 剑士/辅助/机械三棵树各取一名英雄的 ring 顺序（MELEE / BACK / CORE），戒指按树角色的职业层排。
+export const RINGS = Object.fromEntries(SQUAD_COMMANDS.map((c) => [c.id, c.rings]));
+export const TETHER = Object.fromEntries(SQUAD_COMMANDS.map((c) => [c.id, c.rings[0].tether]));
+export const CMD_OVER = Object.fromEntries(SQUAD_COMMANDS.map((c) => [c.id, c.overrides]));
 export const ZIDS = ORDER_Z, HIDS = Object.keys(T.HERO), WIDS = ORDER_W;
 export const MIX0 = { normal: 50, runner: 20, brute: 5, toxic: 10, bomber: 10, splitter: 10, leaper: 10, ward: 5, spitter: 10, spawnling: 0 };
 
@@ -355,7 +369,7 @@ export function carve(lv) {
 // ── 参数表单：把 T 上某个对象的数值字段渲染成输入框；改动写进覆盖层（与默认相同就删掉）──
 export const LABEL = { cd: '冷却 s', desc: '设计说明', dmg: '伤害', knock: '击退力', r: '半径 m', dur: '持续 s', n: '数量', dr: '减伤', tauntR: '嘲讽半径 m', taunt: '嘲讽 s',
   dashT: '冲锋时长 s', dashSpd: '冲锋速度', gap: '间距 m', range: '射程/范围', rate: '攻速', move: '移速加成', hits: '段数', vuln: '易伤 s', slow: '减速', dps: '每秒伤害', frz: '冻结 s',
-  blast: '单发半径 m', heal: '回复比例', hps: '每秒回复', atk: '攻击 / 增伤', life: '存在 s', scale: '体型', chain: '链跳', hp: '生命', spd: '移速 格/s', armor: '护甲', ai: '攻击间隔 s',
+  blast: '单发半径 m', heal: '回复比例', w: '宽度 m', dist: '离身距离 m', hole: '开口宽 m', stand: '站定类(1)', rangeMul: '射程加成', aim: '预警 s', hps: '每秒回复', atk: '攻击 / 增伤', life: '存在 s', scale: '体型', chain: '链跳', hp: '生命', spd: '移速 格/s', armor: '护甲', ai: '攻击间隔 s',
   stab: '稳固', fr: '抗冻', cun: '狡诈', kn: '击退力', sa: '霸体', th: '威胁值', shield: '护盾', splash: '溅射伤害', splashR: '溅射半径', min: '最近 m', max: '最远 m', mul: '伤害倍率',
   cleave: '横扫数', pass: '可穿透数', aoe: '爆炸半径 格', heroSpd: '队员移速 m/s', heroStab: '队员稳固', respawn: '复活 s（0 不复活）', armorK: '护甲常数 K', knockK: '击退系数 k',
   knockCap: '击退命中上限', kb: '击退强度', zspd: '僵尸移速倍率', meleeMul: '僵尸普攻倍率', markBonus: '标记增伤', vulnBonus: '易伤增伤', burnDps: '灼烧每秒', poolDps: '毒池每秒', mudMul: '泥地移速' };

@@ -5,19 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>00 决策清单</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
-<link rel="stylesheet" href="doc.css">
+<link rel="stylesheet" href="../doc.css">
 </head>
 <body>
 <div class="layout">
-<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#a.-已定项-已在代码-数值层落地-改动成本已发生">A. 已定项（已在代码/数值层落地，改动成本已发生）</a></li><li class="d3"><a href="#a13-a15-a16-a17-的说明-这四条都是被实测逼出来的">A13 / A15 / A16 / A17 的说明（这四条都是被实测逼出来的）</a></li><li class="d3"><a href="#a24-的说明-本轮唯一一处&quot;故意留的不对称&quot;">A24 的说明（本轮唯一一处&quot;故意留的不对称&quot;）</a></li><li class="d3"><a href="#a29-a30-的说明-两条都在&quot;尽量少引入新东西&quot;">A29 / A30 的说明（两条都在&quot;尽量少引入新东西&quot;）</a></li><li class="d3"><a href="#a6-的说明-这条曾被我写错过">A6 的说明（这条曾被我写错过）</a></li><li class="d2"><a href="#b.-核心机制-已定">B. 核心机制（已定）</a></li><li class="d2"><a href="#b&#39;.-本轮修订-c1–c5-裁决后-上面-b-表按此覆盖">B&#39;. 本轮修订（C1–C5 裁决后，上面 B 表按此覆盖）</a></li><li class="d2"><a href="#c.-已裁决-用户拍板-2026-09">C. 已裁决（用户拍板，2026-09）</a></li><li class="d3"><a href="#c1.-单局-15-分钟是否太长？">C1. 单局 15 分钟是否太长？</a></li><li class="d3"><a href="#c2.-是否需要&quot;队员复活-救援&quot;机制？">C2. 是否需要&quot;队员复活/救援&quot;机制？</a></li><li class="d3"><a href="#c3.-装备-武器是否做&quot;局外养成&quot;？">C3. 装备/武器是否做&quot;局外养成&quot;？</a></li><li class="d3"><a href="#c4.-是否需要&quot;难度选择&quot;？">C4. 是否需要&quot;难度选择&quot;？</a></li><li class="d3"><a href="#c5.-6-张地图是否需要差异化数值？">C5. 6 张地图是否需要差异化数值？</a></li><li class="d3"><a href="#c6.-第二轮-14-条裁决-用户拍板-2026-09">C6. 第二轮 14 条裁决（用户拍板，2026-09）</a></li><li class="d3"><a href="#c7.-第三轮-职业制重构-用户拍板-2026-10">C7. 第三轮：职业制重构（用户拍板，2026-10）</a></li><li class="d2"><a href="#d.-已发现但不建议现在解决的问题">D. 已发现但<strong>不建议现在解决</strong>的问题</a></li><li class="d3"><a href="#d0.-13-个维度只收敛出-1-条真约束-本轮新增-最重要的一条">D0. 13 个维度只收敛出 1 条真约束（本轮新增，最重要的一条）</a></li><li class="d3"><a href="#d1.-模拟器结构性无法验证&quot;阵亡&quot;这个难度目标">D1. 模拟器结构性无法验证&quot;阵亡&quot;这个难度目标</a></li><li class="d3"><a href="#d2.-阶段-1-进入时-dps-只有-boss-需求的-0.79x-已作废-但留下半个">D2. <del>阶段 1 进入时 DPS 只有 BOSS 需求的 0.79x</del> （已作废，但留下半个）</a></li><li class="d2"><a href="#e.-下一轮-原型阶段-必须回答的问题">E. 下一轮（原型阶段）必须回答的问题</a></li></ol></nav>
+<nav class="toc" aria-label="目录"><a class="home" href="../index.html">← 策划文档首页</a><ol><li class="d2"><a href="#a.-已定项-已在代码-数值层落地-改动成本已发生">A. 已定项（已在代码/数值层落地，改动成本已发生）</a></li><li class="d3"><a href="#a13-a15-a16-a17-的说明-这四条都是被实测逼出来的">A13 / A15 / A16 / A17 的说明（这四条都是被实测逼出来的）</a></li><li class="d3"><a href="#a24-的说明-本轮唯一一处&quot;故意留的不对称&quot;">A24 的说明（本轮唯一一处&quot;故意留的不对称&quot;）</a></li><li class="d3"><a href="#a29-a30-的说明-两条都在&quot;尽量少引入新东西&quot;">A29 / A30 的说明（两条都在&quot;尽量少引入新东西&quot;）</a></li><li class="d3"><a href="#a6-的说明-这条曾被我写错过">A6 的说明（这条曾被我写错过）</a></li><li class="d2"><a href="#b.-核心机制-已定">B. 核心机制（已定）</a></li><li class="d2"><a href="#b&#39;.-本轮修订-c1–c5-裁决后-上面-b-表按此覆盖">B&#39;. 本轮修订（C1–C5 裁决后，上面 B 表按此覆盖）</a></li><li class="d2"><a href="#c.-已裁决-用户拍板-2026-09">C. 已裁决（用户拍板，2026-09）</a></li><li class="d3"><a href="#c1.-单局-15-分钟是否太长？">C1. 单局 15 分钟是否太长？</a></li><li class="d3"><a href="#c2.-是否需要&quot;队员复活-救援&quot;机制？">C2. 是否需要&quot;队员复活/救援&quot;机制？</a></li><li class="d3"><a href="#c3.-装备-武器是否做&quot;局外养成&quot;？">C3. 装备/武器是否做&quot;局外养成&quot;？</a></li><li class="d3"><a href="#c4.-是否需要&quot;难度选择&quot;？">C4. 是否需要&quot;难度选择&quot;？</a></li><li class="d3"><a href="#c5.-6-张地图是否需要差异化数值？">C5. 6 张地图是否需要差异化数值？</a></li><li class="d3"><a href="#c6.-第二轮-14-条裁决-用户拍板-2026-09">C6. 第二轮 14 条裁决（用户拍板，2026-09）</a></li><li class="d2"><a href="#d.-已发现但不建议现在解决的问题">D. 已发现但<strong>不建议现在解决</strong>的问题</a></li><li class="d3"><a href="#d0.-13-个维度只收敛出-1-条真约束-本轮新增-最重要的一条">D0. 13 个维度只收敛出 1 条真约束（本轮新增，最重要的一条）</a></li><li class="d3"><a href="#d1.-模拟器结构性无法验证&quot;阵亡&quot;这个难度目标">D1. 模拟器结构性无法验证&quot;阵亡&quot;这个难度目标</a></li><li class="d3"><a href="#d2.-阶段-1-进入时-dps-只有-boss-需求的-0.79x-已作废-但留下半个">D2. <del>阶段 1 进入时 DPS 只有 BOSS 需求的 0.79x</del> （已作废，但留下半个）</a></li><li class="d2"><a href="#e.-下一轮-原型阶段-必须回答的问题">E. 下一轮（原型阶段）必须回答的问题</a></li></ol></nav>
 <main class="doc">
 <h1 id="00-决策清单"><a class="anchor" href="#00-决策清单">#</a>00 决策清单</h1>
 <blockquote>
 <p>本文是所有&quot;现在不定就会返工&quot;的问题的汇总。<strong>已定项</strong>是已经在数值层落地的结论；
 <strong>待你确认项</strong>是给出建议但需要你拍板的。
-最后更新：<strong>第三轮——职业制重构</strong>（2026-10）。12 名固定英雄 → 5 棵转职树 955 个职业；专精树与技能点删除；军衔改为 25 级美军军衔并给局外属性成长。
-本轮裁决全部记在 <strong>§C7</strong>；A/B 表里被覆盖的条目就地标注「→ C7」，原文保留以留判据。
-第二轮原文存档：<a href="archive/00-决策清单-v2.html">archive/00-决策清单-v2.html</a>。</p>
+最后更新：第二轮——六属性（150 点）· 控制对抗轴 · 局外经济与双成长线 · 命令栏与可破坏障碍。
+A24–A30 是本轮新增的已定项；C3 部分作废，B4 / B6 作废，D0–D2 按新读数改写。</p>
 </blockquote>
 <hr>
 <h2 id="a.-已定项-已在代码-数值层落地-改动成本已发生"><a class="anchor" href="#a.-已定项-已在代码-数值层落地-改动成本已发生">#</a>A. 已定项（已在代码/数值层落地，改动成本已发生）</h2>
@@ -75,13 +74,13 @@
 <tr>
 <td>A8</td>
 <td>一阶属性预算</td>
-<td>每角色合计恰好 <strong>150</strong> 点（6 属性均分 25）。<strong>→ C7-8</strong>：预算单位改为「职业」，各阶预算 P1/P2 重定</td>
+<td>每角色合计恰好 <strong>150</strong> 点（6 属性均分 25）</td>
 <td>12/12 角色已校验</td>
 </tr>
 <tr>
 <td>A9</td>
 <td>角色绑武器</td>
-<td><del>每角色绑定 1 把主武器</del> <strong>→ C7-9</strong>：每个<strong>职业</strong>定义自己能用的武器类别，类别可跨职业共用</td>
+<td>每角色绑定 1 把主武器，武器不通用</td>
 <td><code>src/data/characters.ts</code></td>
 </tr>
 <tr>
@@ -141,19 +140,19 @@
 <tr>
 <td><strong>A19</strong></td>
 <td><strong>游戏结构</strong></td>
-<td><strong>世界地图 → 6 场景 → 82 子关卡</strong>。一个子关卡 = 一次 run（沿用 A14）。<strong>→ C7-13</strong>：改为并列关卡线，关卡数不再是约束，按约 100 小时调</td>
+<td><strong>世界地图 → 6 场景 → 82 子关卡</strong>。一个子关卡 = 一次 run（沿用 A14）</td>
 <td><code>src/data/scenes.ts</code></td>
 </tr>
 <tr>
 <td><strong>A20</strong></td>
 <td><strong>难度来源</strong></td>
-<td><strong>构成，不是数值。</strong> 同场景内威胁预算只涨 ×2.05，维度从 1 个变 3 个且权重全开。<strong>→ C7-4</strong>：改为「<strong>构成为主，军衔带的数值为辅</strong>」</td>
+<td><strong>构成，不是数值。</strong> 同场景内威胁预算只涨 ×2.05，维度从 1 个变 3 个且权重全开</td>
 <td><code>src/data/scenes.ts</code> <code>expandScene()</code></td>
 </tr>
 <tr>
 <td><strong>A21</strong></td>
 <td><strong>维度的定义</strong></td>
-<td>压力<strong>来源</strong>，不是数值档位。判据两条：破解它需要特定<strong>种类</strong>的能力、≥3 种答案形状<del>来自 ≥2 个定位</del>。<strong>→ C7-19</strong>：「≥2 个定位」撤销，改为「首次出现处的军衔上限以下 ≥1 个职业可答」</td>
+<td>压力<strong>来源</strong>，不是数值档位。判据两条：破解它需要特定<strong>种类</strong>的能力、≥3 种答案形状来自 ≥2 个定位</td>
 <td><code>src/data/scenes.ts</code> <code>DIMENSIONS</code></td>
 </tr>
 <tr>
@@ -165,7 +164,7 @@
 <tr>
 <td><strong>A23</strong></td>
 <td><strong>专精不新增乘区</strong></td>
-<td><code>SpecEffect</code> 里刻意没有&quot;新增伤害乘区&quot;变体。<strong>由编译器执行</strong>。<strong>→ C7-5</strong>：全局<strong>只允许军衔这一个乘区</strong>；职业与技能仍不能新增，仍由编译器执行</td>
+<td><code>SpecEffect</code> 里刻意没有&quot;新增伤害乘区&quot;变体。<strong>由编译器执行</strong></td>
 <td><code>src/data/characters.ts</code> <code>SpecEffect</code></td>
 </tr>
 <tr>
@@ -177,7 +176,7 @@
 <tr>
 <td><strong>A25</strong></td>
 <td><strong>局内零购买</strong></td>
-<td>等级按存活时长自动涨、<del>武器阶随等级自动涨</del>。<strong>局内没有任何购买动作</strong>。<strong>→ C7-6/22</strong>：局内等级改名「<strong>战意</strong>」；局内武器阶删除</td>
+<td>等级按存活时长自动涨、武器阶随等级自动涨。<strong>局内没有任何购买动作</strong></td>
 <td><code>src/data/run.ts</code> <code>LEVEL_TIME</code></td>
 </tr>
 <tr>
@@ -187,21 +186,21 @@
 <td><code>src/data/progression.ts</code></td>
 </tr>
 <tr>
-<td><del>A27</del></td>
-<td><del>军衔禁用 <code>attr</code></del></td>
-<td><strong>→ C7-4 作废</strong>：军衔改为给局外属性成长（每级 5–10%）</td>
+<td><strong>A27</strong></td>
+<td><strong>军衔禁用 <code>attr</code></strong></td>
+<td><code>RankEffect = Exclude&lt;SpecEffect, {kind:&#39;attr&#39;}&gt;</code>，军衔只给 <code>skill</code> / <code>ai</code>。<strong>由编译器执行</strong></td>
 <td><code>src/data/progression.ts</code></td>
 </tr>
 <tr>
-<td><del>A28</del></td>
-<td><del>高级技能两把钥匙</del></td>
-<td><strong>→ C7-3 作废</strong>：技能点删除，技能随转职替换升级</td>
+<td><strong>A28</strong></td>
+<td><strong>高级技能两把钥匙</strong></td>
+<td>军衔 5 级给<strong>资格</strong>，技能点 4 点给<strong>到手</strong>。缺一不可</td>
 <td><code>advancedSkillUnlocked()</code></td>
 </tr>
 <tr>
 <td><strong>A29</strong></td>
-<td><strong>三种互斥阵型</strong>（第三轮重构）</td>
-<td>普通防御 / 环形防御 / 搜索推进。<strong>默认&quot;普通防御&quot;必须能通关</strong>——阵型是效率旋钮，不是门槛。旧&quot;三按钮&quot;（集火 / 重整阵型 / 紧密跟随）已重构</td>
+<td><strong>命令栏三按钮</strong></td>
+<td>集火 / 重整阵型 / 紧密跟随。<strong>默认&quot;自由&quot;必须能通关</strong>——命令是效率旋钮，不是门槛</td>
 <td><code>SQUAD_COMMANDS</code></td>
 </tr>
 <tr>
@@ -282,25 +281,9 @@
 会被减速，只是不会被推走。这条把&quot;霸体&quot;从一个&quot;免疫一切&quot;的懒解法
 降级成一个<strong>具体的、有明确答案的</strong>属性——打不动它就换冻结，而不是硬推。</p>
 <h3 id="a29-a30-的说明-两条都在&quot;尽量少引入新东西&quot;"><a class="anchor" href="#a29-a30-的说明-两条都在&quot;尽量少引入新东西&quot;">#</a>A29 / A30 的说明（两条都在&quot;尽量少引入新东西&quot;）</h3>
-<p><strong>A29 —— 阵型栏守住了 B6 的原始担心。</strong> 详见 §B 下方那段。</p>
-<p>第三轮把四个命令按钮换成<strong>三个互斥阵型</strong>（普通防御 / 环形防御 / 搜索推进），
-队长也从 WASD 改由<strong>鼠标点地</strong>驱动。要点：</p>
-<ul>
-<li><strong>三档互斥</strong>，不是三个独立开关。旧形态（自由⇄集火 + 跟随⇄紧密跟随 + 重整阵型）
-要求玩家同时维持两个位；三选一只需要一个位。<strong>换的是形状，不是数量</strong>——
-§5.3 那条&quot;指令一多就变成 RTS&quot;的担心，靠互斥档位继续守住。</li>
-<li><strong>集火并入鼠标</strong>（左键点敌人），<strong>撤退并入&quot;点队长身后&quot;</strong>（一个移动意图，不是一个阵型形状）。
-所以阵型栏能保持三档，且<strong>没有按钮要按</strong>。</li>
-<li><strong>默认&quot;普通防御&quot;必须能通关</strong>。压舱石不变：阵型是效率旋钮，不是操作门槛。
-试玩时若发现玩家在战斗中频繁切阵型，说明它已经越过那条线，要往回砍。</li>
-</ul>
-<p><strong>这一条顺带解决了 A29 与原型实现的分歧</strong>：A29 原来写&quot;集火 / 重整阵型 / 紧密跟随&quot;，
-而 <code>proto/m0/battle.html</code> 的 <code>ORDERS</code> 是&quot;紧密 / 自由 / 撤离&quot;——两份设计并存过一段时间。
-<strong>现在文档这一侧已经收口</strong>（A29 / <code>01</code> §5.3 / <code>04</code> §5.4 全是同一套三档）。
-<strong>原型还没改</strong>：<code>proto/m0/battle.html</code> 仍是 M0 时代的三档旧实现，
-它的价值是把&quot;队长 + <code>h.home</code> 站位锚点&quot;这个结构验证过了——
-第三轮沿用这个结构，只换锚点怎么算。原型按新三档重做归 M3，
-验收项见 <code>06-开发路线图.html</code>。</p>
+<p><strong>A29 —— 命令栏守住了 B6 的原始担心。</strong> 详见 §B 下方那段。
+要点：三个按钮里两个是状态切换、只有一个是即时动作，且<strong>默认&quot;自由&quot;必须能通关</strong>。
+它是效率旋钮。试玩时若发现玩家在战斗中频繁切命令，说明它已经越过那条线，要往回砍。</p>
 <p><strong>A30 —— 障碍只引入两条新通行语义</strong>，因为每多一条，<code>core/terrain.ts</code> 的
 碰撞与视线判定就要多一个分支：</p>
 <div class="tbl"><table>
@@ -363,7 +346,7 @@
 <tbody><tr>
 <td>B1</td>
 <td>玩家控制范围</td>
-<td>只控队伍的<strong>中心与朝向</strong>（左键点地 + 拖拽朝向）；其余 4 人的站位、索敌、开火、放技能全自动。<strong>第三轮</strong>：控制方式由 WASD 改为鼠标点地，WASD 退为整队平移微调</td>
+<td>只控队长移动；其余 4 人自动跟随/索敌/开火/放技能</td>
 </tr>
 <tr>
 <td>B2</td>
@@ -373,7 +356,7 @@
 <tr>
 <td>B3</td>
 <td>软牵引 / 硬脱离</td>
-<td>12 格脱战回位 / 20 格强制传送归队。<strong>第三轮</strong>：站位层另有一条<strong>每层的 <code>tether</code> 硬约束</strong>（§5.3.1）——超出该层活动半径即放弃当前目标强制回位，比 12 格软牵引更紧、更早介入</td>
+<td>12 格脱战回位 / 20 格强制传送归队</td>
 </tr>
 <tr>
 <td><del>B4</del></td>
@@ -383,12 +366,12 @@
 <tr>
 <td>B5</td>
 <td>局外成长</td>
-<td>只解锁&quot;可选角色&quot;与&quot;可选武器种类&quot;，不解锁数值。<strong>→ C7</strong>：局外成长 = 军衔属性 + 转职 + 军械库</td>
+<td>只解锁&quot;可选角色&quot;与&quot;可选武器种类&quot;，不解锁数值</td>
 </tr>
 <tr>
 <td><del>B6</del></td>
 <td><del>玩家指令按钮：只给一个&quot;集火当前目标&quot;</del></td>
-<td><strong>第三轮重构为三个阵型</strong>（普通防御 / 环形防御 / 搜索推进）+ 鼠标点地，集火并入左键点敌，见 A29</td>
+<td><strong>本轮扩为三个</strong>（集火 / 重整阵型 / 紧密跟随），见 A29</td>
 </tr>
 <tr>
 <td>B7</td>
@@ -401,15 +384,12 @@
 这句话就从设计目标退化成一句文案——所以 B2 建议保持。</p>
 <p><strong>B6 的作废理由值得记一笔</strong>：原来不给指令栏，是怕&quot;指令一多就变成 RTS，
 队员 AI 的可读性被指令噪音淹没&quot;。这条担心仍然成立，所以新方案守住了它的形状——
-<strong>三个互斥阵型、没有按钮要按、默认&quot;普通防御&quot;必须能通关</strong>。
-加的是<strong>效率旋钮</strong>，不是<strong>操作门槛</strong>。一旦试玩发现玩家在战斗中频繁切阵型，
-说明它已经越过了那条线，要往回砍（最省的一刀是调轻档位参数，而不是删档位）。</p>
+<strong>三个按钮、两个是状态切换、只有一个是即时动作，且默认&quot;自由&quot;必须能通关</strong>。
+加的是<strong>效率旋钮</strong>，不是<strong>操作门槛</strong>。一旦试玩发现玩家在战斗中频繁切命令，
+说明它已经越过了那条线，要往回砍。</p>
 <hr>
 <h2 id="b&#39;.-本轮修订-c1–c5-裁决后-上面-b-表按此覆盖"><a class="anchor" href="#b&#39;.-本轮修订-c1–c5-裁决后-上面-b-表按此覆盖">#</a>B&#39;. 本轮修订（C1–C5 裁决后，上面 B 表按此覆盖）</h2>
 <p>用户已对 C 部分全部拍板。<strong>B 表与之冲突的三条按下面改写</strong>，其余不动：</p>
-<blockquote>
-<p><strong>第三轮（C7）再次覆盖</strong>：B2 的「莉安独一份」改为交给未来职业（C7-18）；B5 的「专精树」删除（C7-3）。</p>
-</blockquote>
 <div class="tbl"><table>
 <thead>
 <tr>
@@ -471,9 +451,6 @@
 <p>于是&quot;成型太晚&quot;这个问题<strong>保持原状不作处理</strong>。它是一个已知的、被接受的体验缺陷，
 不是待办——若原型试玩后玩家确实在等结算，再议。</p>
 <h3 id="c2.-是否需要&quot;队员复活-救援&quot;机制？"><a class="anchor" href="#c2.-是否需要&quot;队员复活-救援&quot;机制？">#</a>C2. 是否需要&quot;队员复活/救援&quot;机制？</h3>
-<blockquote>
-<p><strong>→ C7-18</strong>：「莉安独一份」作废，战地复活交给未来某些职业；「不做通用复活」不变。</p>
-</blockquote>
 <p><strong>原建议</strong>：不做。队员一死小队 DPS 掉 20%，这是自动生效的失败惩罚，不需要额外机制。</p>
 <p><strong>裁决：✅ 不做统一复活机制，但可以做在某一个英雄角色的高级技能上。</strong></p>
 <p>落地为<strong>莉安的专精顶层节点「战地复活」</strong>（<code>{ kind: &#39;revive&#39;, charges: 1 }</code>）：
@@ -606,7 +583,7 @@
 <tr>
 <td>4</td>
 <td>技能点怎么来</td>
-<td><del>新关卡每颗新星 1 点，三星后不再产出</del> <strong>→ C7-3/7</strong>：技能点删除，星级改发荣誉（首次新星）</td>
+<td>新关卡每颗新星 1 点，三星后不再产出</td>
 <td><code>starsFor</code> / <code>skillPointsFor</code> · 哨兵 §12a</td>
 </tr>
 <tr>
@@ -674,219 +651,9 @@
 <p><strong>落地时发现的问题与裁决</strong>：#1 的&quot;共享&quot;加上武器类别限制后，同类换武器的 DPS 最高仍有 ×2.40（艾拉冷冻器 → 喷火器），
 会让金钱买到<strong>数字</strong>。<strong>用户裁决：方案 B（同类 ≤×1.3）+ 新增步枪类。</strong> 实测同类最大 ×1.28，哨兵 §13a 当闸门守；
 莉安因此不再会用弓箭（跨类 ×2.00）。细节见 <code>09</code> §8 第 7 条。</p>
-<h3 id="c7.-第三轮-职业制重构-用户拍板-2026-10"><a class="anchor" href="#c7.-第三轮-职业制重构-用户拍板-2026-10">#</a>C7. 第三轮：职业制重构（用户拍板，2026-10）</h3>
-<p><strong>这一轮推翻的是&quot;12 名固定英雄&quot;这个前提。</strong> 前两轮的成长线（专精树、技能点、军衔只给行为）
-都是为 12 个人设计的；换成可培养的职业之后，它们要么失去对象，要么失去理由，所以整组替换。
-下表是三轮问答的最终裁决，标「默认」的是用户未单独表态、按我的建议执行的。</p>
-<h4 id="职业与转职"><a class="anchor" href="#职业与转职">#</a>职业与转职</h4>
-<div class="tbl"><table>
-<thead>
-<tr>
-<th>#</th>
-<th>问题</th>
-<th>裁决</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>1</td>
-<td>角色是什么</td>
-<td><strong>5 个基础职业</strong>：剑士（近战）· 法师（法术）· 弓手（远程）· 治疗兵（辅助）· 技师（科技 / 召唤 / 机关 / 技术）。队员是可招募的士兵，职业由转职决定</td>
-</tr>
-<tr>
-<td>2</td>
-<td>转职树的形状</td>
-<td>6 个<strong>可选</strong>转职点，每个二选一；第 7 个是<strong>五星上将</strong>，不可选，把第 6 转职业一对一升级为终极职业。每树 1 + 2 + 4 + 8 + 16 + 32 + 64 + 64 = <strong>191</strong>，五树合计 <strong>955 个职业</strong>（含 5 个基础、320 个终极）</td>
-</tr>
-<tr>
-<td>3</td>
-<td>技能</td>
-<td><strong>替换制</strong>：固定技能槽，转职 = 升级槽里的技能，身上技能数不随转职膨胀。<strong>专精树与技能点删除</strong>（覆盖 A28、C6-#4）</td>
-</tr>
-<tr>
-<td>2a</td>
-<td>转职点</td>
-<td>到达转职军衔时发 <strong>1 个转职点</strong>并解锁该层职业。可以不转、<strong>转职点可累积</strong>，等以后再用</td>
-</tr>
-<tr>
-<td>2b</td>
-<td>五星转职的前提</td>
-<td><strong>先补完前 6 次转职</strong>；转职点不足的角色到了五星也不能转终极</td>
-</tr>
-<tr>
-<td>2c</td>
-<td>转职军衔</td>
-<td>E-4 第 1 转 → E-7 第 2 转 → W-1 第 3 转 → O-1 第 4 转 → O-4 第 5 转 → O-7 第 6 转 → 五星终极（E-1~E-3 为基础职业）</td>
-</tr>
-<tr>
-<td>11</td>
-<td>具名英雄</td>
-<td><strong>只是名字</strong>：第 6 转（将官阶）的每个职业有一个英雄名，格式「称号·名字」（如「铁壁·罗恩」），320 个都起名；终极职业沿用名字、换称号。<strong>不保留</strong>旧 12 人的属性与数值。名册重名时加编号（罗恩 II）</td>
-</tr>
-<tr>
-<td>17</td>
-<td>职业怎么解锁（默认）</td>
-<td>军衔到了，对应那一层就解锁。不另设全局解锁，不花钱</td>
-</tr>
-<tr>
-<td>18</td>
-<td>召唤 / 嘲讽 / 复活</td>
-<td>不归哪棵树专属，按职业设计分配。<strong>战地复活</strong>交给未来某些职业（覆盖 C2 的&quot;莉安独一份&quot;；B2 的&quot;不做通用复活&quot;不变）</td>
-</tr>
-<tr>
-<td>25</td>
-<td>955 个职业怎么写（默认）</td>
-<td><strong>组合生成</strong>：每次二选一 = 在一条&quot;方向轴&quot;上选一边；职业的技能、武器类别、答案标签由一路选过的方向推导，只有名字、外形、招牌技能手写（集中在将官与终极阶）。代价：同层相邻职业有意保留部分相似</td>
-</tr>
-<tr>
-<td>10</td>
-<td>职业形象</td>
-<td>全部由体素管线生成；角色页改为<strong>职业形象方阵</strong>，按转职关系排布，可单独调出看技能</td>
-</tr>
-</tbody></table>
-</div>
-<h4 id="成长线"><a class="anchor" href="#成长线">#</a>成长线</h4>
-<div class="tbl"><table>
-<thead>
-<tr>
-<th>#</th>
-<th>问题</th>
-<th>裁决</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>4</td>
-<td>军衔</td>
-<td><strong>25 级美军军衔</strong>（标准中文译名），与局外等级是同一条线；<strong>给局外属性成长</strong>，每级 <strong>5–10%</strong>（按职业），复利。覆盖 A27</td>
-</tr>
-<tr>
-<td>4a</td>
-<td>敌人强度</td>
-<td>敌人按<strong>关卡的军衔上限</strong>加成：<code>1.05^(上限 − 1)</code>，<strong>不按关卡序号</strong>——加关卡不推高敌人。A20 改为「构成为主，军衔数值为辅」</td>
-</tr>
-<tr>
-<td>4b</td>
-<td>加成加在哪（默认）</td>
-<td>加在<strong>最终生命与最终伤害</strong>上，不加在六属性上（属性经 <code>derive()</code> 非线性换算，+10% 属性 ≠ 强 10%）</td>
-</tr>
-<tr>
-<td>4c</td>
-<td>精度</td>
-<td><strong>先不精确设计</strong>，用实战测试检验难度，再修正平衡方法</td>
-</tr>
-<tr>
-<td>5</td>
-<td>A23</td>
-<td>全局<strong>只允许军衔这一个乘区</strong>；职业与技能不能新增乘区，仍由编译器执行</td>
-</tr>
-<tr>
-<td>6</td>
-<td>局内等级</td>
-<td>改名「<strong>战意</strong>」，每关重置，不跨局</td>
-</tr>
-<tr>
-<td>22</td>
-<td>局内武器阶</td>
-<td><strong>删除</strong>。武器成长只剩局外（军衔限制 + 军械库）</td>
-</tr>
-<tr>
-<td>7</td>
-<td>荣誉</td>
-<td>自动分配给<strong>出战队员</strong>。星级荣誉只在<strong>首次</strong>拿到新星时发；任务荣誉与通关荣誉<strong>每次都发</strong>，直到该角色在这关毕业</td>
-</tr>
-<tr>
-<td>8</td>
-<td>属性预算</td>
-<td>预算单位从&quot;角色&quot;改为&quot;职业&quot;，各阶预算在 P1 / P2 重定（覆盖 A8 的&quot;12/12&quot;）</td>
-</tr>
-<tr>
-<td>9</td>
-<td>武器</td>
-<td>每个<strong>职业</strong>定义自己能用的武器类别，类别可跨职业共用（覆盖 A9）。初始类别：刀剑 · 刀盾 · 弓箭 · 长枪类 · 重锤 · 手枪 · 冲锋枪 · 狙击枪 · 重武器 · 投掷 · 喷射 · 魔法 · 药水 · 光线；名称与划分开放调整</td>
-</tr>
-<tr>
-<td>20</td>
-<td>伤害类型</td>
-<td>职业树与武器类别定稿后再按需新增</td>
-</tr>
-<tr>
-<td>21</td>
-<td>动画数</td>
-<td>武器类别定稿后按握持方式重算</td>
-</tr>
-</tbody></table>
-</div>
-<h4 id="名册-出战与关卡"><a class="anchor" href="#名册-出战与关卡">#</a>名册、出战与关卡</h4>
-<div class="tbl"><table>
-<thead>
-<tr>
-<th>#</th>
-<th>问题</th>
-<th>裁决</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>12</td>
-<td>招募</td>
-<td>三选一 + 随机，花钱刷新。新兵以基础职业入队（默认）</td>
-</tr>
-<tr>
-<td>14</td>
-<td>名册</td>
-<td>上限 <strong>64</strong></td>
-</tr>
-<tr>
-<td>15</td>
-<td>出战人数</td>
-<td>第 1 关 2 人 · 第 2 关 3 人 · 第 3–4 关 4 人 · 第 5 关起 5 人。<strong>可以少带，不能超</strong></td>
-</tr>
-<tr>
-<td>23</td>
-<td>敌人随人数缩放（默认）</td>
-<td>同一套刷怪表按 <code>partyCap</code> 缩威胁预算，不另写&quot;少人关&quot;</td>
-</tr>
-<tr>
-<td>16</td>
-<td>等级上界</td>
-<td>每关有军衔上限，<strong>针对所有出战队员</strong></td>
-</tr>
-<tr>
-<td>13</td>
-<td>关卡结构</td>
-<td><strong>并列关卡线</strong>；关卡可重复打；<strong>全队超过上限 = 这关毕业</strong>，不能再刷——这就是防刷机制，逼玩家培养新阵容。关卡数量不再是约束，按约 <strong>100 小时</strong>（可超）增减</td>
-</tr>
-<tr>
-<td>19</td>
-<td>答案标签</td>
-<td><strong>保留</strong>，挂在<strong>技能</strong>上，职业的标签 = 技能标签并集。撤销&quot;≥2 个定位 / ≥2 棵树&quot;（同树可练多人上阵）；改为<strong>每个维度在首次出现处的军衔上限以下，至少 1 个职业可答</strong>，保证没有死关</td>
-</tr>
-</tbody></table>
-</div>
-<h4 id="工具"><a class="anchor" href="#工具">#</a>工具</h4>
-<div class="tbl"><table>
-<thead>
-<tr>
-<th>#</th>
-<th>问题</th>
-<th>裁决</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>24</td>
-<td><code>proto/m0/gamedata.js</code></td>
-<td><strong>方案 A</strong>：原型改走 Vite、直接 import <code>src/data/*.ts</code>，删掉手抄数值副本；流场 / 编辑器 / 调参逻辑保留。分歧值以 src 为准（<code>respawn 6</code> 作废 → B2；<code>armorK 200</code> 作废 → 100）</td>
-</tr>
-</tbody></table>
-</div>
-<p><strong>这一轮的风险</strong>：军衔一旦给属性，&quot;打不过就回去刷&quot;这条路就打开了。守住它的是两件事——
-等级上界（全队超了这关就毕业，刷不了）和敌人按军衔上限同步加成（军衔高了，对应的关也更强）。
-数值本身先不精确，<strong>它是否守住，只能靠试玩回答</strong>。</p>
 <hr>
 <h2 id="d.-已发现但不建议现在解决的问题"><a class="anchor" href="#d.-已发现但不建议现在解决的问题">#</a>D. 已发现但<strong>不建议现在解决</strong>的问题</h2>
 <h3 id="d0.-13-个维度只收敛出-1-条真约束-本轮新增-最重要的一条"><a class="anchor" href="#d0.-13-个维度只收敛出-1-条真约束-本轮新增-最重要的一条">#</a>D0. 13 个维度只收敛出 1 条真约束（本轮新增，最重要的一条）</h3>
-<blockquote>
-<p><strong>第三轮注</strong>：下面的读数基于旧 12 人。职业制下阵容空间从 C(12,5) 变为从 64 人名册里选，枚举要在 P7 重写；
-结论的形状（&quot;能不能进&quot;基本免费，真正该量的是&quot;答得好不好&quot;）预计不变。</p>
-</blockquote>
 <p>用户要求&quot;每种挑战不止有单一方案，而是有很多种组合&quot;。哨兵枚举了全部
 C(12,5) = 792 套阵容来验证，结果是<strong>这条只完成了下限</strong>：</p>
 <pre><code>最紧的一关也放行 92.9% 的阵容；87.5% 的阵容能覆盖全部 13 维

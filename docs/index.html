@@ -382,8 +382,8 @@ footer{
   </a>
   <a href="02-数值表.html">
     <span class="n">02</span>
-    <span class="t">数值表<small>属性公式、13 武器、9 僵尸、12 角色、82 子关卡推导、三档难度、BOSS 反向校准，以及模拟器能力边界（§10）</small></span>
-    <span class="fmt">HTML</span>
+    <span class="t">数值表<small>属性公式、14 武器、17 僵尸、12 角色、82 子关卡推导、三档难度、BOSS 反向校准、控制矩阵、军衔，以及模拟器能力边界（§10）。由 numbers-doc.ts 生成</small></span>
+    <span class="fmt">生成</span>
   </a>
   <a href="03-计算演示.html">
     <span class="n">03</span>
@@ -437,7 +437,7 @@ footer{
   <p>所有数值表的真源是 <code>src/data/*.ts</code>，输出由模拟器生成。文档里的数字全部从模拟器导出，不手填。82 个子关卡的刷怪表同理，由 <code>scenes.ts</code> 的 <code>expandScene()</code> 推导，没有手写的关卡配置。</p>
 <pre>npm run sim          <span class="c"># = node src/sim/balance-check.ts</span></pre>
   <p>Node 24 原生支持 TypeScript 类型剥离，不需要 tsx / ts-node。输出十二节实测表：角色属性预算 / 单角色基准（含四属性→六属性的偏离闸门） / BOSS DPS 锚点 / BOSS 血量反向校准 / 生存压力 / 15 分钟全程模拟 / 承伤现实检查 / 多阵容鲁棒性 / 挑战维度覆盖矩阵 / 阵容多样性枚举 / 控制对抗矩阵 / 军衔与技能点的时间成本。</p>
-  <p>改数字去 <code>src/data/</code>；改图表去 <code>src/sim/balance-check.ts</code>，重跑，再把输出同步进 <code>02-数值表.html</code>。</p>
+  <p>改数字去 <code>src/data/</code>；改图表去 <code>src/sim/numbers-doc.ts</code>，重跑 <code>node src/sim/numbers-doc.ts &gt; docs/02-数值表.html</code>；哨兵检查在 <code>balance-check.ts</code>（<code>npm run sim</code>）。</p>
 </div>
 
 <div class="note">
