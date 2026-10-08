@@ -584,14 +584,19 @@ const BACK: HeroRole[] = ['rangedDps'];
 export const SQUAD_COMMANDS: SquadCommand[] = [
   {
     id: 'defend', name: '普通防御阵型', facing: true,
-    // 最紧的一档：近战铺一道扇形挡在阵前，远程缩在队长身后，辅助在中心
+    // 最紧的一档：近战铺一道扇形挡在阵前，远程分到两翼，辅助居中靠后
+    // bearing 只定层心方向，成员是沿 spread【均分】的（见 04 §5.4 的 slotsAt）：θ = bearing + s。所以
+    //   「两翼」= 层心朝后 π 配总张角 π —— 两名远程正好落在 θ = 180°±90°，即队长左右正侧；
+    //   张角放得比 π 宽（旧值 0.9π 是后扇形，1.1π 就绕过了正侧）就不叫两翼了。只有一名远程时 s = 0，退化成正面后方
+    //   「居中靠后」= 层心朝后 π 配张角 0.8π。辅助层旧值铺满 2π，三人里必有一人站到 θ=60°、直接站到队长前面去了
+    //   「中心靠前」= 张角收在 0.8π。旧值 1.1π（198°）把两名近战排到 ±99°，比队长还靠后半步，不是一道阵前扇形
     rings: [
-      { roles: MELEE, radius: 2.2, bearing: 0, spread: Math.PI * 1.1, tether: 7 },
-      { roles: BACK, radius: 4.4, bearing: Math.PI, spread: Math.PI * 0.9, tether: 2.5 },
-      { roles: CORE, radius: 1.3, bearing: Math.PI, spread: Math.PI * 2, tether: 2.5 },
+      { roles: MELEE, radius: 2.2, bearing: 0, spread: Math.PI * 0.8, tether: 7 },
+      { roles: BACK, radius: 4.4, bearing: Math.PI, spread: Math.PI, tether: 2.5 },
+      { roles: CORE, radius: 1.3, bearing: Math.PI, spread: Math.PI * 0.8, tether: 2.5 },
     ],
     overrides: {},
-    note: '默认档。最紧密的站位，有朝向。近战在前、远程在后、辅助在中心，全员收在队长周围',
+    note: '默认档。最紧密的站位，有朝向。近战在前、远程在两翼、辅助居中靠后，全员收在队长周围',
   },
   {
     id: 'ring', name: '环形防御阵型', facing: false,

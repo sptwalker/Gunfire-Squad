@@ -13,6 +13,8 @@ import { ZOMBIES as SRC_Z } from '../../src/data/zombies.ts';
 import { WEAPONS as SRC_W } from '../../src/data/weapons.ts';
 import { STAGES as SRC_STAGES } from '../../src/data/run.ts';
 import { HEROES_BY_ID, SQUAD_COMMANDS } from '../../src/data/characters.ts';
+import { CLASS_TREES, TEMPLATE, CLASSES, className } from '../../src/data/classes.ts';
+import { ADVANCE_RANKS, RANKS, heroRankMul } from '../../src/data/progression.ts';
 
 // 下标即身份：ZIDS[i] 对应 assets/vox_z_*.glb 载入顺序、battle.html 的 ZGV[i]。
 // src 的 key 顺序与原型不同，也随时可能被重排，所以顺序只由这里这两行说了算。第二步补新僵尸／武器时改这里。
@@ -34,6 +36,9 @@ const ZT = Object.fromEntries(ORDER_Z.map((id) => [id, { name: Z_NAME[id], ...pi
   sa: (z) => (z.superArmor ? 1 : 0),   // src 是布尔，原型与调参页按 0/1 用
   dr: (z) => z.resist.physRes,         // 原型只有一个减伤值，取物理那一系
 }) }]));
+// 原型手感层：把种类之间的差距拉开（src 的数是配平基准、模拟器在用，不在这里改它）。倍率乘在 src 值上，调参页看到的是乘完的数
+const Z_SPREAD = { runner: { spd: 1.7, hp: .8 }, spawnling: { spd: 1.3 }, leaper: { spd: 1.2 }, brute: { armor: 2, hp: 1.6, spd: .75, atk: 1.4 }, ward: { armor: 1.6, hp: 1.3 } };
+for (const [id, m] of Object.entries(Z_SPREAD)) for (const k in m) ZT[id][k] = Math.round(ZT[id][k] * m[k] * 100) / 100;
 
 // src 武器字段 → 原型短名
 const pickW = (w) => { const r = {}; for (const [k, s] of Object.entries({ dmg: 'base', rate: 'rate', range: 'range', knock: 'knockback', aoe: 'aoe' })) if (w[s]) r[k] = w[s]; return r; };
@@ -75,6 +80,7 @@ export const T = {
     kb: 2,           // 击退强度：只放大队员打僵尸
     zspd: .6,        // 僵尸移速倍率（蹒跚节奏）
     meleeMul: .25,   // 僵尸普攻伤害 = 攻击 × 该倍率
+    zhp: 1, zarmor: 1, zatk: 1,   // 僵尸强度：全局倍率，乘在每种僵尸自己的生命 / 护甲 / 攻击上（战斗页滑杆）
     markBonus: .35,  // 被标记增伤
     vulnBonus: .5,   // 易伤增伤
     burnDps: 40,     // 灼烧每秒
@@ -149,6 +155,25 @@ export const ROLE = Object.fromEntries(Object.keys(T.HERO).map((id) => [id, HERO
 export const RINGS = Object.fromEntries(SQUAD_COMMANDS.map((c) => [c.id, c.rings]));
 export const TETHER = Object.fromEntries(SQUAD_COMMANDS.map((c) => [c.id, c.rings[0].tether]));
 export const CMD_OVER = Object.fromEntries(SQUAD_COMMANDS.map((c) => [c.id, c.overrides]));
+export const FACING = Object.fromEntries(SQUAD_COMMANDS.map((c) => [c.id, c.facing]));
+// 小队等级：基础 = 军衔 1，第 k 转 = ADVANCE_RANKS[k-1]；生命与伤害各乘 heroRankMul(军衔, 成长率)（C7-4b）
+export const TIERS = [1, ...ADVANCE_RANKS].map((rank, k) => ({ name: k ? `${k} 转` : '基础', rank, title: `${RANKS[rank - 1].code} ${RANKS[rank - 1].name}` }));
+// 成长率 = 该英雄当样板的那棵树、那条第一轴的 growth（classes.ts TEMPLATE）
+export const GROWTH = Object.fromEntries(Object.keys(T.HERO).map((id) => { for (const [tree, ids] of Object.entries(TEMPLATE)) { const i = ids.indexOf(id); if (i >= 0) return [id, CLASS_TREES[tree].growth[i >> 1]]; } return [id, 0]; }));
+export const rankMul = (id, rank) => heroRankMul(rank, GROWTH[id]);
+// ── 职业名册：小队等级 = 转数，每级能选的是那一级刚解锁的职业（C7-17）。
+// 原型不重做职业系统，选一名该级的职业只带过来四样：名字、成长率、定位、样板英雄（AI/技能/模型仍借样板）。
+// 星数 = 该级本身的星级（转职 = 一次成长）；到 5 转封顶，五星是英雄称号层，不进小队名册。
+const shortName = (t, path, tier) => (tier ? className(t, path).replace(t.name, '') : t.name) || className(t, path);
+export const TIER_CLASSES = (tier) => Object.values(CLASS_TREES).flatMap((t) =>
+  CLASSES.filter((c) => c.tier === tier && c.tree === t.id).map((c) => ({
+    id: c.id, name: shortName(t, c.path, tier), full: c.name, tree: t.id, treeName: t.name, stars: '★'.repeat(Math.min(5, tier + 1)), growth: c.growth,
+    hero: TEMPLATE[t.id][(c.path[0] ?? 0) * 2 + (c.path[1] ?? 0)] })));   // 等级 0 借该树的第一条轴样板（职业 id 是树名，样板英雄 id 不是），二转起 path 前两位就够
+// 样板英雄 id → 它当样板的那棵树。旧关卡文件里写的是样板英雄 id（'ron'/'vera'…），
+// 等级 0 的职业 id 是树名（'sw'/'ar'…），所以存档要经这一层翻译才能落到职业名册上。
+// ponytail: 取第一棵树（TEMPLATE 的声明顺序：剑/弓/法/辅/技）。jet/vera 在两棵树里都当样板，
+// 剑士那三位只出现一次、射手的两位在 archer 里也先出现，所以「先声明者胜」正好是对的；真按树区分要等存档带 tree 字段。
+export const TREE_OF_HERO = (() => { const m = {}; for (const [tree, ids] of Object.entries(TEMPLATE)) for (const id of ids) if (!m[id]) m[id] = tree; return m; })();
 export const ZIDS = ORDER_Z, HIDS = Object.keys(T.HERO), WIDS = ORDER_W;
 export const MIX0 = { normal: 50, runner: 20, brute: 5, toxic: 10, bomber: 10, splitter: 10, leaper: 10, ward: 5, spitter: 10, spawnling: 0 };
 
@@ -372,7 +397,7 @@ export const LABEL = { cd: '冷却 s', desc: '设计说明', dmg: '伤害', knoc
   blast: '单发半径 m', heal: '回复比例', w: '宽度 m', dist: '离身距离 m', hole: '开口宽 m', stand: '站定类(1)', rangeMul: '射程加成', aim: '预警 s', hps: '每秒回复', atk: '攻击 / 增伤', life: '存在 s', scale: '体型', chain: '链跳', hp: '生命', spd: '移速 格/s', armor: '护甲', ai: '攻击间隔 s',
   stab: '稳固', fr: '抗冻', cun: '狡诈', kn: '击退力', sa: '霸体', th: '威胁值', shield: '护盾', splash: '溅射伤害', splashR: '溅射半径', min: '最近 m', max: '最远 m', mul: '伤害倍率',
   cleave: '横扫数', pass: '可穿透数', aoe: '爆炸半径 格', heroSpd: '队员移速 m/s', heroStab: '队员稳固', respawn: '复活 s（0 不复活）', armorK: '护甲常数 K', knockK: '击退系数 k',
-  knockCap: '击退命中上限', kb: '击退强度', zspd: '僵尸移速倍率', meleeMul: '僵尸普攻倍率', markBonus: '标记增伤', vulnBonus: '易伤增伤', burnDps: '灼烧每秒', poolDps: '毒池每秒', mudMul: '泥地移速' };
+  knockCap: '击退命中上限', kb: '击退强度', zspd: '僵尸移速倍率', meleeMul: '僵尸普攻倍率', zhp: '僵尸生命倍率', zarmor: '僵尸护甲倍率', zatk: '僵尸攻击倍率', markBonus: '标记增伤', vulnBonus: '易伤增伤', burnDps: '灼烧每秒', poolDps: '毒池每秒', mudMul: '泥地移速' };
 export const getP = (p) => get(T, p);
 export function paramForm(el, path, { skip = ['name'], onChange } = {}) {
   const obj = get(T, path), over = readOver(); el.innerHTML = '';
@@ -395,6 +420,8 @@ if (typeof process !== 'undefined' && process.argv[1]?.endsWith('gamedata.js')) 
   console.assert(m.mv[cellOf(m, 0, 0)] && m.shot[cellOf(m, 0, 0)] && !m.mv[cellOf(m, 0, 3)], 'mask');
   console.assert(f.dist[cellOf(m, 0, -5)] > 10, 'flow goes around wall', f.dist[cellOf(m, 0, -5)]);
   const d = flowDir(m, f, 0, -1.5); console.assert(d && Math.abs(d[0]) > .5, 'steers sideways at wall', d);
+  console.assert(TIERS.length === 8 && Object.values(GROWTH).every((g) => g > 0) && rankMul('ron', 1) === 1 && rankMul('ron', 25) > 4, 'tiers', GROWTH);
+  console.assert(ZT.runner.spd > 2 * ZT.normal.spd && ZT.brute.armor > 2 * ZT.ward.armor / 1.6, 'spread');
   console.assert(Math.abs(rateAt(lv, 0) - 3 / avgThreat(STAGES[0].mix)) < 1e-9 && rateAt(lv, 99) === 0, 'rate');
   const r = buildMask({ size: 20, props: [['partition', 0, 0, Math.PI / 2]] }); console.assert(r.mv[cellOf(r, 0, 1.5)] && !r.mv[cellOf(r, 1.5, 0)], 'rotated');
   const pp = { x: .1, z: .35 }; pushOut(m, pp, .3); console.assert(Math.abs(pp.z) >= .49 && Math.abs(pp.x - .1) < 1e-9, 'pushOut', pp);

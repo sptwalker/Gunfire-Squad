@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>职业色谱</title>
+<style>
+:root { --bg: #16171b; --fg: #e8e8ec; --dim: #8a8d96; }
+body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, "Microsoft YaHei", sans-serif; }
+h1 { font-size: 20px; margin: 0 0 4px; } p { color: var(--dim); margin: 0 0 16px; max-width: 70em; }
+.tree { margin: 0 0 28px; } .tree h2 { font-size: 16px; margin: 0 0 6px; } .tree h2 small { color: var(--dim); font-weight: normal; }
+.row { display: grid; grid-template-columns: 4.5em 1fr; align-items: center; gap: 8px; margin: 2px 0; }
+.row b { font-weight: normal; color: var(--dim); font-size: 12px; text-align: right; }
+.cells { display: flex; gap: 1px; height: 34px; }
+.cell { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.cell i { flex: 3; } .cell i:nth-child(2) { flex: 2; } .cell i:nth-child(3) { flex: 1; }
+.legend { display: flex; gap: 16px; color: var(--dim); font-size: 12px; margin-bottom: 12px; }
+.legend span::before { content: ''; display: inline-block; width: 10px; vertical-align: -1px; margin-right: 4px; border: 1px solid var(--dim); }
+.legend .m::before { height: 12px; } .legend .s::before { height: 8px; } .legend .t::before { height: 4px; }
+</style></head><body>
+<h1>职业色谱</h1>
+<p>每格一个职业，从上到下：主色（衣甲大面）／辅助色（领口、袖口、护手）／装饰色（扣子、镶边、花纹）。行 = 转数，列 = 本转职业从左到右（同形象页站位）。低转低饱和，往下饱和度增加、色相向两侧散开；装饰色铜 → 银 → 金 → 亮金 → 五星亮彩。数据由 tools/palette.py 生成，出模用的是同一份。</p>
+<div class="legend"><span class="m">主色</span><span class="s">辅助色</span><span class="t">装饰色</span></div>
+<div id="out"></div>
+<script>
+const DATA = /*DATA*/null, TRIM = /*TRIM*/null, TIER = ['基础', '1 转', '2 转', '3 转', '4 转', '5 转', '6 转英雄', '五星'];
+document.getElementById('out').innerHTML = Object.values(DATA).map((T) =>
+  `<div class="tree"><h2>${T.name} <small>主 ${T.main} · 辅 ${T.sub}</small></h2>` +
+  T.rows.map((r, t) => `<div class="row"><b>${TIER[t]} · ${TRIM[t]}</b><div class="cells">` +
+    r.map((c) => `<div class="cell" title="主 ${c.main}  辅 ${c.sub}  饰 ${c.trim}"><i style="background:${c.main}"></i><i style="background:${c.sub}"></i><i style="background:${c.trim}"></i></div>`).join('') +
+    `</div></div>`).join('') + `</div>`).join('');
+</script></body></html>

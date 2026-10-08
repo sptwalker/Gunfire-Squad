@@ -41,10 +41,34 @@
   #skl button.on { border-color: var(--acc); color: var(--acc); }
   #orders button.on { border-color: var(--acc); color: var(--acc); }
   #labmsg { min-height: 1.5em; }
+  .grid2 select { flex: 1; min-width: 0; width: 0; }
+  /* 开局设置：游戏开始前必须先定僵尸强度与队伍，之后战斗面板的数值不可再动 */
+  #prep { position: fixed; inset: 0; background: #0b0e0ccc; display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; overflow: auto; }
+  #prep .box { width: min(560px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 16px; display: grid; gap: 8px; }
+  #prep h2 { margin: 0; font-size: 15px; } #prep h3 { margin: 6px 0 0; }
+  #prep .box > p.dim { margin: 0; }
+  body.playing #prep { display: none; }
+  body.playing .battle :is(input, select) { opacity: .45; }
   @media (max-width: 700px) { #panel { width: 100%; top: auto; max-height: 55%; } #team { max-width: calc(100% - 32px); bottom: calc(56% + 8px); } }
 </style>
 <div id="stat">加载中…</div>
 <div id="team"></div>
+<div id="prep" class="battle"><div class="box">
+  <h2>开局设置</h2>
+  <p class="dim">这里的数值只在开始前能改。点「开始游戏」后，僵尸强度与队伍配置就锁住了，战斗中只剩暂停。</p>
+  <h3>小队等级</h3>
+  <div class="row"><label for="tier">转数</label><select id="tier"></select></div>
+  <p class="dim" id="tierHint"></p>
+  <h3>小队（同级职业里选 5，先定的职业决定其余 4 人的树）</h3>
+  <div id="squad" class="grid2"></div>
+  <h3>僵尸强度</h3>
+  <div class="row"><label for="zhp">生命 ×</label><input id="zhp" type="range" min="0.2" max="5" step="0.1" value="1"><output id="zhpv"></output></div>
+  <div class="row"><label for="zarmor">护甲 ×</label><input id="zarmor" type="range" min="0" max="5" step="0.1" value="1"><output id="zarmorv"></output></div>
+  <div class="row"><label for="zatk">攻击 ×</label><input id="zatk" type="range" min="0" max="5" step="0.1" value="1"><output id="zatkv"></output></div>
+  <div class="row"><label for="zv">僵尸移速 ×</label><input id="zv" type="range" min="0.1" max="2" step="0.05" value="0.6"><output id="zvv"></output></div>
+  <p class="dim">倍率乘在每种僵尸自己的数值上；生命对开始后刷出的僵尸生效。</p>
+  <div class="row"><button id="start">开始游戏</button><label><input type="checkbox" id="god"> 队员无敌</label></div>
+</div></div>
 <aside id="panel">
   <header><span><a href="home.html">← 测试首页</a> · <b id="ptitle">调试台</b></span><button id="fold">收起</button></header>
   <section id="pbody">
@@ -61,14 +85,15 @@
     <h3 class="levelonly">关卡</h3>
     <p id="lvinfo" class="dim levelonly"></p>
     <div class="row levelonly"><button id="restart">重开关卡</button><label><input type="checkbox" id="showMask"> 显示碰撞格</label><a href="editor.html">编辑器</a><a href="tuning.html">调参</a></div>
-    <p class="dim levelonly">WASD / 方向键走位（按镜头方向），整队一起挪，镜头跟着小队中心。出怪按关卡阶段时间线走（在编辑器里改）；下方「种类比例 / 每秒刷」在关卡里不生效。碰撞格：橙 = 挡人、红 = 挡人也挡子弹。</p>
-    <h3 class="battle">团队命令</h3>
+    <p class="dim levelonly">鼠标操作见下方「阵型」，镜头跟着小队中心。出怪按关卡阶段时间线走（在编辑器里改）；下方「种类比例 / 每秒刷」在关卡里不生效。碰撞格：橙 = 挡人、红 = 挡人也挡子弹。</p>
+    <h3 class="battle">阵型</h3>
     <div class="row battle" id="orders"></div>
     <p id="orderHint" class="dim battle"></p>
-    <h3 class="battle">小队（12 选 5）</h3>
-    <div id="squad" class="grid2 battle"></div>
-    <div class="row battle"><button id="apply">换人</button><label><input type="checkbox" id="god"> 队员无敌</label></div>
+    <p class="dim battle">左键点地 = 移动（落点即阵型中心）· 按住左键拖 = 指定朝向，松开才走 · 左键点僵尸 = 集火，点地解除 · 点队长身后 = 撤退（不转向）· WASD 整队平移微调，S = 撤退 · 右键拖转镜头</p>
+    <h3 class="battle">小队</h3>
+    <p id="squadInfo" class="dim battle"></p>
     <h3 class="battle">僵尸</h3>
+    <p id="zInfo" class="dim battle"></p>
     <div class="row battle nolevel"><label for="nz">同屏上限</label><input id="nz" type="number" min="0" max="400" step="10" value="120">
       <label for="rate">每秒刷</label><input id="rate" type="number" min="0" max="60" step="1" value="8"></div>
     <p class="dim nolevel">种类比例（勾掉 = 不刷；按比例抽取，0–200）</p>
@@ -88,7 +113,6 @@
     <p class="dim">调色松手后生效。特效强度 = 粒子数量倍率。击退强度只放大队员打僵尸：击退力 × 强度 &gt; 僵尸稳固时击倒（躺约 1 s，起身后 0.6 s 内不会再倒）；霸体不倒。</p>
     <h3>动画</h3>
     <div class="row"><label for="hs">队员步幅</label><input id="hs" type="range" min="0.3" max="3" step="0.05" value="1.3"><output id="hsv"></output></div>
-    <div class="row"><label for="zv">僵尸移速</label><input id="zv" type="range" min="0.1" max="2" step="0.05" value="0.6"><output id="zvv"></output></div>
     <div class="row"><label for="zs">僵尸步幅</label><input id="zs" type="range" min="0.5" max="2" step="0.05" value="1"><output id="zsv"></output></div>
     <div class="row"><label for="ts">时间流速</label><input id="ts" type="range" min="0.05" max="2" step="0.05" value="1"><output id="tsv"></output></div>
     <p class="dim">队员步幅 = 每个跑步循环前进的距离 ÷ 模型身高。僵尸步速从走路动画的着地脚实测，步幅是它的倍率，1 = 贴地。播放速率 = 移速 ÷ 步幅；配合时间流速慢放看。</p>
@@ -109,7 +133,7 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // ── 数据：全部来自 gamedata.js（调参页 tuning.html 改了，这里原地生效）。G / ZT / ZB / W 是活引用：别把里面的数抄成局部常量 ──
-import { T, CELL, ZIDS, HIDS, WIDS, MIX0, PICK0, PROPS, SCENES, TILES, levelFromURL, buildMask, flowField, flowDir, pushOut, cellOf, tileAt, stageAt, rateAt, flowLen, AI, ROLE, RINGS, CMD_OVER } from './gamedata.js';
+import { T, CELL, ZIDS, HIDS, WIDS, MIX0, PICK0, PROPS, SCENES, TILES, FACING, levelFromURL, buildMask, flowField, flowDir, pushOut, cellOf, tileAt, stageAt, rateAt, flowLen, AI, ROLE, RINGS, CMD_OVER, TIERS, rankMul, GROWTH, TIER_CLASSES, TREE_OF_HERO } from './gamedata.js';
 const { G, ZT, ZB, W } = T;
 const GRIPS = { melee: ['attack_melee1h', 'run_melee1h'], heavy: ['attack_heavy', 'run_melee1h'], thrust: ['attack_thrust', 'run_melee1h'],
   rifle: ['attack_rifle', 'run_rifle'], onehand: ['attack_pistol', 'run'], throw: ['attack_throw', 'run'] };
@@ -146,7 +170,7 @@ const flat = (w, d, color, x, z, y = 0) => {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshLambertMaterial({ color }));
   m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); scene.add(m); return m;
 };
-let M = null, FF = null, maskPlane = null;
+let M = null, FF = null, FL = [null, null], maskPlane = null;   // FL：左右两条包抄路线的流场
 const canvasTex = (N, draw) => { const cv = document.createElement('canvas'); cv.width = cv.height = N; draw(cv.getContext('2d'));
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.NearestFilter; return t; };
 if (!LV) {
@@ -379,14 +403,19 @@ const HALO_OUT = new THREE.RingGeometry(.7, .76, 48).rotateX(-Math.PI / 2), HALO
 const haloMat = add(0x2ecc55, .8), capMat = add(0x66ff77), capOut = add(0x66ff77, .5), capFill = add(0x33aa44, .18);
 function makeHero(id, slot) {
   const i = HIDS.indexOf(id), def = T.HERO[id], g = hgl[i], w = W[def.weapon];
+  // 小队等级选的是「那一级的职业」：名字、星级、定位来自职业表，模型 / 武器 / 技能 / AI 仍借该职业的样板英雄（TEMPLATE）。
+  // 成长率用样板英雄那条轴的 GROWTH，不读 cl.growth——后者是职业自己那条轴的数，与借来的英雄对不上，等级一换血量就跳错
+  const cl = cur.classes[i], nm = cl ? `${cl.full || cl.name}（${def.name}）` : def.name, gr = GROWTH[id] ?? 0;
   const root = SkeletonUtils.clone(g.scene); scene.add(root);
   const a = slot / 5 * Math.PI * 2, c0 = LV?.start ?? [0, 0], home = new THREE.Vector3(c0[0] + Math.sin(a) * 1.6, 0, c0[1] + Math.cos(a) * 1.6);
   root.position.copy(home); root.rotation.y = a; root.updateMatrixWorld(true);
   const socket = root.getObjectByName('socket_hand_r'), weapon = wgl[WIDS.indexOf(def.weapon)].scene.clone(), s = new THREE.Vector3();
   weapon.quaternion.copy(GRIP); socket.getWorldScale(s); weapon.scale.setScalar(1 / s.x); socket.add(weapon);
+  const mul = rankMul(id, TIERS[cur.tier].rank);   // 军衔成长：只加血与伤害（C7-5），现算不查表
   const u = { hero: true, id, def, w, root, pos: root.position, home, socket, weapon, mixer: new THREE.AnimationMixer(root), mats: cloneMats(root),
-    anims: g.animations, acts: {}, cur: null, h: HH[i], r: HERO_R, hp: def.hp, maxHp: def.hp, vel: new THREE.Vector3(),
-    cd: Math.random() * .5, sk: [2 + Math.random() * 4, 5 + Math.random() * 6], buf: {}, lock: 0, holdT: 0, atkT: 0, flash: 0, target: null, dead: false, deadT: 0, spd: 0 };
+    anims: g.animations, acts: {}, cur: null, h: HH[i], r: HERO_R, name: nm, growth: gr, id2: cl?.id,
+    hp: def.hp * mul, maxHp: def.hp * mul, vel: new THREE.Vector3(),
+    cd: Math.random() * .5, sk: [2 + Math.random() * 4, 5 + Math.random() * 6], buf: {}, lock: 0, atkT: 0, flash: 0, target: null, dead: false, deadT: 0, spd: 0 };
   const halo = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.position.y = .04; m.renderOrder = 1; root.add(m); return m; };
   u.halo = slot ? [halo(HALO, haloMat)] : [halo(HALO_CAP, capMat), halo(HALO_OUT, capOut), halo(HALO_FILL, capFill)];
   play(u, 'idle'); return u;
@@ -397,9 +426,9 @@ function makeZombie(type, x, z, ry = 0) {
   root.rotation.order = 'YXZ';   // 击倒绕自身左右轴仰倒
   root.position.set(x, 0, z); root.rotation.y = ry; scene.add(root);
   const u = { type, t, root, pos: root.position, mixer: new THREE.AnimationMixer(root), mats: cloneMats(root), anims: g.animations, acts: {}, cur: null,
-    h: ZH[i], gv: ZGV[i], r: t.r * .7, hp: t.hp, vel: new THREE.Vector3(), cd: t.ai * Math.random(), skCd: 1 + Math.random() * 3, lock: 0, state: 'walk',
+    h: ZH[i], gv: ZGV[i], r: t.r * .7, hp: t.hp * G.zhp, vel: new THREE.Vector3(), cd: t.ai * Math.random(), skCd: 1 + Math.random() * 3, lock: 0, state: 'walk',
     flash: 0, slow: 0, slowT: 0, frz: 0, burn: 0, mark: 0, vuln: 0, shield: type === 'ward' ? ZB.ward.shield : 0, sly: Math.random() < t.cun,
-    dead: false, deadT: 0, spd: 0, leap: null };
+    dead: false, deadT: 0, spd: 0, leap: null, lane: Math.random() < .4 ? 0 : 1 + (Math.random() < .5), side: Math.random() * 2 - 1 };
   play(u, 'walk'); u.acts.walk.time = Math.random() * 1.2;
   zs.push(u); return u;
 }
@@ -429,16 +458,9 @@ function bestSpot(p, range, r) {
   return best;
 }
 // 敌人来袭的主方向（src AutoAim.threatBearing）：方位角按「威胁值 ÷ 距离」加权平均，不是最近那一只；
-// 玩家左键拖过方向后 6 s 内让位给玩家朝向。没有敌人返回 null
-let aimYaw = 0, aimT = 0, aimDrag = false;
-{ const ray = new THREE.Raycaster(), gp = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ndc = new THREE.Vector2(), q = new THREE.Vector3();
-  renderer.domElement.addEventListener('pointerdown', (e) => { if (e.button === 0) aimDrag = true; });
-  addEventListener('pointerup', () => (aimDrag = false));
-  renderer.domElement.addEventListener('pointermove', (e) => { const c = aimDrag && captain(); if (!c) return;
-    ndc.set(e.clientX / innerWidth * 2 - 1, -e.clientY / innerHeight * 2 + 1); ray.setFromCamera(ndc, camera);
-    if (ray.ray.intersectPlane(gp, q) && Math.hypot(q.x - c.pos.x, q.z - c.pos.z) > 1) { aimYaw = Math.atan2(q.x - c.pos.x, q.z - c.pos.z); aimT = 6; } }); }
+// 玩家拖拽钉住了阵型朝向（或撤退中）就让位给那个朝向（04 §5.5）。没有敌人返回 null
 function threatBearing(p, r = 40) {
-  if (aimT > 0) return aimYaw;
+  if (SQ.manual && FACING[CMD[order]]) return SQ.yaw;
   let sx = 0, sz = 0;
   for (const z of nearZ(p, r)) { const dx = z.pos.x - p.x, dz = z.pos.z - p.z, d = Math.hypot(dx, dz) || 1, w = (z.t.th ?? 1) / d; sx += dx / d * w; sz += dz / d * w; }
   return sx || sz ? Math.atan2(sx, sz) : null;
@@ -493,8 +515,8 @@ function push(u, fx, fz, force) {   // force → 初速 m/s；摩擦在 move() �
 function hitZ(z, dmg, o = {}) {
   if (z.dead) return;
   const from = o.from ?? z.pos, fx = z.pos.x - from.x, fz = z.pos.z - from.z;
-  dmg *= G.armorK / (G.armorK + z.t.armor * (1 - (o.pen ?? 0))) * (1 - (z.t.dr ?? 0) * (1 - (o.pen ?? 0)));
-  dmg *= (1 + (z.mark > 0 ? G.markBonus : 0) + (z.vuln > 0 ? G.vulnBonus : 0)) * (1 + teamBuf('atk'));
+  dmg *= G.armorK / (G.armorK + z.t.armor * G.zarmor * (1 - (o.pen ?? 0))) * (1 - (z.t.dr ?? 0) * (1 - (o.pen ?? 0)));
+  dmg *= (1 + (z.mark > 0 ? G.markBonus : 0) + (z.vuln > 0 ? G.vulnBonus : 0)) * (1 + teamBuf('atk')) * squadMul;
   // 护盾：正面 ±60° 来的伤害先扣盾；盾破 3 s 易伤
   if (z.shield > 0 && (fx || fz)) {
     const f = Math.sin(z.root.rotation.y) * -fx + Math.cos(z.root.rotation.y) * -fz;
@@ -533,7 +555,7 @@ function killZ(z) {
 function blowBomber(z) {
   const B = ZB.bomber; z.hideAt = 0; explode(z.pos.x, z.pos.z, B.r * .82, 0xff7733);
   emit(SOLID, 20, z.pos.x, .6, z.pos.z, { color: 0x6b3a2a, spd: 5, up: 6, size: .12, life: 1.3 });
-  for (const h of team()) { const d = Math.sqrt(d2(h.pos, z.pos)); if (d < B.r) hurt(h, z.t.atk * (1 - d / (B.r * 1.36)), { from: z.pos, knock: B.knock, blast: true }); }
+  for (const h of team()) { const d = Math.sqrt(d2(h.pos, z.pos)); if (d < B.r) hurt(h, z.t.atk * G.zatk * (1 - d / (B.r * 1.36)), { from: z.pos, knock: B.knock, blast: true }); }
   for (const o of nearZ(z.pos, B.splashR)) if (o !== z) hitZ(o, B.splash, { from: z.pos, knock: 80 });
 }
 // 队员 / 召唤物受伤：团队减伤 buff；爆炸必推（blast），其余按稳固判定
@@ -790,12 +812,12 @@ function cast(h, k, auto) {
   return true;
 }
 
-// ── 站定（AIProfile.holdPolicy）：never 只在队长停下时放；safe 最近敌人在「射程 × engageDistanceMul」外才放、被贴脸或玩家移动即解除；
+// ── 站定（AIProfile.holdPolicy）：never 只在队伍停下时放；safe 最近敌人在「射程 × engageDistanceMul」外才放、被贴脸或玩家移动即解除；
 //    engaged 目标进射程（扎根看嘲讽半径）就放、贴脸也不断。站定期间锚点钉在脚下；离队长超过 12 m 强制解除（tether 是硬约束）
 const reachOf = (h) => h.w.range * CELL * (1 + buf(h, 'range')) + (h.w.kind === 'melee' ? .5 : 0);
 function standOk(h, P) {
   const ai = { ...AI[h.id], ...CMD_OVER[CMD[order]] }, e = nearestZ(h.pos, 99), d = e ? Math.sqrt(d2(e.pos, h.pos)) : 1e9, r = reachOf(h) * ai.engageDistanceMul;
-  if (ai.holdPolicy === 'never') return (captain()?.spd ?? 0) < .5 && d < r;
+  if (ai.holdPolicy === 'never') return !SQ.dest && !kdir().some(Boolean) && d < r;   // 队伍停下（没有未走完的点地指令、没按 WASD）才站
   if (ai.holdPolicy === 'safe') return d > r && d < reachOf(h) * (1 + (P.rangeMul ?? 0));   // 安全、但值得站：敌人在加成后的射程里
   return d < Math.max(r, P.tauntR ?? 0);
 }
@@ -806,7 +828,7 @@ function standOn(h, P, color, r) {
 }
 function endStand(h) { for (const k of ['dr', 'range']) if (h.buf[k]) h.buf[k].t = 0; h.stand = null; }
 function stepStand(h, dt) {   // 返回 true = 本帧已处理（站着打）
-  const st = h.stand, c = captain(), moving = Object.values(keys).some(Boolean) && (order === 'free' || h === c);
+  const st = h.stand, c = captain(), moving = !!SQ.dest || kdir().some(Boolean);
   if ((st.t -= dt) <= 0 || c && c !== h && Math.hypot(c.pos.x - h.pos.x, c.pos.z - h.pos.z) > 12
     || st.pol === 'safe' && (moving || nearZ(h.pos, 2).length)) { endStand(h); return false; }
   if (st.tauntR && (st.tt -= dt) <= 0) { st.tt = .5; for (const z of nearZ(h.pos, st.tauntR)) if (!z.sly) z.taunt = { u: h, t: 1 }; }
@@ -883,80 +905,152 @@ function separate(units) {
   }
 }
 
-// ── 团队命令：只改每个队员的「站位锚点」h.home，索敌 / 拴绳 / 走位 / 开火全部复用现成 AI ──
-// 角度沿用 atan2(vx,vz) 那套：yaw 方向 = (sin yaw, cos yaw)，队长模型朝向就是队伍的正面
+// ── 阵型与鼠标（04 §5.4–5.6）：队伍有一个中心 S。左键点地 / WASD 只挪 SQ 和阵型朝向，每名队员的站位锚点 h.home 由 rings 绕 SQ 摆出；
+//    索敌 / 拴绳 / 走位 / 开火全部复用现成 AI。角度沿用 atan2(vx,vz)：yaw 方向 = (sin yaw, cos yaw)
 // 三档就是 src 的 SQUAD_COMMANDS（defend / ring / advance），名字与说明照抄，别再各叫一套
 const ORDERS = {
-  tight: { name: '普通防御阵型', hint: '最紧密的站位，有朝向。近战在前、远程在后、辅助在中心，全员收在队长周围。（src：defend）' },
+  tight: { name: '普通防御阵型', hint: '最紧密的站位，有朝向。近战在前、远程在两翼、辅助居中靠后，全员收在队长周围。（src：defend）' },
   free: { name: '环形防御阵型', hint: '没有朝向。近战在外圈防四面来敌，远程环视射击，辅助在内圈按需游走。（src：ring）' },
   retreat: { name: '搜索推进阵型', hint: '站位更松散，近战可以前置得更远、活动范围更大，代价是收不紧。（src：advance）' },
 };
 let order = 'tight';
-// tight / free / retreat 就是 src 的 defend / ring / advance：站位与拴绳取 SQUAD_COMMANDS 的 rings，原型不许自己写一份
 const CMD = { tight: 'defend', free: 'ring', retreat: 'advance' };
-const LAYER_ROLE = { melee: 'tank', back: 'rangedDps', core: 'support' };   // 每层挑一个代表定位去 rings 里找
-const ringOf = (k, layer) => RINGS[CMD[k]].find((r) => r.roles.includes(LAYER_ROLE[layer]));
-const ORDER_R = Object.fromEntries(['tight', 'free', 'retreat'].map((k) => [k, {
-  layer: ringOf(k, 'melee').radius, back: ringOf(k, 'back').radius,
-  tether: Math.max(...RINGS[CMD[k]].map((r) => r.tether)),   // free 不摆环位，只借这一档的最大活动半径做「别跑太远」的兜底
-}]));
-const short = (h) => layerOf(h) === 'melee';   // 短手 = 站近战层（src role 派生的，不是按武器射程猜）
-const HOLD = 1.2;   // 近战脱离包围后的脱战冷却（秒）：这段时间内不重新索敌，先走回阵位
-// 定位来自 src（HEROES_BY_ID[id].role），决定站 rings 的哪一层——近战层 / 后排层 / 中心层
+// 定位来自 src（HEROES_BY_ID[id].role），决定站 rings 的哪一层；那一层的 tether 就是他的活动圈（画出来的圈读同一个字段）
+const ringOfHero = (h, k = order) => RINGS[CMD[k]].find((r) => r.roles.includes(ROLE[h.id])) ?? RINGS[CMD[k]][0];
 const layerOf = (h) => ROLE[h.id] === 'rangedDps' ? 'back' : ROLE[h.id] === 'tank' || ROLE[h.id] === 'meleeDps' ? 'melee' : 'core';
-const tetherOf = (h) => (RINGS[CMD[order]].find((r) => r.roles.includes(ROLE[h.id])) ?? RINGS[CMD[order]][0]).tether;   // 阵型的 overrides 也是一层，见 stepStand
-let fyaw = 0;   // 紧密阵型的朝向：只跟队长「走动」的方向，原地转身打怪不转阵
+const tetherOf = (h) => ringOfHero(h).tether;   // 阵型的 overrides 也是一层，见 stepStand
+// 算「到了」。两条人挤不到 0.5 以内：HERO_R 是 0.3，两人的圆心最少隔 0.6（见 separate），
+// 所以锚点一旦被队友占了，阈值 0.5 就永远达不到——h.go 一真到底，人就一直跑着动画原地磨。
+// 按两倍半径定阈值，再加一点余量，站位够近就算到位
+const ARRIVE = HERO_R * 2 + .12;
+const SLOT_EPS = .3;   // 锚点挪动超过这些才叫「换站位」，不然 quiet 的人会被叫起来再跑一遍（0.05 时朝向一晃就重排）
 const captain = () => heroes.find(live) ?? heroes[0] ?? null;   // 队长阵亡就顺位交给下一个活人
-// 环形站位：yaw = 相对队长该站的方向，n 个人沿 spread 弧度均分；单人正对 yaw
-function ringSlot(cx, cz, yaw, i, n, radius, spread) {
-  const a = yaw + (n > 1 ? (i / (n - 1) - .5) * spread : 0);
-  return [cx + Math.sin(a) * radius, cz + Math.cos(a) * radius];
+// S：goal = 最近一次指令的落点（站位指示画在这里），dest = 还没走到的落点，manual = 朝向被玩家钉住（拖拽 / 撤退）
+const SQ = { x: 0, z: 0, yaw: 0, mx: 0, mz: 1, manual: false, dest: null, goal: null };
+let focus = null, planT = 0, drag = null;
+// 站不站得住（§5.6 第一层）：挡人 / 挡子弹的格子不能当锚点，泥地、草地无所谓。
+// 「跑着动画但是到不了位」的老根因就在这：点地时只吸附了阵型中心，每名队员的锚点没吸附
+const blocked = (x, z) => { const c = cellOf(M, x, z); return c < 0 || !!M.mv[c]; };
+// 落点 / 锚点落进挡人格 → 吸附到附近的可走格（§5.6 第一层）。ponytail: 按切比雪夫圈找，不是严格最近；8 格内找不到就原样返回
+function snap(x, z) {
+  if (!M) return [x, z]; const c = cellOf(M, x, z); if (c >= 0 && !M.mv[c]) return [x, z];
+  for (let r = 1; r < 8; r++) for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) {
+    if (Math.max(Math.abs(i), Math.abs(j)) !== r) continue;
+    const nx = Math.floor(x) + i + .5, nz = Math.floor(z) + j + .5, n = cellOf(M, nx, nz); if (n >= 0 && !M.mv[n]) return [nx, nz]; }
+  return [x, z];
+}
+// rings 绕 (cx,cz) 摆出每名活着队员的锚点：每层 n 人沿 spread 均分；spread = 2π 的铺满一圈（首尾不重合）
+function slotsAt(cx, cz, yaw) {
+  const out = new Map(), on = heroes.filter(live);
+  for (const r of RINGS[CMD[order]]) {
+    const list = on.filter((h) => ringOfHero(h) === r), n = list.length, full = r.spread > 6.2;
+    list.forEach((h, i) => { const a = yaw + r.bearing, R = r.radius + LAYER_PUSH;   // 层心按层自己的 bearing 推出去一点，层与层才分得开
+      const s = full ? i / n * Math.PI * 2 : n > 1 ? (i / (n - 1) - .5) * r.spread : 0;
+      out.set(h, snap(cx + Math.sin(a + s) * R, cz + Math.cos(a + s) * R)); });
+  }
+  return out;
+}
+// 一个点四米内还有挡人格就算「贴墙」。贴墙时阵型整体沿球推出去再摆站位，否则半个阵型会摆进墙里，
+// 站在墙里的那几个人永远到不了（原地跑）。找不到位就退回原点 —— 宁可挤一点，也不要有到不了的锚点
+function freeAt(x, z, r = 4) {
+  if (!blocked(x, z)) return [x, z];
+  const { N, half } = M, i = Math.floor(x + half), j = Math.floor(z + half);
+  for (let R = 1; R <= r; R++) for (let j2 = j - R; j2 <= j + R; j2++) for (let i2 = i - R; i2 <= i + R; i2++) {
+    if (Math.max(Math.abs(i2 - i), Math.abs(j2 - j)) !== R) continue;
+    const c = (i2 < 0 || j2 < 0 || i2 >= N || j2 >= N) ? -1 : j2 * N + i2;
+    if (c >= 0 && !M.mv[c]) return [i2 - half + .5, j2 - half + .5];
+  }
+  return [x, z];
+}
+const kdir = () => [(keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0)];
+const camMove = (kx, kz) => { const f = new THREE.Vector3().subVectors(orbit.target, camera.position).setY(0).normalize(), vx = f.x * -kz - f.z * kx, vz = f.z * -kz + f.x * kx, n = Math.hypot(vx, vz); return [vx / n, vz / n]; };
+const turn = (a, b, k) => { const d = Math.atan2(Math.sin(b - a), Math.cos(b - a)); return a + Math.max(-k, Math.min(k, d)); };
+
+// ── 地面指示：每名队员的目的站位点 + 圈（近战 = 活动圈 tether，远程 = 武器射程，辅助只画点）+ 阵型朝向箭头；下令后显示，到位 2 s 后淡出（07 界面原型）
+const THIN = new THREE.RingGeometry(.97, 1, 72).rotateX(-Math.PI / 2), plan = [];
+// 射程 / 活动圈：坐标纸式 1 px 细线 + 刻度（5° 短刻、15° 中刻、45° 长刻）+ 圆心十字。刻度长度按米，不随半径放大，所以按半径缓存几何
+const GRID = new Map(), lineMat = (c) => new THREE.LineBasicMaterial({ color: c, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+function gridRing(r) {
+  const key = r.toFixed(2); if (GRID.has(key)) return GRID.get(key);
+  const v = [], P = (a, l) => [Math.sin(a) * l, 0, Math.cos(a) * l];
+  for (let i = 0; i < 120; i++) v.push(...P(i / 60 * Math.PI, r), ...P((i + 1) / 60 * Math.PI, r));
+  for (let d = 0; d < 360; d += 5) { const a = d * Math.PI / 180, L = d % 45 ? d % 15 ? .12 : .25 : .5; v.push(...P(a, r), ...P(a, r - L)); }
+  v.push(-.4, 0, 0, .4, 0, 0, 0, 0, -.4, 0, 0, .4);
+  const g = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); GRID.set(key, g); return g;
+}
+const arrow = new THREE.Group(); scene.add(arrow); arrow.visible = false;
+{ const m = add(0xe8f0ff, .8), sh = new THREE.Mesh(BOX, m), hd = new THREE.Mesh(new THREE.ConeGeometry(.45, .9, 3).rotateX(Math.PI / 2), m);
+  sh.scale.set(.14, .02, 1.6); sh.position.z = .8; hd.position.z = 2; hd.scale.y = .05; arrow.add(sh, hd); arrow.mat = m; }
+const focusMark = new THREE.Mesh(THIN, add(0xffffff, .9)); scene.add(focusMark); focusMark.visible = false;   // 集火标记：白圈（红色只留给错误与禁止）
+function showPlan(x, z, yaw) {
+  let i = 0;
+  for (const [h, [sx, sz]] of slotsAt(x, z, yaw)) {
+    const p = plan[i++] ??= (() => { const o = { dot: new THREE.Mesh(DISC, add(0xffffff)), ring: new THREE.LineSegments(gridRing(1), lineMat(0xffffff)) }; scene.add(o.dot, o.ring); return o; })();
+    const L = layerOf(h), col = L === 'melee' ? C_MELEE : L === 'back' ? C_RANGED : C_SUP, r = L === 'melee' ? tetherOf(h) : L === 'back' ? reachOf(h) : 0;
+    p.dot.material.color.setHex(col); p.ring.material.color.setHex(col); p.dot.position.set(sx, .05, sz); p.ring.position.set(sx, .05, sz);
+    p.dot.scale.setScalar(.35); p.ring.geometry = gridRing(r || 1); p.dot.visible = true; p.ring.visible = r > 0;
+  }
+  for (; i < plan.length; i++) plan[i].dot.visible = plan[i].ring.visible = false;
+  arrow.visible = FACING[CMD[order]]; arrow.position.set(x, .06, z); arrow.rotation.y = yaw;
+}
+function command(p, yaw) {   // 左键点地 / 拖拽松手：落点即阵型中心
+  focus = null; const [x, z] = snap(p[0], p[1]), dx = x - SQ.x, dz = z - SQ.z, l = Math.hypot(dx, dz);
+  if (yaw != null) { SQ.manual = true; SQ.yaw = yaw; }   // 拖出的朝向钉住，直到下一次普通单击
+  else SQ.manual = FACING[CMD[order]] && dx * Math.sin(SQ.yaw) + dz * Math.cos(SQ.yaw) < -1;   // 点队长身后 = 撤退：不转向，保持迎敌朝向边打边撤
+  if (l > .1) { SQ.mx = dx / l; SQ.mz = dz / l; }
+  // 锚点直接落到地面标点上，每人立刻各自走向自己的点（h.go = 行军中：边走边打，不追怪、不停步），全员到位才算走完
+  SQ.x = x; SQ.z = z; SQ.dest = SQ.goal = [x, z]; for (const h of heroes) h.go = true; planT = 2;
+}
+if (!LAB) { const ray = new THREE.Raycaster(), gp = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ndc = new THREE.Vector2(), q = new THREE.Vector3(), v = new THREE.Vector3(), cv = renderer.domElement;
+  const groundAt = (e) => { ndc.set(e.clientX / innerWidth * 2 - 1, -e.clientY / innerHeight * 2 + 1); ray.setFromCamera(ndc, camera); return ray.ray.intersectPlane(gp, q) ? [q.x, q.z] : null; };
+  const zombieAt = (e) => { let b = null, bd = 30 ** 2;   // 屏幕上离光标 30 px 内、身体中点最近的那只（点在身上而不是脚下也能选中）
+    for (const z of zs) { if (z.dead) continue; v.set(z.pos.x, z.h * .5, z.pos.z).project(camera);
+      const d = ((v.x + 1) / 2 * innerWidth - e.clientX) ** 2 + ((1 - v.y) / 2 * innerHeight - e.clientY) ** 2; if (d < bd) { bd = d; b = z; } }
+    return b; };
+  cv.addEventListener('pointerdown', (e) => { if (e.button !== 0 || heroes.length < 2) return; const p = groundAt(e); if (!p) return; drag = { x0: e.clientX, y0: e.clientY, p, yaw: null, on: false }; });
+  cv.addEventListener('pointermove', (e) => { if (!drag) return;
+    if (!drag.on && FACING[CMD[order]] && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 8) drag.on = true;
+    const g = drag.on && groundAt(e); if (g && Math.hypot(g[0] - drag.p[0], g[1] - drag.p[1]) > .5) { drag.yaw = Math.atan2(g[0] - drag.p[0], g[1] - drag.p[1]); showPlan(...snap(...drag.p), drag.yaw); planT = 2; } });
+  addEventListener('pointerup', (e) => { if (e.button !== 0 || !drag) return; const d = drag; drag = null;
+    if (d.on && d.yaw != null) return command(d.p, d.yaw);
+    if (d.on) return;   // 拖了但没拖出方向：当作取消
+    const z = zombieAt(e); if (z) { focus = z; return; }   // 左键点敌人 = 集火；点地面解除
+    command(d.p, null); });
 }
 function stepOrders(dt) {
   if (heroes.length < 2) return;   // 技能台单人：命令无意义
-  const c = captain(); if (!c) return;
-  for (const h of heroes) if (h !== c && !live(h)) h.home.copy(c.pos);   // 阵亡的归队复活，别留在原地
-  const fs = heroes.filter((h) => h !== c && live(h)); if (!fs.length) return;
-  const R = order === 'free' ? ORDER_R[order].tether : ORDER_R[order].layer;   // 站位半径直接取该档 rings，不再各写一份
-  const yaw = c.root.rotation.y;
-
-  if (order === 'free') {   // 自由：不摆位，只在离队太远时把锚点往回拽
-    for (const h of fs) {
-      const dx = h.home.x - c.pos.x, dz = h.home.z - c.pos.z, d = Math.hypot(dx, dz);
-      if (d > R) { const k = (d - R) / d; h.home.x -= dx * k; h.home.z -= dz * k; }
-    }
-    return;
-  }
-  if (order === 'tight') {   // 紧密：全员上环形站位，正面留给队长
-    if (c.spd > 1) fyaw = yaw;
-    const back = fyaw + Math.PI, spread = short(c) ? Math.PI * 2 : Math.PI * 1.1;
-    fs.forEach((h, i) => { const [x, z] = ringSlot(c.pos.x, c.pos.z, back, i, fs.length, R, spread); h.home.set(x, 0, z); });
-    return;
-  }
-  // 撤退：以「背对最近威胁」为基准，近战挡前、远程缩后
-  const th = threatBearing(c.pos) ?? yaw;   // 来袭主方向（威胁加权），不是最近那一只
-  // 被围的近战先脱离：本帧不摆环位。只设 holdT，锚点仍由队长位置每帧重写（见下），
-  // 这样它走回队长身后，而不是原地被环位一次次拖回去、又被索敌拉回来。
-  for (const h of fs) if (short(h) && h.holdT <= 0 && nearZ(h.pos, 3).length >= 3) h.holdT = HOLD;   // 近战被围：脱离
-  const ring = fs.filter((h) => h.holdT <= 0);
-  const put = (list, base, radius, spread) => list.forEach((h, i) => {
-    const [x, z] = ringSlot(c.pos.x, c.pos.z, base, i, list.length, radius, spread); h.home.set(x, 0, z); });
-  put(ring.filter(short), th, ORDER_R.retreat.layer, Math.PI * .9);   // 近战挡在队长身前
-  put(ring.filter((h) => !short(h)), th + Math.PI, ORDER_R.retreat.back, Math.PI * .8);   // 远程缩到队长身后
-  const hold = fs.filter((h) => h.holdT > 0);   // 脱离中：贴着队长身后，别再挨打
-  hold.forEach((h, i) => { const [x, z] = ringSlot(c.pos.x, c.pos.z, th + Math.PI, i, hold.length, 1.2, Math.PI * .8); h.home.set(x, 0, z); });
-  for (const h of fs) {   // 各自再微调一次锚点
-    if (h.holdT > 0) continue;   // 脱离中的不参与微调，安心走回去
-    const e = nearestZ(h.pos, 26); if (!e) continue;
-    const d = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z);
-    if (!short(h)) {   // 远程被贴脸：锚点往外让，把射程拉开
-      const want = Math.max(6, h.w.range * CELL * .8);
-      if (d < want) { const k = (want - d) / d * .5; h.home.x += (h.home.x - e.pos.x) * k; h.home.z += (h.home.z - e.pos.z) * k; }
-    }
-  }
+  if (focus?.dead) focus = null;
+  focusMark.visible = !!focus; if (focus) { focusMark.position.set(focus.pos.x, .07, focus.pos.z); focusMark.scale.setScalar(focus.r + .4 + .08 * Math.sin(performance.now() * .01)); }
+  const [kx, kz] = kdir(), facing = FACING[CMD[order]];
+  if (kx || kz) {   // WASD：整队平移微调，按住期间不转阵；SQ 往后 = 撤退，同一条分支
+    const [vx, vz] = camMove(kx, kz), nx = SQ.x + vx * G.heroSpd * .85 * dt, nz = SQ.z + vz * G.heroSpd * .85 * dt, c = M ? cellOf(M, nx, nz) : 0;
+    if (c >= 0 && !(M && M.mv[c])) { SQ.x = nx; SQ.z = nz; } SQ.dest = null; SQ.goal = [SQ.x, SQ.z];
+  } else if (SQ.dest && heroes.every((h) => h.dead || !h.go)) SQ.dest = null;   // 点地移动：全员走到自己的标点
+  // 朝向（§5.5）：有朝向的档位默认取来袭主方向，没敌人就朝行进方向；玩家拖过 / 撤退中 / WASD 按住时不动
+  // 朝向（§5.5）：有朝向的档位默认取来袭主方向，没敌人就朝行进方向；玩家拖过 / 撤退中 / WASD 按住时不动
+  // 行军途中不转阵：朝向每一帧都在改，slotsAt 每个锚点就跟着绕着中心甩，人跑到底也追不上（实测 8 s 甩了 2.8 rad）。
+  // 只有敌人绕到侧后方（> 90°）才翻一次身，转到位（< 15°）就锁住，不在 90° 附近来回抖
+  if (facing && !SQ.manual && !(kx || kz)) {
+    const th = threatBearing(SQ), dv = th == null ? Math.PI : Math.abs(Math.atan2(Math.sin(th - SQ.yaw), Math.cos(th - SQ.yaw)));
+    if (SQ.dest) { if (dv > Math.PI / 2) SQ.re = true; if (SQ.re && dv < .25) SQ.re = false; if (SQ.re) SQ.yaw = turn(SQ.yaw, th, dt * 1.2); }
+    else { SQ.re = false; if (th != null) SQ.yaw = turn(SQ.yaw, th, dt * 2.5); }
+  } else SQ.re = false;
+  const [fx, fz] = M ? freeAt(SQ.x, SQ.z) : [SQ.x, SQ.z];
+  if (fx !== SQ.x || fz !== SQ.z) { SQ.x = fx; SQ.z = fz; if (SQ.dest) { SQ.dest = [fx, fz]; SQ.goal = [fx, fz]; } }
+  const slots = slotsAt(SQ.x, SQ.z, SQ.yaw);
+  for (const h of heroes) { const s = slots.get(h); if (s) { if (Math.hypot(s[0] - h.home.x, s[1] - h.home.z) > SLOT_EPS) h.go = true; h.home.set(s[0], 0, s[1]); } else h.home.set(SQ.x, 0, SQ.z); }   // 阵亡的归队复活，别留在原地
+  if (SQ.dest || drag?.on) planT = 2; else planT -= dt;
+  if (planT > 0 && !drag?.on && SQ.goal) showPlan(SQ.goal[0], SQ.goal[1], SQ.yaw);   // 逐帧重画：自动朝向转了，指示跟着转
+  const k = Math.max(0, Math.min(1, planT));
+  for (const p of plan) { p.dot.material.opacity = .8 * k; p.ring.material.opacity = .7 * k; }
+  arrow.mat.opacity = .8 * k; if (!k) { arrow.visible = false; for (const p of plan) p.dot.visible = p.ring.visible = false; }
 }
 
 // ── 队员 AI ──
+// 阵型层锚点（层心）：每层的锚点 = 层心的参考点 + 该层自己的角度（见 slotsAt）。
+// 参考点放在 0.55 m：全员同心的环靠 bearing 的差就能分层，但「辅助居中」会跟近战挤在同一个圆心，
+// 挤开以后谁在前谁在后就看运气——所以给每层推出去一点，方向就是层自己的 bearing。
+const LAYER_PUSH = .55;
 // 索敌半径 / 脱战半径：src 按【格】给，原型按 m，CELL = 0.5（gamedata.js）
 const aggroOf = (h) => AI[h.id].aggroRange * CELL;
 const leashOf = (h) => AI[h.id].leashRange * CELL;
@@ -971,7 +1065,7 @@ function stepHero(h, dt) {
     return move(h, 0, 0, dt);
   }
   for (const k in h.buf) h.buf[k].t -= dt;
-  h.sk[0] -= dt; h.sk[1] -= dt; h.cd -= dt; h.lock -= dt; h.holdT -= dt;
+  h.sk[0] -= dt; h.sk[1] -= dt; h.cd -= dt; h.lock -= dt;
   if (h.swarm > 0) { h.swarm -= dt; emit(GLOW, 2, h.pos.x, 1.2, h.pos.z, { color: 0x44ffdd, spd: 3, up: .5, size: .05, life: .6, grav: 0 }); }
   if (h.pend && (h.pend.at -= dt) <= 0) { const z = h.pend.z; h.pend = null; if (!z.dead || h.w.kind === 'melee') fire(h, z); }
   if (h.dash) {   // 铁壁冲锋
@@ -991,28 +1085,25 @@ function stepHero(h, dt) {
   if (auto.checked && h.lock <= 0) cast(h, 1, 1) || cast(h, 0, 1);
   if (h.lock > 0) return move(h, 0, 0, dt);
   if (h.stand && stepStand(h, dt)) return;
-  // 键盘走位：按镜头方向。每个队员各自算出同一个方向向量，所以整队一起挪、相对站位不变（挤到的由分离推开）
-  const kx = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), kz = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0);
-  if (kx || kz) {
-    // 紧密 / 撤退：键盘只驱动队长，队员追自己的环位（略快于队长，被僵尸挤开也能补回来）
-    if (heroes.length > 1 && order !== 'free' && h !== captain()) { h.target = null; return goHome(h, dt, G.heroSpd * 1.3 * (1 + buf(h, 'move'))); }
-    const f = new THREE.Vector3().subVectors(orbit.target, camera.position).setY(0).normalize(), r = new THREE.Vector3(-f.z, 0, f.x);
-    const vx = (f.x * -kz + r.x * kx), vz = (f.z * -kz + r.z * kx), n = Math.hypot(vx, vz), spd = G.heroSpd * (1 + buf(h, 'move'));
-    move(h, vx / n * spd, vz / n * spd, dt);
-    // 自由作战：人人把锚点钉在脚下 → 键盘走位时全队一起平移（松散跟随）；其余命令走到这里的只有队长
-    if (heroes.length < 2 || order === 'free' || h === captain()) h.home.copy(h.pos);
+  // 键盘走位（只剩技能台单人用；小队的 WASD 挪的是队伍中心，见 stepOrders）
+  const [kx, kz] = kdir();
+  if (heroes.length < 2 && (kx || kz)) {
+    const [vx, vz] = camMove(kx, kz), spd = G.heroSpd * (1 + buf(h, 'move'));
+    move(h, vx * spd, vz * spd, dt); h.home.copy(h.pos);
     const run = GRIPS[h.w.grip][1]; play(h, run); syncGait(h, run, STRIDE.hero); return;
   }
+  if (h.go && Math.hypot(h.pos.x - h.home.x, h.pos.z - h.home.z) < ARRIVE) h.go = false;
+  if (heroes.length > 1 && (h.go || kx || kz)) return marchFire(h, dt, G.heroSpd * (1 + buf(h, 'move')));
   if (LAB && !heroAtk.checked) return goHome(h, dt, G.heroSpd);   // 松手的位置就是新站位，普攻追击也拴在这里
   // 索敌：目标按 role 定的优先级挑（最近 / 最脆 / 最硬），脱战半径读 AIProfile.leashRange；嘲讽不影响队员
   const melee = h.w.kind === 'melee', reach = reachOf(h);
-  if (h.holdT > 0) { h.target = null; return goHome(h, dt, G.heroSpd * (1 + buf(h, 'move'))); }   // 脱战冷却：先走回阵位，不许掉头再冲进去
   if (retreating(h)) { h.target = null; return goHome(h, dt, G.heroSpd * (1 + buf(h, 'move'))); }   // 血掉到线以下：退回锚点，不再追
-  // 紧密 / 撤退：离锚点超过该层拴绳就先归位再打。否则远程只要目标在射程内就原地站桩，队长一走锚点移开，人就越拉越散
-  if (order !== 'free' && heroes.length > 1 && Math.hypot(h.pos.x - h.home.x, h.pos.z - h.home.z) > tetherOf(h) + 1) {
+  // 离锚点超过该层拴绳就先归位再打（tether 是硬约束）。否则远程只要目标在射程内就原地站桩，队伍一走锚点移开，人就越拉越散
+  if (heroes.length > 1 && Math.hypot(h.pos.x - h.home.x, h.pos.z - h.home.z) > tetherOf(h) + 1) {
     h.target = null; return goHome(h, dt, G.heroSpd * (1 + buf(h, 'move'))); }
-  if (!h.target || h.target.dead || d2(h.target.pos, h.pos) > leashOf(h) ** 2 || Math.random() < dt * 2)
-    h.target = pickZ(h.home, Math.max(tetherOf(h) + reach, aggroOf(h)), AI[h.id].targetPriority);
+  const R = Math.max(tetherOf(h) + reach, aggroOf(h));
+  if (focus && d2(focus.pos, h.home) < R * R) h.target = focus;   // 集火：够得着的全员改打它，够不着的照常按优先级打
+  else if (!h.target || h.target.dead || d2(h.target.pos, h.pos) > leashOf(h) ** 2 || Math.random() < dt * 2) h.target = pickZ(h.home, R, AI[h.id].targetPriority);
   const z = h.target, spd = G.heroSpd * (1 + buf(h, 'move'));
   if (z) {
     const d = Math.sqrt(d2(z.pos, h.pos));
@@ -1028,9 +1119,30 @@ function stepHero(h, dt) {
   }
   goHome(h, dt, spd);
 }
+// 行进射击（WASD 按住 / 点地行军中）：腿走向锚点，身体转向射程内的目标开火，不停步——边打边退就是按住 S。
+// 近战与投掷要播完出手动作（attack 里的 lock），会顿一下再跟上
+function marchFire(h, dt, spd) {
+  const reach = reachOf(h), R = reach + 1;
+  if (focus && d2(focus.pos, h.pos) < R * R) h.target = focus;
+  else if (!h.target || h.target.dead || d2(h.target.pos, h.pos) > R * R) h.target = pickZ(h.pos, reach + .5, AI[h.id].targetPriority);
+  goHome(h, dt, spd);
+  const z = h.target; if (!z || d2(z.pos, h.pos) > (reach + z.r) ** 2) return;
+  if (h.cd > 0) return;
+  face(h, z.pos, 1);
+  // 出手动作（近战 / 投掷，IMPACT）会连腿一起锁住一个动作时长：行进中播出来就是「跑着动画停在半路，过一下再走」。等站定再挥
+  if (IMPACT[h.w.kind]) { if (!h.go) attack(h, z); return; }
+  h.cd = 1 / (h.w.rate * (1 + buf(h, 'rate') + teamBuf('rate'))); fire(h, z);
+}
 function goHome(h, dt, spd) {
   const dx = h.home.x - h.pos.x, dz = h.home.z - h.pos.z, d = Math.hypot(dx, dz);
-  if (d > .2) { const s = Math.min(spd, d * 3); move(h, dx / d * s, dz / d * s, dt); play(h, GRIPS[h.w.grip][1]); syncGait(h, GRIPS[h.w.grip][1], STRIDE.hero); }
+  let ux = dx / d, uz = dz / d;
+  if (M && d > .2) {   // §5.6 第二层：直线走 0.4 s 没靠近 = 卡住 → 对锚点算一次流场沿着绕；锚点挪远 3 m 就作废重算
+    h.stuckT = d > (h.gd ?? 1e9) - spd * dt * .3 ? (h.stuckT ?? 0) + dt : 0; h.gd = d;
+    if (h.ff && (d < 1 || Math.hypot(h.ff.x - h.home.x, h.ff.z - h.home.z) > 3)) h.ff = null;
+    if (h.stuckT > .4 && !h.ff) h.ff = { ...flowField(M, [[h.home.x, h.home.z]]), x: h.home.x, z: h.home.z };
+    if (h.ff) { const f = flowDir(M, h.ff, h.pos.x, h.pos.z); if (f) [ux, uz] = f; }
+  }
+  if (d > .2) { const s = Math.min(spd, d * 3); move(h, ux * s, uz * s, dt); play(h, GRIPS[h.w.grip][1]); syncGait(h, GRIPS[h.w.grip][1], STRIDE.hero); }
   else { move(h, 0, 0, dt); play(h, 'idle', .25); }
 }
 
@@ -1043,7 +1155,7 @@ function zTarget(z) {
 function zImpact(z, tg) {
   if (!tg || tg.dead) return;
   if (z.ally) { hitZ(tg, z.dmg, { knock: 70, from: z.pos }); emit(SOLID, 5, tg.pos.x, .4, tg.pos.z, { color: 0x6a6a60, spd: 2, size: .08 }); return; }
-  if (d2(tg.pos, z.pos) < (z.r + tg.r + .7) ** 2) hurt(tg, z.t.atk * G.meleeMul, { from: z.pos, knock: z.t.kn });
+  if (d2(tg.pos, z.pos) < (z.r + tg.r + .7) ** 2) hurt(tg, z.t.atk * G.zatk * G.meleeMul, { from: z.pos, knock: z.t.kn });
 }
 function stepZombie(z, dt) {
   if (z.dead) {
@@ -1075,7 +1187,7 @@ function stepZombie(z, dt) {
     const l = z.leap; l.t += dt; const k = Math.min(1, l.t / l.T), kk = THREE.MathUtils.clamp((k - .3) / .5, 0, 1);
     z.pos.lerpVectors(l.a, l.b, kk); z.pos.y = Math.sin(kk * Math.PI) * 1.6;
     if (kk >= 1 && !l.landed) { l.landed = true; z.pos.y = 0; ring(z.pos.x, z.pos.z, ZB.leaper.r, 0xaa66ff, .35); emit(SOLID, 10, z.pos.x, .1, z.pos.z, { color: 0x555048, spd: 3, up: 3, size: .09 });
-      for (const u of team()) if (d2(u.pos, z.pos) < ZB.leaper.r ** 2) hurt(u, z.t.atk * ZB.leaper.mul, { from: z.pos, knock: ZB.leaper.knock }); }
+      for (const u of team()) if (d2(u.pos, z.pos) < ZB.leaper.r ** 2) hurt(u, z.t.atk * G.zatk * ZB.leaper.mul, { from: z.pos, knock: ZB.leaper.knock }); }
     if (k >= 1) { z.leap = null; z.state = 'walk'; }
     return;
   }
@@ -1107,9 +1219,10 @@ function stepZombie(z, dt) {
     const v = (z.ally ? 3.2 : z.t.spd * CELL * G.zspd) * (1 - z.slow);
     let ux = dx / d, uz = dz / d;
     if (M && !z.ally && d > 2.5) {   // 关卡：远了沿流场绕开障碍，近了直扑；方向做一点平滑，免得在格子拐角抖
-      const f = flowDir(M, FF, z.pos.x, z.pos.z);
+      const f = flowDir(M, z.lane && d > 6 && FL[z.lane - 1] || FF, z.pos.x, z.pos.z);   // 六成僵尸走左右包抄路线，到小队 6 m 内再直扑
       if (f) { const k = Math.min(1, dt * 8); z.fx = (z.fx ?? f[0]) + (f[0] - (z.fx ?? f[0])) * k; z.fz = (z.fz ?? f[1]) + (f[1] - (z.fz ?? f[1])) * k; const l = Math.hypot(z.fx, z.fz) || 1; ux = z.fx / l; uz = z.fz / l; }
     }
+    if (!z.ally && d > 4) { const s = z.side * .3, x = ux - uz * s, y = uz + ux * s, l = Math.hypot(x, y); ux = x / l; uz = y / l; }   // 每只固定偏一点侧向，同一条路上也铺开，不排成一条线
     move(z, ux * v, uz * v, dt); play(z, 'walk', .2); z.state = 'walk'; syncGait(z, 'walk', STRIDE.zombie);
     return;
   }
@@ -1121,7 +1234,7 @@ function stepZombie(z, dt) {
   if (atkName === 'spit') z.pend = { at: dur * .5, fn: () => {
     const f = z.pos.clone().setY(z.h * .8), to = tg.pos.clone().setY(.05);
     lob(f, to, .8, BALL, 0x99dd44, .14, (p) => { flash(p.x, .2, p.z, .6, 0x99dd44, .3); emit(GLOW, 10, p.x, .1, p.z, { color: 0x99dd44, spd: 2, up: 2, size: .08 });
-      for (const u of team()) if (d2(u.pos, p) < 1) hurt(u, z.t.atk * ZB.spitter.mul, { from: p, knock: z.t.kn }); });
+      for (const u of team()) if (d2(u.pos, p) < 1) hurt(u, z.t.atk * G.zatk * ZB.spitter.mul, { from: p, knock: z.t.kn }); });
   } };
   else z.pend = { at: dur * .45, fn: () => zImpact(z, tg) };
 }
@@ -1159,22 +1272,43 @@ function stepFlow(dt) {
   spawnAcc += dt * rateAt(LV, flowT);
   while (spawnAcc >= 1) { spawnAcc--; if (alive() < (LV.cap ?? 120)) spawnOne(); }
 }
-function restartLevel() { clearZ(); flowT = spawnAcc = kills = 0; flowI = -1; flowEnd = false; setSquad(pick); }
+function restartLevel() { clearZ(); flowT = spawnAcc = kills = 0; flowI = -1; flowEnd = false; setSquadNow(); }
 const mmss = (t) => `${(t / 60) | 0}:${String((t % 60) | 0).padStart(2, '0')}`;
 
 // ── 小队：换人时整队重建 ──
-let pick = [...PICK0];
-function setSquad(ids) {
+let pick = [...PICK0], tier = 0, squadMul = 1;
+// 本局出场配置：tier = 转数（小队等级），classes[i] = 第 i 人的职业。写进关卡文件的是 [tier, 职业 id…] 的短串
+let cur = { tier: 0, classes: [] };
+// 小队等级 = 转数 → 该级职业名册；换级时按「与旧名单的树重合度」自动换一批同树的
+function curFromSquad(squad) {
+  // 关卡文件里写的是样板英雄 id（'ron'/'vera'…）。原型借模型/AI/技能给职业，所以两人同职业时分的其实是「借谁的」，
+  // 六转的同一条 path 会撞到同一个样板，这里按 BFS 顺序优先挑没被占的，实在没有了才复用
+  const hids = (Array.isArray(squad) ? squad : []).filter((h) => T.HERO[h]);
+  const five = (hids.length ? hids : PICK0).slice(0, 5), taken = [];
+  return { tier: 0, classes: five.map((h) => {
+    const pool = CLASSES_OF.get(0).filter((c) => c.tree === (TREE_OF_HERO[h] ?? 'swordsman'));
+    const c = pool.find((x) => !taken.includes(x.id)) ?? pool[0]; taken.push(c.id); return c;
+  }) };
+}
+function setSquad(classes) {
+  cur = { tier: cur.tier, classes }; setSquadNow();
+}
+function setSquadNow() {
   for (const h of heroes) removeUnit(h); heroes.length = 0;
-  pick = ids.filter((id) => T.HERO[id]).slice(0, 5); pick.forEach((id, i) => heroes.push(makeHero(id, i)));
-  buildTeamUI(); if (document.getElementById('hero0')) buildSquadUI();
+  cur.classes.forEach((c, i) => heroes.push(makeHero(c.hero, i)));   // 位置与 cur.classes 一一对应，不再看 pick
+
+  // ponytail: 伤害乘区取全队平均（hitZ 不知道是谁打的）；成长率只差 0.06–0.08，按人分要给每个伤害来源带上出手者
+  squadMul = cur.classes.reduce((s, c) => s + (1 + c.growth) ** (TIERS[cur.tier].rank - 1), 0) / (cur.classes.length || 1);
+  tier = cur.tier; pick = cur.classes.map((c) => c.hero);
+  buildTeamUI(); buildSquadUI();
+  const c0 = LV?.start ?? [0, 0]; Object.assign(SQ, { x: c0[0], z: c0[1], dest: null, goal: null, manual: false }); focus = null;
 }
 const teamEl = document.getElementById('team');
 function buildTeamUI() {
   teamEl.innerHTML = '';
   for (const h of heroes) {
     const c = document.createElement('div'); c.className = 'card';
-    c.innerHTML = `<div class="row" style="justify-content:space-between"><b>${h.def.name}</b><span class="dim">${W[h.def.weapon].name}</span></div><div class="bar"><i></i></div>
+    c.innerHTML = `<div class="row" style="justify-content:space-between"><b>${h.name}</b><span class="dim">${W[h.def.weapon].name}</span></div><div class="bar"><i></i></div>
       <div class="sk"><button title="${h.def.sk[0].desc}">${h.def.sk[0].name}<i></i></button><button title="${h.def.sk[1].desc}">${h.def.sk[1].name}<i></i></button></div>`;
     c.querySelectorAll('.sk button').forEach((b, k) => (b.onclick = () => cast(h, k)));
     h.ui = { card: c, hp: c.querySelector('.bar i'), cd: [...c.querySelectorAll('.sk i')] };
@@ -1200,12 +1334,14 @@ function tint(u, dt) {
 // ── 主循环 ──
 const gl = renderer.getContext(), tq = gl.getExtension('EXT_disjoint_timer_query_webgl2'), pending = [];
 let repAcc = 0, labLast = null, labPrev = null;
-let ffT = 0, win = [], paused = false, spawnAcc = 0, hudT = 0, last = performance.now(), gpuMs = null;
+let ffT = 0, win = [], paused = !LAB, spawnAcc = 0, hudT = 0, last = performance.now(), gpuMs = null;   // 开局先停住，等「开始游戏」
 const clock = new THREE.Clock(), camBase = new THREE.Vector3();
 function step(dt) {
   if (LV) stepFlow(dt);
   else { spawnAcc += dt * (+rate.value || 0); while (spawnAcc >= 1) { spawnAcc--; if (alive() < (+nz.value || 0)) spawnOne(); } }
-  if (M && (ffT -= dt) <= 0) { ffT = .4; const tg = team().map((u) => [u.pos.x, u.pos.z]); if (tg.length) flowField(M, tg, FF); }   // 流场追着小队走
+  if (M && (ffT -= dt) <= 0) { ffT = .4; const tg = team().map((u) => [u.pos.x, u.pos.z]); if (tg.length) { flowField(M, tg, FF);   // 流场追着小队走
+    const px = Math.cos(SQ.yaw) * 6, pz = -Math.sin(SQ.yaw) * 6;   // 包抄点：阵型朝向的左右两侧 6 m
+    for (let k = 0; k < 2; k++) FL[k] = flowField(M, [snap(SQ.x + (k ? -px : px), SQ.z + (k ? -pz : pz))], FL[k] ?? undefined); } }
   if (M && LV.tiles) for (const h of team()) if (tileAt(LV, M, h.pos.x, h.pos.z) === 2) hurt(h, G.poolDps * dt, {});   // 毒池地块
   for (const k in tbuf) tbuf[k].t -= dt;
   if (LAB && rep.checked && labLast && (repAcc += dt) >= (+repT.value || 4)) { repAcc = 0; labCast(); }
@@ -1216,7 +1352,7 @@ function step(dt) {
   for (const a of allies) stepZombie(a, dt);
   separate([...heroes.filter(live), ...zs.filter((z) => !z.dead && !z.leap), ...allies.filter(live)]);
   for (const h of heroes) if (!h.leap) h.pos.y = 0;
-  aimT -= dt; for (const w of walls) for (const z of zs) if (!z.dead && !z.leap) pushWall(w, z);   // ponytail: 墙 × 僵尸全扫，墙只有个位数段
+  for (const w of walls) for (const z of zs) if (!z.dead && !z.leap) pushWall(w, z);   // ponytail: 墙 × 僵尸全扫，墙只有个位数段
   if (M) for (const list of [heroes, zs, allies]) for (const u of list) if (!u.dead && !u.leap) pushOut(M, u.pos, u.r);   // 障碍：推出去（跳跃中的可以越过）
   for (let i = shots.length - 1; i >= 0; i--) if (!shots[i].step(dt)) { scene.remove(shots[i].m); shots[i].m.material?.dispose(); shots.splice(i, 1); }
   for (let i = zones.length - 1; i >= 0; i--) { const zo = zones[i]; zo.t += dt; zo.tick(zo, dt); zo.m.material.opacity = .3 * Math.min(1, (zo.dur - zo.t) * 2);
@@ -1271,16 +1407,66 @@ const stats = () => ({ alive: alive(), total: zs.length, allies: allies.length, 
 // ── 调试台 ──
 const $ = (id) => document.getElementById(id);
 const squadEl = $('squad');
+const CLASSES_OF = new Map(TIERS.map((t, k) => [k, TIER_CLASSES(k)]));   // 8 个等级的职业名册，加载时算一次
+const classOf = (heroId) => (CLASSES_OF.get(0).find((c) => c.tree === (TREE_OF_HERO[heroId] ?? 'swordsman')) ?? CLASSES_OF.get(0)[0]);   // 样板英雄 id → 它那棵树的基础职业
+const clsIdx = (s) => s;   // 槽位号 == cur.classes 的下标（pick 现在存的是样板英雄 id，两套下标不同源）
 function buildSquadUI() {
   squadEl.innerHTML = '';
   for (let s = 0; s < 5; s++) {
     const l = document.createElement('label'); l.innerHTML = `<span>${s + 1}</span>`;
     const sel = document.createElement('select'); sel.id = 'hero' + s;
-    for (const id of HIDS) sel.add(new Option(`${T.HERO[id].name} · ${W[T.HERO[id].weapon].name}`, id, false, id === pick[s]));
+    // 1 号位先定树，其余四人跟着自己的树 —— 「一套职业配所有等级」是错的，等级选的是那一级的职业
+    const tree = cur.classes[clsIdx(0)]?.tree;
+    const list = CLASSES_OF.get(tier).filter((c) => s === 0 || c.tree === tree);
+    const mine = cur.classes[clsIdx(s)];
+    for (const c of list) sel.add(new Option(s ? c.name : `${c.stars} ${c.name} · ${c.treeName}`, c.id, false, mine?.id === c.id));
+    sel.onchange = () => suggest();
     l.append(sel); squadEl.append(l);
   }
 }
-$('apply').onclick = () => setSquad([0, 1, 2, 3, 4].map((s) => $('hero' + s).value));
+// 同级同树里挑一名还没被占的，占满了就复用 —— 选人只是原型里的站位试验，不追求唯一
+function suggest() {
+  const tree = CLASSES_OF.get(tier).find((c) => c.id === $('hero0').value)?.tree;
+  const pool = CLASSES_OF.get(tier).filter((c) => c.tree === tree), used = new Set();
+  const next = [];
+  for (let s = 0; s < 5; s++) {
+    const id = $('hero' + s).value;
+    let c = pool.find((x) => x.id === id);
+    if (s && (!c || c.tree !== tree || used.has(c.id))) c = pool.find((x) => !used.has(x.id));
+    used.add(c.id); next.push(c);
+  }
+  setSquad(next);   // 只改人，等级由等级下拉负责
+}
+{ // 等级 = 转数：选的是「那一级解锁的职业」，不是同一批人换数值
+  TIERS.forEach((t, k) => $('tier').add(new Option(`${t.name} · ${t.title} · ${CLASSES_OF.get(k).length} 个职业可选`, k)));
+  $('tier').value = tier;
+  $('tier').onchange = () => {
+    tier = +$('tier').value;
+    const tree = cur.classes[clsIdx(0)]?.tree ?? 'swordsman', pool = CLASSES_OF.get(tier), taken = [];
+    cur = { tier, classes: Array.from({ length: 5 }, () => { const c = pool.find((x) => x.tree === tree && !taken.includes(x.id)) ?? pool[taken.length]; taken.push(c.id); return c; }) };
+    setSquadNow(); updPrep();
+  };
+}
+// ── 开局设置：小队等级 + 职业 + 僵尸强度只在这里改；点「开始游戏」后锁住，战斗里只剩暂停 ──
+let playing = LAB;   // 技能台没有开局这一步，直接进
+function statLine() {
+  const pool = CLASSES_OF.get(tier), trees = new Set(pool.map((c) => c.tree));
+  return `${TIERS[tier].title} · 同级职业 ${pool.length} 个（${trees.size} 棵树各 ${pool.length / trees.size} 个）`;
+}
+function updPrep() {
+  $('tierHint').textContent = `${statLine()}。1 号位选哪棵树，其余 4 人就从同一棵树里出。`;
+  $('squadInfo').textContent = `小队等级 ${TIERS[tier].name} · ${cur.classes.map((c) => c.name).join(' / ')}（战斗中不可改）`;
+}
+function updInfo() {
+  const f = (k) => G[k].toFixed(2);
+  $('zInfo').textContent = `僵尸强度已锁定：生命 ×${f('zhp')} · 护甲 ×${f('zarmor')} · 攻击 ×${f('zatk')} · 移速 ×${f('zspd')}`;
+}
+$('start').onclick = () => {
+  playing = true; document.body.classList.add('playing');
+  paused = false; $('pause').textContent = '暂停';
+  if (LV) restartLevel();   // 关卡：计时与出怪从这一刻开始
+};
+
 const mixEl = $('mix');
 for (const k of ZIDS) {
   const l = document.createElement('label');
@@ -1298,7 +1484,8 @@ const bindRange = (id, out, set) => { const i = $(id), o = $(out), f = () => { s
 bindRange('hs', 'hsv', (v) => (STRIDE.hero = v));
 bindRange('zs', 'zsv', (v) => (STRIDE.zombie = v));
 $('zv').value = G.zspd; $('kb').value = G.kb;   // 滑杆从调参表取初值；拖动只改本页，不写回调参表
-bindRange('zv', 'zvv', (v) => (G.zspd = v));
+bindRange('zv', 'zvv', (v) => (G.zspd = v, updInfo()));
+for (const k of ['zhp', 'zarmor', 'zatk']) { $(k).value = G[k]; bindRange(k, k + 'v', (v) => (G[k] = v, updInfo())); }
 bindRange('ts', 'tsv', () => {});
 bindRange('fx', 'fxv', (v) => (FX = v));
 bindRange('kb', 'kbv', (v) => (G.kb = v));
@@ -1309,7 +1496,7 @@ regrade();
 
 // ── 技能特效台 ──
 function labHero(id) {   // 换人：新队员站在当前位置
-  if (heroes.length !== 1 || heroes[0].id !== id) { const at = heroes[0] ? heroes[0].pos.clone() : new THREE.Vector3(); setSquad([id]); heroes[0].home.copy(at); heroes[0].pos.copy(at); }
+  if (heroes.length !== 1 || heroes[0].id !== id) { const at = heroes[0] ? heroes[0].pos.clone() : new THREE.Vector3(); const h0 = heroes[0]; setSquad([classOf(id)]); heroes[0].home.copy(at); heroes[0].pos.copy(at); }
   document.querySelectorAll('#skl .nm').forEach((b) => b.classList.toggle('on', b.dataset.id === id));
 }
 function labStop() {
@@ -1344,7 +1531,9 @@ if (LAB) {
   $('reset').onclick = () => { clearZ(); spawnN(+nz.value); };
   labHero('ron'); spawnN(+nz.value);
 } else {
-  setSquad(LV?.squad?.length ? LV.squad : PICK0); buildSquadUI(); if (!LV) spawnN(40);
+  cur = curFromSquad(LV?.squad?.length ? LV.squad : PICK0); setSquadNow(); if (!LV) spawnN(40);
+  // 僵尸默认是「走路速度 0.6 倍」的试玩手感，开局设置里的滑杆从它起步
+  updPrep();
   // 团队命令按钮
   for (const k in ORDERS) { const b = document.createElement('button'); b.textContent = ORDERS[k].name; b.dataset.o = k; b.title = ORDERS[k].hint;
     b.onclick = () => setOrder(k); $('orders').append(b); }
@@ -1354,12 +1543,11 @@ if (LAB) {
     $('lvinfo').textContent = `${SCENES[LV.scene]?.name ?? LV.scene} · ${LV.size} m · ${LV.props.length} 个物件 · ${LV.spawns.length} 个刷怪点 · 同屏上限 ${LV.cap ?? 120}`; }
 }
 function setOrder(k) {
-  order = k;
-  if (captain()) fyaw = captain().root.rotation.y;
+  order = k; SQ.goal ??= [SQ.x, SQ.z]; planT = 2;   // 换档：在当前中心亮一下新站位
   for (const h of heroes) h.target = null;   // 下令即脱手当前目标，先按新命令站位
   for (const b of $('orders').children) b.classList.toggle('on', b.dataset.o === k);
   $('orderHint').textContent = ORDERS[k].hint;
 }
-window.__battle = { LV, M, T, walls, threatBearing, neediestAlly, priorityElite, restartLevel, flow: () => ({ t: flowT, i: flowI, end: flowEnd, rate: LV ? rateAt(LV, flowT) : 0 }), setFlowT: (t) => (flowT = t), renderer, shots, zones, tmp, later, GLOW, SOLID, setSquad, spawnN, clearZ, cast, stats, ZGV, keys, labPick: (id, k) => { labLast = [id, k]; labCast(); }, mix, mixOn, GRADE, regrade, setFX: (v) => (FX = v), STRIDE, heroes, zs, allies, scene, THREE, explode: () => $('boom').click(), setOrder, order: () => order,
+window.__battle = { cur: () => cur, GRIPRUN: (h) => GRIPS[h.w.grip][1], tier: () => tier, setTier: (k) => { $('tier').value = k; $('tier').onchange(); }, start: () => $('start').onclick(), playing: () => playing, TIER_CLASSES, CLASSES_OF, LV, M, T, walls, threatBearing, neediestAlly, priorityElite, restartLevel, flow: () => ({ t: flowT, i: flowI, end: flowEnd, rate: LV ? rateAt(LV, flowT) : 0 }), setFlowT: (t) => (flowT = t), renderer, shots, zones, tmp, later, GLOW, SOLID, setSquad, spawnN, clearZ, cast, stats, ZGV, keys, labPick: (id, k) => { labLast = [id, k]; labCast(); }, mix, mixOn, GRADE, regrade, setFX: (v) => (FX = v), STRIDE, heroes, zs, allies, scene, THREE, explode: () => $('boom').click(), setOrder, order: () => order, SQ, focus: () => focus, camera,
   perf: () => { const n = win.length, avg = (k) => win.reduce((s, f) => s + f[k], 0) / n; return { logic: avg('logic'), anim: avg('anim'), sub: avg('sub'), gpu: gpuMs, fps: 1000 / avg('dt') }; } };
 </script>

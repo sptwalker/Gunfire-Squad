@@ -1796,7 +1796,7 @@ export interface ClassDef {
 
 // 策略字段按前两条轴派生，不逐职业手填：样板英雄给 role 与 AIProfile 的数，第二条轴定 holdPolicy。
 // 样板 = 第一轮 12 名英雄里打法最接近的那位（键是 path[0] path[1]，基础职业按 00 算）
-const TEMPLATE: Record<TreeId, [string, string, string, string]> = {
+export const TEMPLATE: Record<TreeId, [string, string, string, string]> = {
   swordsman: ['kai', 'ironbull', 'ron', 'gwen'],   // 锋轻 / 锋重 / 盾轻 / 盾重
   archer: ['jet', 'vera', 'jet', 'vera'],          // 机动 / 阵地（传统、现代同打法）
   mage: ['bom', 'ella', 'bom', 'ella'],            // 外放 / 引导
