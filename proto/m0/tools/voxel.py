@@ -456,7 +456,79 @@ ZOMBIES = {
     'spitter':  dict(skin='#a8864a', shirt='#6a5634', pants='#4a3a24', hoff=(-2, 0), sac='#dcb44a', arms='down',
                      spine=(0, -0.12, 1), skills=['spit']),
 }
-GLOW_COLS = {'#a6ff3a', '#ffd23a', ZEYE, '#f07a2a'}
+GLOW_COLS = {'#a6ff3a', '#ffd23a', ZEYE, '#f07a2a', '#7ff0ff', '#ff6a8a', '#c88aff'}
+
+# 第三轮 8 种（zombies.ts 第三轮 / 06 §5 答案维度）：各自一个俯视能认出的大件
+ZCYAN, ZPINK, ZVIO = '#7ff0ff', '#ff6a8a', '#c88aff'
+def deco_herald(part, z, rnd):
+    # 先驱：背后一面高举的破旗（旗面发黄光的印记）——光环怪站在后排，旗子从尸群里冒出来
+    chest = part('Spine2')
+    box(chest, (-1, 0), (4, 4), (10, 34), '#4a3a2a')
+    box(chest, (-8, -1), (5, 5), (24, 33), '#6a2a2a')
+    for i in range(-8, 0):
+        for k in range(24, 24 + rnd.randint(0, 2)): chest.pop((i, 5, k), None)
+    box(chest, (-6, -3), (5, 5), (28, 30), '#ffd23a'); box(chest, (-5, -4), (5, 5), (27, 31), '#ffd23a')
+def deco_summoner(part, z, rnd):
+    # 召唤者：兜帽长袍 + 右手骨杖（杖头发紫光）+ 袍上紫色符文
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); hz = 18
+    box(head, (-7, 6), (-5, 7), (hz + 4, hz + 12), z['shirt']); box(head, (-6, 5), (-7, -6), (hz + 11, hz + 12), z['shirt'])
+    box(hips, (-5, 4), (-3, 2), (3, 11), z['shirt'])
+    for k in (13, 15): box(chest, (-2, 1), (-3, -3), (k, k), ZVIO)
+    hand = part('RightHand'); x = -11
+    box(hand, (x, x), (-1, -1), (4, 26), '#e2d6b8'); box(hand, (x - 1, x + 1), (-2, 0), (27, 29), '#e2d6b8'); hand[(x, -3, 28)] = ZVIO
+def deco_tesla(part, z, rnd):
+    # 特斯拉：双肩两根线圈柱（青色电弧顶）+ 背后电池组——电磁伤害全吸收
+    chest = part('Spine2')
+    for f in ((lambda r: r), mx):
+        for k in range(18, 26): box(chest, f((5, 6)), (-1, 0), (k, k), '#b07a3a' if k % 2 else '#6a6f74')
+        box(chest, f((4, 7)), (-2, 1), (26, 27), ZCYAN)
+    box(chest, (-3, 2), (2, 5), (10, 18), '#4a4f53'); box(chest, (-2, 1), (6, 6), (12, 16), ZCYAN)
+def deco_regenerator(part, z, rnd):
+    # 再生体：外翻的粉红新肉块 + 发亮的血管纹，越打越长
+    for bone in ('Spine2', 'Head', 'LeftArm', 'RightArm', 'Hips'):
+        cells = part(bone)
+        for c in [c for c, h in cells.items() if h == z['skin'] and rnd.random() < 0.10]: cells[c] = ZPINK
+    chest = part('Spine2')
+    for k in range(10, 22): chest[((k % 3) - 1, 4, k)] = ZPINK
+    box(chest, (-4, 3), (3, 5), (14, 18), '#c84a5a')
+def deco_stalker(part, z, rnd):
+    # 潜伏者：一身近黑的破斗篷（俯视几乎融进地面）+ 前臂长刃爪
+    chest, head = part('Spine2'), part('Head'); hz = 18
+    box(chest, (-5, 4), (2, 4), (8, 18), '#1e2026'); box(head, (-7, 6), (-4, 7), (hz + 6, hz + 12), '#1e2026')
+    for f, side in (((lambda r: r), 'Left'), (mx, 'Right')):
+        box(part(side + 'Hand'), f((11, 15)), (-1, -1), (15, 15), '#d8dce0')
+def deco_burrower(part, z, rnd):
+    # 掘地者：背上一片碎岩壳 + 一对铲形大爪
+    chest = part('Spine2')
+    for i in range(-6, 6):
+        for j in range(1, 6):
+            if rnd.random() < 0.8: chest[(i, j, 18 + (abs(i) < 3) + rnd.randint(0, 1))] = rnd.choice(('#6a5a44', '#7a6a50', '#5a4a38'))
+    for f, side in (((lambda r: r), 'Left'), (mx, 'Right')):
+        box(part(side + 'Hand'), f((11, 13)), (-4, 1), (14, 18), '#8a7a5a'); box(part(side + 'Hand'), f((14, 14)), (-4, 1), (14, 14), '#d8d0b8')
+def deco_flyer(part, z, rnd):
+    # 飞行体：背后一对展开的蝠翼（翼骨 + 半透膜），俯视是一个大 V
+    chest = part('Spine2')
+    for f in ((lambda r: r), mx):
+        for i in range(2, 20):
+            top = 24 - abs(i - 8) // 2; bot = 14 + i // 3
+            for k in range(min(bot, top), top + 1):
+                chest[(f((i, i))[0], 4 + i // 4, k)] = '#3a2a3a' if k == top or i % 6 == 0 else '#6a4a6a'
+def deco_screamer(part, z, rnd):
+    # 尖啸者：张到下巴的大嘴（发紫光的喉咙）+ 脖子上一圈鼓起的声囊
+    head = part('Head'); hz = 18
+    box(head, (-5, 4), (-7, -7), (hz - 3, hz + 2), ZMOUTH); box(head, (-3, 2), (-7, -7), (hz - 2, hz + 1), ZVIO)
+    for i in (-5, -3, 2, 4): head[(i, -8, hz + 2)] = TOOTH; head[(i, -8, hz - 3)] = TOOTH
+    box(part('Neck'), (-5, 4), (-4, 3), (16, 18), '#9a7aa8')
+ZOMBIES.update({
+    'herald':      dict(skin='#a8a490', shirt='#5a4a3a', pants='#3a3028', k=0.95, eye='#ffd23a', skills=['roar'], deco=deco_herald),
+    'summoner':    dict(skin='#7a8a6a', shirt='#3a2a4a', pants='#2a2034', k=1.15, eye=ZVIO, skills=['summon'], deco=deco_summoner),
+    'tesla':       dict(skin='#7a8aa0', shirt='#3a404a', pants='#2a3038', sh=1, k=1.1, eye=ZCYAN, arms='down', deco=deco_tesla),
+    'regenerator': dict(skin='#b07a6a', shirt=None, pants='#4a2a2a', fat=True, k=1.05, deco=deco_regenerator),
+    'stalker':     dict(skin='#4a5048', shirt=None, pants='#1e2026', slim=True, thin=True, lift=2, loco='stalk', k=0.9, deco=deco_stalker),
+    'burrower':    dict(skin='#8a7050', shirt=None, pants='#4a3a28', sh=1, hoff=(-2, -1), loco='sprint', spine=(0, -0.15, 1), arms='down', deco=deco_burrower),
+    'flyer':       dict(skin='#7a6a8a', shirt=None, pants='#2a2030', slim=True, thin=True, loco='sprint', k=0.85, claw='#e0d8b8', skills=['leap'], deco=deco_flyer),
+    'screamer':    dict(skin='#b0a0b8', shirt='#4a3a50', pants='#3a3040', slim=True, hoff=(-1, 1), mouth=ZVIO, skills=['roar'], deco=deco_screamer),
+})
 
 def build_zombie(zid, z):
     P = {}
@@ -599,7 +671,8 @@ def zclips(z):
     w = lambda keys: [(k[0], dict(k[1], **over)) + tuple(k[2:]) for k in keys]
     loco = z.get('loco', 'walk')
     c = {'idle': w(Z['idle']), 'walk': w(Z['walk']) if loco == 'walk' else Z[loco],
-         'attack': Z[z.get('attack', 'attack')], 'hit': Z['hit'], 'death': Z['death'], 'death2': Z['death2'], 'death3': Z['death3']}
+         'attack': Z[z.get('attack', 'attack')], 'hit': Z['hit'], **{d: Z[d] for d in ('death', 'death2', 'death3', 'death4')}}
+    if 'run' in z: c['run'] = Z[z['run']]
     if loco == 'stalk': c['idle'] = [(0, poses.ST_A, 0.62), (1, poses.ST_A, 0.62)]   # 跳跃僵尸站着也是蹲的
     for s in z.get('skills', []): c[s] = Z[s]
     return c
@@ -682,24 +755,360 @@ BOSSES = {
                       spots=('#4a1a1a', ('#7a2e2a',)), skills=['smash', 'roar'], deco=deco_chaos),
 }
 
-for kind, table, pre in (('zombies', ZOMBIES, 'vox_z_'), ('bosses', BOSSES, 'vox_b_')):
+# ══════════════ 精英（src/data/enemies.ts ELITES）══════════════
+#   blender -b -P voxel.py -- <rig_donor.glb> <out_dir> elites [id ...]  → out_dir/vox_e_<基础种>.glb
+# 精英 = 基础种的模型 × 1.18（ELITE_MUL.scale）+ 一件俯视能认出的发光标记（enemies.ts 的 look 文案）
+GOLD_G = '#ffd23a'
+def _hz(z): return 18 + z.get('lift', 0) + z.get('hoff', (0, 0))[1], z.get('hoff', (0, 0))[0], z.get('lift', 0)
+def ed_normal(part, z, rnd):
+    hz, dy, U = _hz(z); head, chest = part('Head'), part('Spine2')
+    for t in range(5): head[(-1 + t % 2, -7 + dy, hz + 6 + t)] = GOO                         # 额头一道发光绿裂痕
+    for x, n in ((-3, 12), (2, 9)): box(chest, (x, x), (2, 2), (14 + U, 14 + U + n), RUST)      # 背上插的钢筋
+def ed_runner(part, z, rnd):
+    hz, dy, U = _hz(z); chest = part('Spine2'); head = part('Head')
+    for k in (12, 14, 16): box(chest, (-3, 2), (-3, 2), (k + U, k + U), '#d8d0b8')              # 绷带
+    for x in (6, -7): box(head, (x, x), (-5 + dy, 8 + dy), (hz + 3, hz + 3), GOLD_G)            # 眼睛拖出的黄光尾
+def ed_brute(part, z, rnd):
+    chest, a0 = part('Spine2'), 4 + z.get('sh', 0)
+    box(chest, (-7, 6), (-6, -6), (12, 17), PLATE)
+    for t, k in enumerate(range(12, 18)): chest[(t - 3, -7, k)] = EMBER                         # 甲缝里的余火
+    for side, f in (('Left', lambda r: r), ('Right', mx)):
+        box(part(side + 'Arm'), f((a0 - 1, a0 + 3)), (-4, 2), (18, 19), PLATE)
+        box(part(side + 'Arm'), f((a0, a0)), (-7, -5), (19, 20), BONE)                         # 肩上的撞角
+def ed_toxic(part, z, rnd):
+    for bone in ('Spine2', 'Head', 'LeftArm', 'RightArm', 'LeftForeArm', 'RightForeArm'):
+        cells = part(bone)
+        for c in [c for c, h in cells.items() if h == z['skin'] and rnd.random() < 0.12]: cells[c] = GOO   # 发光毒囊
+    for side in ('Left', 'Right'):
+        h = part(side + 'Hand'); x = min(c[0] for c in h) if side == 'Right' else max(c[0] for c in h)
+        box(h, (x, x), (-1, -1), (11, 14), GOO)                                                # 指尖滴的黏液
+def ed_bomber(part, z, rnd):
+    chest = part('Spine2')
+    for k in (12, 14, 16):
+        for i in range(-4, 4, 2): chest[(i, -3, k)] = '#c0302a'; chest[(i, -3, k + 1)] = GOLD_G   # 三排雷管
+    box(chest, (-2, 1), (2, 3), (13, 16), '#8a8f94'); chest[(0, 4, 15)] = GOLD_G               # 背后的钟
+def ed_splitter(part, z, rnd):
+    chest = part('Spine2')
+    for x, k in ((-4, 14), (2, 13), (-1, 17)):
+        box(chest, (x, x + 2), (2, 4), (k, k + 2), shade(z['skin'], 0.8)); chest[(x + 1, 5, k + 1)] = GOO   # 肉瘤 + 里面发光的小僵尸
+def ed_leaper(part, z, rnd):
+    chest = part('Spine2'); U = z.get('lift', 0)
+    for k in range(12, 18, 2):
+        for s in range(3): chest[(-1, 2 + s, k + U + s)] = BONE                                # 背脊骨刺
+def ed_ward(part, z, rnd):
+    hz, dy, U = _hz(z); head = part('Head')
+    for i in range(-7, 7):
+        for j in range(-7, 7):
+            if 30 <= (i + .5) ** 2 + (j + .5) ** 2 <= 49: head[(i, j + dy, hz + 15)] = ZVIO      # 头顶紫色光环
+    shd, a0 = part('LeftForeArm'), 4 + z.get('sh', 0)
+    for k in (11, 15, 19): box(shd, (a0 + 3, a0 + 5), (-7, -7), (k + U, k + U), ZVIO)           # 盾面符文
+def ed_spitter(part, z, rnd):
+    chest = part('Spine2')
+    for c in [c for c, h in chest.items() if h == z['sac'] and rnd.random() < 0.3]: chest[c] = GOO   # 发光酸袋
+    box(chest, (-5, 4), (3, 6), (22, 23), z['sac']); box(chest, (-2, 1), (4, 5), (24, 24), GOO)
+def ed_herald(part, z, rnd):
+    chest, a0 = part('Spine2'), 4 + z.get('sh', 0)
+    box(chest, (-4, 3), (2, 3), (6, 17), z['shirt'])                                           # 军官大衣的后摆（衣色 ELITE_OVR 换成军绿）
+    for side, f in (('Left', lambda r: r), ('Right', mx)): box(part(side + 'Arm'), f((a0, a0 + 2)), (-2, 0), (18, 18), GOLD_G)   # 黄肩章
+    hips = part('Hips'); box(hips, (4, 5), (-2, 0), (8, 10), '#c8a040'); hips[(6, -1, 10)] = '#c8a040'   # 腰上的锈号角
+def ed_summoner(part, z, rnd):
+    hz, dy, U = _hz(z); head, chest = part('Head'), part('Spine2')
+    box(head, (-4, 3), (-3, 4), (hz + 13, hz + 18), z['shirt']); box(head, (-4, 3), (-4, -4), (hz + 15, hz + 15), ZVIO)   # 高帽
+    box(chest, (-1, 0), (-3, -3), (14, 15), ZCYAN)                                             # 胸口魂灯
+    part('RightHand')[(-11, -3, 28)] = ZCYAN                                                   # 杖头骷髅的眼光换青色
+def ed_tesla(part, z, rnd):
+    hz, dy, U = _hz(z); head, chest = part('Head'), part('Spine2')
+    box(chest, (-4, 3), (2, 5), (9, 20), '#4a4f53'); box(chest, (-2, 1), (6, 6), (11, 18), ZCYAN)   # 变压器
+    for t in range(8): head[(-4 + t, (t % 2) * 2 - 1 + dy, hz + 13 + (t % 3))] = ZCYAN          # 头顶电弧
+def ed_regenerator(part, z, rnd):
+    chest = part('Spine2'); box(chest, (-2, 1), (-7, -7), (13, 16), ZPINK); box(chest, (-1, 0), (-8, -8), (14, 15), ZPINK)   # 发光心脏
+def ed_stalker(part, z, rnd):
+    hz, dy, U = _hz(z); head = part('Head')
+    box(head, (-6, 5), (-7 + dy, -7 + dy), (hz, hz + 11), '#1e2026')                           # 黑布蒙脸
+    for r in ((-5, -2), (1, 4)): box(head, r, (-8 + dy, -8 + dy), (hz + 4, hz + 4), ZCYAN)     # 青色眼缝
+def ed_burrower(part, z, rnd):
+    hz, dy, U = _hz(z); head = part('Head')
+    for t in range(5): box(head, (-5 + t, 4 - t), (-7 + dy - t, -7 + dy - t), (hz + t, hz + 11 - t), BONE if t % 2 else '#a89878')   # 钻头骨甲
+def ed_flyer(part, z, rnd):
+    hz, dy, U = _hz(z); head, chest = part('Head'), part('Spine2')
+    for f in ((lambda r: r), mx):
+        for i in range(20, 26): chest[(f((i, i))[0], 9, 22 - (i - 20))] = '#3a2a3a'            # 翼展加长
+        for i in range(4, 20, 4): chest[(f((i, i))[0], 4 + i // 4, 20)] = ZPINK                 # 翼膜发光血管
+        box(head, f((4, 5)), (-2 + dy, -1 + dy), (hz + 12, hz + 14), BONE)                      # 一对弯角
+def ed_screamer(part, z, rnd):
+    hz, dy, U = _hz(z); head = part('Head')
+    for i in range(-6, 6): box(head, (i, i), (5 + dy, 6 + dy), (hz - rnd.randint(4, 9), hz + 12), '#1a141e')   # 长发
+    for i in (-6, -5, 4, 5): box(head, (i, i), (-7 + dy, -7 + dy), (hz + 3, hz + 11), '#1a141e')               # 遮脸的两缕
+ELITE_OVR = {'leaper': dict(claw=GOLD_G, hand=GOLD_G), 'stalker': dict(eye=ZCYAN), 'screamer': dict(mouth=ZPINK), 'herald': dict(shirt='#3a4a32')}
+
+def _chain(a, b): return lambda part, z, rnd: (a and a(part, z, rnd), b(part, z, rnd))
+ELITES = {zid: dict(ZOMBIES[zid], k=ZOMBIES[zid].get('k', 1) * 1.18, **ELITE_OVR.get(zid, {}),
+                    deco=_chain(ZOMBIES[zid].get('deco'), globals()['ed_' + zid]))
+          for zid in ZOMBIES if 'ed_' + zid in globals()}
+
+# ══════════════ 变异生物（src/data/enemies.ts MUTANTS）══════════════
+#   blender -b -P voxel.py -- <rig_donor.glb> <out_dir> mutants [id ...]  → out_dir/vox_m_<id>.glb
+# 四足兽 / 鸟仍用 Xbot 那副骨，只是关节摆成四足：Hips 在后腰、Spine2 在前胸、胳膊 = 前腿、腿 = 后腿（鸟：胳膊 = 翅膀）。
+# aim() 只认"子骨头 - 本骨头"的方向，所以静止姿态就是四足站姿，动作只写要动的骨头。巨猿走人形僵尸管线。
+L_, R_ = poses.L, poses.R
+def _m(J, s): return {k: (x * V * s, y * V * s, z * V * s) for k, (x, y, z) in J.items()}
+def _sym(J):
+    for k in [k for k in J if k.startswith('Left')]: J['Right' + k[4:]] = (-J[k][0], *J[k][1:])
+    return J
+
+def qbody(m):
+    """四足兽：身体是沿 y 的长方块（前 1/3 挂 Spine2、中段 Spine、后段 Hips），头 + 吻部挂 Head，四条腿各三段。格子坐标。"""
+    P = {}; part = lambda b: P.setdefault('mixamorig:' + b, {})
+    h, w, yf, yb, bz, hd, sn, lg = (m[k] for k in ('h', 'w', 'yf', 'yb', 'bz', 'hd', 'sn', 'lg'))
+    z0, z1 = h, h + bz - 1
+    t1, t2 = yf + (yb - yf) // 3, yf + 2 * (yb - yf) // 3
+    for b, ys in (('Spine2', (yf, t1)), ('Spine', (t1 + 1, t2)), ('Hips', (t2 + 1, yb))):
+        c = part(b)
+        box(c, (-w, w - 1), ys, (z0, z1), m['fur'])
+        box(c, (-w + 1, w - 2), ys, (z1, z1), m['back'])          # 背脊深一档：俯视看到的主要是这条
+        box(c, (-w + 1, w - 2), ys, (z0, z0), m['belly'])
+    hc = z1 + 1; hy0 = yf - 2 - 2 * hd                            # 头的中心高度、脸面所在的 y
+    heads = m.get('heads', (0,))
+    box(part('Neck'), (min(heads) - hd + 1, max(heads) + hd - 2), (yf - 2, yf - 1), (z1 - bz // 2, z1 + 1), m['fur'])
+    head = part('Head')
+    for ox, eye in zip(heads, m.get('eyes', (m.get('eye'),) * len(heads))):
+        X = lambda r: (r[0] + ox, r[1] + ox)
+        box(head, X((-hd, hd - 1)), (hy0, yf - 3), (hc - hd, hc + hd - 1), m['fur'])
+        box(head, X((-hd + 1, hd - 2)), (hy0 - sn, hy0 - 1), (hc - hd, hc - 1), m.get('snout', m['fur']))
+        box(head, X((-1, 0)), (hy0 - sn, hy0 - sn), (hc - 2, hc - 1), '#1a1418')                 # 鼻头
+        box(head, X((-hd + 1, hd - 2)), (hy0 - sn, hy0 - 1), (hc - hd, hc - hd), ZMOUTH)         # 咧开的嘴
+        for i in range(-hd + 1, hd - 1, 2): head[(i + ox, hy0 - sn, hc - hd + 1)] = TOOTH
+        for r in ((1, hd - 1), mx((1, hd - 1))): box(head, X(r), (hy0 - 1, hy0 - 1), (hc + 1, hc + 1), eye)   # 发光的眼
+        for r in ((hd - 2, hd - 1), mx((hd - 2, hd - 1))):
+            box(head, X(r), (yf - 4, yf - 3), (hc + hd, hc + hd - 1 + m.get('ear', 2)), m['back'])   # 耳朵
+    lx, fy, by = (w - lg, w - 1), (yf + 1, yf + lg), (yb - lg + 1, yb)
+    zA, zB = 2 * h // 3, h // 3
+    for side, f in (('Left', lambda r: r), ('Right', mx)):
+        for up, mid, low, ys in (('Arm', 'ForeArm', 'Hand', fy), ('UpLeg', 'Leg', 'Foot', by)):
+            box(part(side + up), f(lx), ys, (zA, z0 - 1), m['fur'])
+            box(part(side + mid), f(lx), ys, (zB, zA - 1), m['fur'])
+            box(part(side + low), f(lx), (ys[0] - 1, ys[1]), (0, zB - 1), m['paw'])
+            box(part(side + low), f(lx), (ys[0] - 1, ys[0] - 1), (0, 0), m.get('claw', TOOTH))   # 爪尖
+    xc, yfc, ybc, zc = w - lg / 2, (fy[0] + fy[1] + 1) / 2, (by[0] + by[1] + 1) / 2, z0 + bz / 2
+    J = _sym({'Hips': (0, ybc, zc), 'Spine': (0, t2, zc), 'Spine1': (0, (t1 + t2) / 2, zc), 'Spine2': (0, t1, zc),
+              'Neck': (0, yf - 1, z1), 'Head': (0, yf - 3, hc), 'HeadTop_End': (0, hy0 - sn, hc),
+              'LeftShoulder': (xc / 2, yfc, z0), 'LeftArm': (xc, yfc, z0), 'LeftForeArm': (xc, yfc, zA), 'LeftHand': (xc, yfc, zB),
+              'LeftHandMiddle1': (xc, yfc - 1, 0), 'LeftUpLeg': (xc, ybc, z0), 'LeftLeg': (xc, ybc, zA), 'LeftFoot': (xc, ybc, zB),
+              'LeftToeBase': (xc, ybc - 1, 0), 'LeftToe_End': (xc, ybc - 2, 0)})
+    return P, part, J
+
+def _add(a, b): return tuple((Vector(a) + Vector(b)).normalized())
+def qclips(m, J, skills=()):
+    """四足动作。L = 体长（米），lunge 按体长比例；sd = Spine2 静止时的朝向（低头 / 抬头在它上面加偏移）"""
+    s = m['k']; L = (m['yb'] - m['yf']) * V * s; T = m.get('T', 0.8)
+    sd = tuple((Vector(J['Neck']) - Vector(J['Spine2'])).normalized())
+    H0 = {'mixamorig:Hips': (0, -1, 0)}
+    TA = dict(H0, **{L_ + 'Arm': (0, -.45, -1), L_ + 'ForeArm': (0, -.2, -1), R_ + 'Arm': (0, .4, -1), R_ + 'ForeArm': (0, .25, -1),
+                     R_ + 'UpLeg': (0, -.4, -1), R_ + 'Leg': (0, -.1, -1), L_ + 'UpLeg': (0, .45, -1), L_ + 'Leg': (0, .3, -1)})
+    TB = dict(H0, **{L_ + 'Arm': (0, 0, -1), R_ + 'Arm': (0, -.05, -1), R_ + 'ForeArm': (0, .9, -.6),
+                     L_ + 'UpLeg': (0, -.05, -1), L_ + 'Leg': (0, .9, -.6)})
+    BW = {'mixamorig:Spine2': _add(sd, (0, 0, .5)), 'lunge': (-.05 * L, 0)}
+    BITE = {'mixamorig:Spine2': _add(sd, (0, -.3, -.6)), 'lunge': (.3 * L, -.04 * L),
+            L_ + 'Arm': (0, -.7, -1), R_ + 'Arm': (0, -.6, -1), L_ + 'UpLeg': (0, .5, -1), R_ + 'UpLeg': (0, .45, -1)}
+    HITQ = {'mixamorig:Spine2': _add(sd, (0, .3, .4)), 'lunge': (-.08 * L, 0)}
+    dr = (m['bz'] / 2 + 1) / (m['h'] + m['bz'] / 2)   # 倒地：身子贴地时臀高 / 站立臀高
+    DEAD = dict(H0, **{'mixamorig:Spine2': _add(sd, (0, 0, -.6)), 'lunge': (-.1 * L, 0),
+                       L_ + 'Arm': (1, -.4, -.3), R_ + 'Arm': (-1, -.4, -.3), L_ + 'UpLeg': (1, .4, -.3), R_ + 'UpLeg': (-1, .4, -.3)})
+    DEADB = dict(DEAD, **{'mixamorig:Spine2': _add(sd, (0, 0, -.2))})
+    death = [(0, {}, None), (.1, HITQ, None), (.4, DEAD, dr, 'LINEAR'), (.5, DEADB, dr + .08), (.7, DEAD, dr), (1.4, DEAD, dr)]
+    # 死亡二 = 前扑：冲势带着往前栽，前腿折到胸下、嘴先着地，后半身再塌下去
+    FPLANT = dict(H0, **{'mixamorig:Spine2': _add(sd, (0, 0, -.9)), 'lunge': (.35 * L, 0), L_ + 'Arm': (0, .9, -.4), R_ + 'Arm': (0, .85, -.45),
+                         L_ + 'ForeArm': (0, -.9, -.3), R_ + 'ForeArm': (0, -.9, -.3)})
+    FDOWN = dict(FPLANT, **{'mixamorig:Hips': (0, -1, -.25), L_ + 'UpLeg': (.4, .9, -.2), R_ + 'UpLeg': (-.3, .9, -.25), L_ + 'Leg': (0, -1, 0), R_ + 'Leg': (0, -1, 0)})
+    death2 = [(0, {}, None), (.12, dict(HITQ, lunge=(.1 * L, 0)), None), (.35, FPLANT, .75, 'LINEAR'), (.55, FDOWN, dr), (.65, dict(FDOWN, lunge=(.4 * L, .05 * L)), dr + .06),
+              (.8, FDOWN, dr), (1.4, FDOWN, dr)]
+    # 死亡三 = 侧倒：四条腿一起甩向右边，身子往左塌（体块不会滚，靠腿和脊背的反向读出"侧躺"）
+    SIDE = dict(H0, **{'mixamorig:Hips': (-.35, -1, -.1), 'mixamorig:Spine2': _add(sd, (-.7, 0, -.5)), 'lunge': (0, 0),
+                       L_ + 'Arm': (1, -.2, -.1), R_ + 'Arm': (1, -.3, -.15), L_ + 'UpLeg': (1, .2, -.1), R_ + 'UpLeg': (1, .3, -.15),
+                       L_ + 'ForeArm': (1, -.5, 0), R_ + 'ForeArm': (1, -.6, 0), L_ + 'Leg': (1, .4, 0), R_ + 'Leg': (1, .5, 0)})
+    SIDEK = dict(SIDE, **{R_ + 'UpLeg': (1, -.3, .3), R_ + 'Leg': (.7, .7, 0)})   # 蹬一下腿
+    death3 = [(0, {}, None), (.1, HITQ, None), (.3, dict(HITQ, **{'mixamorig:Spine2': _add(sd, (-.5, 0, .2))}), .9), (.55, SIDE, dr, 'LINEAR'),
+              (.65, dict(SIDE, **{'mixamorig:Spine2': _add(sd, (-.7, 0, -.2))}), dr + .07), (.8, SIDE, dr), (1.0, SIDEK, dr), (1.2, SIDE, dr), (1.6, SIDE, dr)]
+    # 死亡四 = 后腿先垮：中弹人立半截 → 后腿一软坐下 → 前腿撑不住趴倒，抽一下
+    RSIT = {'mixamorig:Hips': (0, -.5, .85), 'mixamorig:Spine2': (0, -.6, .6), L_ + 'UpLeg': (.2, -1, -.1), R_ + 'UpLeg': (-.2, -1, -.1),
+            L_ + 'Leg': (0, .9, -.4), R_ + 'Leg': (0, .9, -.4), L_ + 'Arm': (.1, -.2, -1), R_ + 'Arm': (-.1, -.2, -1)}
+    RFLAT = dict(DEAD, **{L_ + 'UpLeg': (.3, -1, -.1), R_ + 'UpLeg': (-.3, -1, -.1), L_ + 'Leg': (0, .9, -.3), R_ + 'Leg': (0, .9, -.3)})
+    death4 = [(0, {}, None), (.1, dict(HITQ, **{'mixamorig:Spine2': _add(sd, (0, .4, .8))}), 1.02), (.4, RSIT, .55), (.6, RSIT, .5, 'LINEAR'),
+              (.8, RFLAT, dr), (.95, dict(RFLAT, **{'mixamorig:Spine2': _add(sd, (0, 0, -.25))}), dr + .05), (1.1, RFLAT, dr), (1.7, RFLAT, dr)]
+    # 奔跑 = 跳跃步：前两腿 / 后两腿成对着地，脊背一伸一收；周期是走路的 0.55
+    R1 = dict(H0, **{'mixamorig:Spine2': _add(sd, (0, 0, -.15)), L_ + 'Arm': (0, -.8, -.7), R_ + 'Arm': (0, -.7, -.75), L_ + 'ForeArm': (0, -.6, -.8), R_ + 'ForeArm': (0, -.5, -.85),
+                     L_ + 'UpLeg': (0, .85, -.55), R_ + 'UpLeg': (0, .8, -.6), L_ + 'Leg': (0, .7, -.7), R_ + 'Leg': (0, .6, -.8)})
+    R2 = dict(H0, **{'mixamorig:Spine2': _add(sd, (0, 0, .15)), L_ + 'Arm': (0, .6, -.8), R_ + 'Arm': (0, .55, -.85), L_ + 'ForeArm': (0, .8, -.6), R_ + 'ForeArm': (0, .75, -.65),
+                     L_ + 'UpLeg': (0, -.75, -.65), R_ + 'UpLeg': (0, -.7, -.7), L_ + 'Leg': (0, -.2, -1), R_ + 'Leg': (0, -.15, -1)})
+    RT = T * .55
+    run = [(0, R1, 1.0), (RT * .25, dict(R1, **{L_ + 'Arm': (0, -.2, -1), R_ + 'Arm': (0, -.15, -1)}), .97), (RT * .5, R2, 1.0),
+           (RT * .75, dict(R2, **{L_ + 'UpLeg': (0, -.1, -1), R_ + 'UpLeg': (0, -.05, -1)}), 1.06), (RT, R1, 1.0)]
+    c = {'idle': [(0, {}, None), (1, {'mixamorig:Spine2': _add(sd, (0, 0, -.15))}, None), (2, {}, None)],
+         'walk': [(0, TA, 1), (T / 4, TB, 1.03), (T / 2, poses.mirror(TA), 1), (3 * T / 4, poses.mirror(TB), 1.03), (T, TA, 1)],
+         'attack': [(0, {}, None), (.25, BW, None), (.32, BW, None, 'LINEAR'), (.4, BITE, None), (.6, BITE, None), (.9, {}, None)],
+         'hit': [(0, {}, None), (.08, HITQ, None), (.35, {}, None)], 'death': death, 'death2': death2, 'death3': death3, 'death4': death4, 'run': run}
+    if 'leap' in skills:   # 扑击：伏低 → 前后腿拉直腾空 → 落地
+        CR = dict(H0, **{'mixamorig:Spine2': _add(sd, (0, 0, -.3)), L_ + 'ForeArm': (0, .6, -1), R_ + 'ForeArm': (0, .6, -1), L_ + 'Leg': (0, .7, -1), R_ + 'Leg': (0, .7, -1)})
+        AIR = dict(H0, **{'mixamorig:Spine2': _add(sd, (0, 0, .2)), 'lunge': (.6 * L, 0), L_ + 'Arm': (0, -1, -.2), R_ + 'Arm': (0, -1, -.25),
+                          L_ + 'UpLeg': (0, 1, -.3), R_ + 'UpLeg': (0, 1, -.35)})
+        c['leap'] = [(0, {}, None), (.25, CR, .8), (.35, CR, .78, 'LINEAR'), (.55, AIR, 1.5), (.75, dict(AIR, lunge=(L, 0)), 1.2),
+                     (.85, dict(BITE, lunge=(L, -.04 * L)), None), (1.3, {}, None)]
+    if 'smash' in skills:   # 人立：以后腰为轴把身子立起来，前爪举到胸前；roar = 人立咆哮，smash = 人立后拍地
+        REAR = {'mixamorig:Hips': (0, -.4, 1), 'mixamorig:Spine2': (0, -.6, .8), L_ + 'Arm': (.3, -.7, .4), R_ + 'Arm': (-.3, -.7, .4),
+                L_ + 'ForeArm': (0, -.5, .8), R_ + 'ForeArm': (0, -.5, .8), L_ + 'UpLeg': (0, .15, -1), R_ + 'UpLeg': (0, .15, -1)}
+        REAR_B = dict(REAR, **{'mixamorig:Spine2': (0, -.35, 1), L_ + 'Arm': (.7, -.5, .5), R_ + 'Arm': (-.7, -.5, .5)})
+        SLAM = dict(H0, **{'mixamorig:Hips': (0, -1, -.15), 'mixamorig:Spine2': _add(sd, (0, 0, -.5)), 'lunge': (.25 * L, -.04 * L),
+                           L_ + 'Arm': (0, -.8, -1), R_ + 'Arm': (0, -.8, -1), L_ + 'UpLeg': (0, .5, -1), R_ + 'UpLeg': (0, .5, -1)})
+        c['roar'] = [(0, {}, None), (.4, REAR, None), (.6, REAR_B, None), (.8, REAR, None), (1.0, REAR_B, None), (1.5, {}, None)]
+        c['smash'] = [(0, {}, None), (.45, REAR, None), (.55, REAR, None, 'LINEAR'), (.65, SLAM, None), (.95, SLAM, None), (1.4, {}, None)]
+    if 'howl' in skills:   # 坐下仰头长嚎（狼）
+        SIT = {'mixamorig:Hips': (0, -.85, .5), 'mixamorig:Spine2': (0, -.5, .9), L_ + 'Arm': (0, -.2, -1), R_ + 'Arm': (0, -.2, -1),
+               L_ + 'UpLeg': (0, -.9, -.2), R_ + 'UpLeg': (0, -.9, -.2), L_ + 'Leg': (0, .95, -.3), R_ + 'Leg': (0, .95, -.3)}
+        c['roar'] = [(0, {}, None), (.4, SIT, .45), (.7, dict(SIT, **{'mixamorig:Spine2': (0, -.15, 1)}), .45),
+                     (1.4, dict(SIT, **{'mixamorig:Spine2': (0, -.1, 1)}), .45), (1.8, {}, None)]
+    return c
+
+DOG = dict(k=1.0, h=9, w=3, yf=-8, yb=8, bz=6, hd=3, sn=3, lg=2, ear=3, T=0.5,
+           fur='#7a6a5a', back='#5a4a3e', belly='#9a8a76', paw='#4a3e34', eye=GOLD_G, snout='#8a7a68')
+WOLF = dict(k=1.1, h=12, w=4, yf=-10, yb=10, bz=8, hd=3, sn=3, lg=2, ear=3, T=0.6, heads=(-4, 4), eyes=(GOLD_G, ZCYAN),
+            fur='#4a4a50', back='#2a2a30', belly='#6a6a70', paw='#2a2a2e')
+BEAR = dict(k=1.3, h=10, w=7, yf=-12, yb=12, bz=12, hd=5, sn=3, lg=4, ear=1, T=1.3,
+            fur='#6a4a32', back='#4e3624', belly='#7a5a40', paw='#3a2a1e', eye=GOLD_G, snout='#8a6a50')
+
+def m_dog():
+    P, part, J = qbody(DOG); rnd = random.Random('dog')
+    for b in ('Spine2', 'Spine', 'Hips'):
+        c = part(b)
+        for q in [q for q, h in c.items() if h in (DOG['fur'], DOG['back']) and rnd.random() < .08]: c[q] = '#b07a6a'   # 掉毛露出的皮
+    for y in range(-7, 8, 2):   # 脊背裂开露出的骨刺
+        part('Spine2' if y < -2 else 'Spine' if y < 3 else 'Hips')[(-1 + (y % 4 == 1), y, 15)] = BONE
+    return P, J, qclips(DOG, J, ('leap',))
+def m_wolf():
+    P, part, J = qbody(WOLF)
+    for t in range(-4, 4): part('Neck')[(t, -12, 17 + (t % 2))] = '#8a8f94'                       # 颈上的断链
+    for y in range(-9, 10):   # 长毛：背脊两侧竖起的一圈深色
+        part('Spine2' if y < -3 else 'Spine' if y < 4 else 'Hips')[(-4 if y % 2 else 3, y, 20)] = WOLF['back']
+    return P, J, qclips(WOLF, J, ('howl',))
+def m_bear():
+    P, part, J = qbody(BEAR)
+    box(part('Spine2'), (-5, 4), (-12, -5), (22, 23), BEAR['back'])                                       # 肩峰
+    for y0, b in ((-3, 'Spine'), (5, 'Hips')): box(part(b), (-4, 2), (y0, y0 + 3), (22, 22), RUST); part(b)[(-2, y0 + 1, 22)] = PLATE   # 嵌着的锈铁片
+    for x, y, b in ((3, -2, 'Spine'), (-3, 6, 'Hips'), (1, 9, 'Hips')):                                    # 断箭
+        box(part(b), (x, x), (y, y), (22, 25), '#6a4a2a'); part(b)[(x, y, 26)] = '#d8d0b8'
+    box(part('RightHand'), mx((3, 6)), (-15, -13), (0, 1), BONE); box(part('RightHand'), mx((4, 5)), (-17, -16), (0, 0), BONE)   # 右前掌的骨刃
+    for c in ((-1, -28, 20), (0, -29, 21), (-2, -29, 19)): part('Head')[c] = GOO                            # 口鼻冒的腐气
+    return P, J, qclips(BEAR, J, ('smash',))
+
+VULT = dict(k=1.1)
+def m_vulture():
+    """秃鹫：胳膊 = 翅膀（静止就是展翅），腿短；身子水平"""
+    P = {}; part = lambda b: P.setdefault('mixamorig:' + b, {}); rnd = random.Random('vulture')
+    F, F2, SK = '#3a2a22', '#5a4434', '#c88a7a'
+    box(part('Spine2'), (-3, 2), (-6, -2), (6, 11), F); box(part('Spine2'), (-3, 2), (-7, -7), (9, 11), '#e8e0d0')   # 胸 + 白色颈羽
+    box(part('Spine'), (-3, 2), (-1, 1), (6, 11), F); box(part('Hips'), (-3, 2), (2, 5), (7, 11), F)
+    box(part('Hips'), (-4, 3), (6, 10), (9, 10), F2)                                                     # 尾羽
+    box(part('Neck'), (-1, 0), (-9, -8), (10, 13), SK)
+    head = part('Head'); box(head, (-2, 1), (-11, -8), (13, 16), SK)
+    for c in ((-2, -10, 17), (1, -9, 17), (1, -11, 17)): head[c] = '#a85a5a'                             # 秃头上的肉瘤
+    box(head, (-1, 0), (-13, -12), (13, 15), '#d8c890'); head[(-1, -14, 13)] = head[(0, -14, 13)] = '#d8c890'   # 钩喙
+    for r in ((1, 1), mx((1, 1))): box(head, r, (-12, -12), (15, 15), GOLD_G)
+    for side, f in (('Left', lambda r: r), ('Right', mx)):
+        for b, x, y in (('Arm', (3, 8), (-2, 4)), ('ForeArm', (9, 14), (-1, 5)), ('Hand', (15, 21), (0, 6))):
+            box(part(side + b), f(x), y, (10, 10), F); box(part(side + b), f(x), (y[0], y[0] + 1), (11, 11), F2)   # 上面一层浅色前缘
+        hand = part(side + 'Hand')
+        for i in range(15, 22):
+            for j in range(4, 7):
+                if rnd.random() < .3: hand.pop((f((i, i))[0], j, 10), None)                              # 残缺的飞羽
+        box(part(side + 'ForeArm'), f((10, 13)), (2, 2), (10, 10), BONE)                                 # 破洞里露出的骨
+        box(part(side + 'UpLeg'), f((1, 2)), (0, 1), (4, 5), F2); box(part(side + 'Leg'), f((1, 1)), (0, 1), (1, 3), SK)
+        box(part(side + 'Foot'), f((1, 2)), (-2, 1), (0, 0), GOO)                                        # 发绿光的爪
+    J = _sym({'Hips': (0, 3, 9), 'Spine': (0, 1, 9), 'Spine1': (0, 0, 9), 'Spine2': (0, -3, 9), 'Neck': (0, -7, 11), 'Head': (0, -8, 14),
+              'HeadTop_End': (0, -12, 14), 'LeftShoulder': (1.5, -1, 10.5), 'LeftArm': (3, 1, 10.5), 'LeftForeArm': (9, 1, 10.5),
+              'LeftHand': (15, 1, 10.5), 'LeftHandMiddle1': (21, 1, 10.5), 'LeftUpLeg': (2, 1, 6), 'LeftLeg': (2, 1, 4),
+              'LeftFoot': (2, 1, 1), 'LeftToeBase': (2, 0, 0), 'LeftToe_End': (2, -1, 0)})
+    sym = lambda d: dict(d, **poses.mirror(d))
+    L = 12 * V * VULT['k']; sd = tuple((Vector(J['Neck']) - Vector(J['Spine2'])).normalized())
+    H0 = {'mixamorig:Hips': (0, -1, .1)}
+    TUCK = sym({L_ + 'UpLeg': (0, .7, -.5), L_ + 'Leg': (0, 1, 0)})
+    UP = dict(H0, **TUCK, **sym({L_ + 'Arm': (1, 0, .7), L_ + 'ForeArm': (1, 0, .4), L_ + 'Hand': (1, .2, 0)}))
+    DN = dict(H0, **TUCK, **sym({L_ + 'Arm': (1, 0, -.6), L_ + 'ForeArm': (1, .1, -.8), L_ + 'Hand': (1, .3, -.6)}))
+    GL = dict(H0, **TUCK, **sym({L_ + 'Arm': (1, 0, .15), L_ + 'ForeArm': (1, .1, .05), L_ + 'Hand': (1, .3, -.05)}))
+    FOLD = sym({L_ + 'Arm': (.35, .9, .1), L_ + 'ForeArm': (-.05, 1, 0), L_ + 'Hand': (0, 1, -.1)})
+    DIVE = dict(H0, **TUCK, **sym({L_ + 'Arm': (.6, .8, .3), L_ + 'ForeArm': (.3, 1, 0), L_ + 'Hand': (0, 1, 0)}),
+                **{'mixamorig:Spine2': (0, -.7, -.7), 'lunge': (.4 * L, 0)})
+    LIMP = dict(sym({L_ + 'Arm': (1, .2, -.15), L_ + 'ForeArm': (1, .4, -.1), L_ + 'Hand': (1, .5, -.2), L_ + 'UpLeg': (.3, .3, -.4)}),
+                **{'mixamorig:Hips': (0, -1, 0), 'mixamorig:Spine2': (0, -.7, -.7)})
+    HITV = dict(UP, **{'mixamorig:Spine2': _add(sd, (0, .3, .4)), 'lunge': (-.1 * L, 0)})
+    PECK = dict(FOLD, **{'mixamorig:Spine2': (0, -.6, -.8), 'mixamorig:Hips': (0, -1, -.2)})
+    death = [(0, GL, 1.3), (.1, HITV, 1.3), (.5, LIMP, .5, 'LINEAR'), (.6, dict(LIMP, **{'mixamorig:Spine2': (0, -.9, -.3)}), .6), (.8, LIMP, .5), (1.4, LIMP, .5)]
+    # 死亡二 = 打旋坠落：一翼收一翼张，歪着栽下去，落地一侧翅膀压在身下
+    SPIN = dict(H0, **TUCK, **{L_ + 'Arm': (1, 0, .8), L_ + 'ForeArm': (1, 0, .5), L_ + 'Hand': (1, .2, .2)}, **poses.mirror({L_ + 'Arm': (.35, .9, -.2), L_ + 'ForeArm': (-.05, 1, 0)}),
+                **{'mixamorig:Spine2': (.5, -.7, -.4)})
+    SLUMP = dict(LIMP, **{L_ + 'Arm': (1, .2, .4), L_ + 'ForeArm': (1, .4, .2), L_ + 'Hand': (1, .3, 0)}, **poses.mirror({L_ + 'Arm': (.4, .9, -.1), L_ + 'ForeArm': (0, 1, 0)}))
+    death2 = [(0, GL, 1.3), (.1, HITV, 1.32), (.35, SPIN, 1.0), (.6, dict(SPIN, **{'mixamorig:Spine2': (-.5, -.7, -.4)}), .65, 'LINEAR'), (.8, SLUMP, .5),
+              (.9, dict(SLUMP, **{'mixamorig:Spine2': (0, -.9, -.2)}), .56), (1.0, SLUMP, .5), (1.5, SLUMP, .5)]
+    # 死亡三 = 仰面翻倒：被打得往后翻，肚皮朝天、两爪朝上蜷着
+    BACKUP = dict(H0, **{'mixamorig:Hips': (0, -.4, 1), 'mixamorig:Spine2': (0, .2, 1), 'lunge': (-.2 * L, 0)},
+                  **sym({L_ + 'Arm': (1, .3, .5), L_ + 'ForeArm': (1, .5, 0), L_ + 'UpLeg': (.3, -.5, -.5)}))
+    ONBACK = dict(sym({L_ + 'Arm': (1, .1, .1), L_ + 'ForeArm': (1, .3, -.1), L_ + 'Hand': (1, .4, -.15), L_ + 'UpLeg': (.2, -.2, 1), L_ + 'Leg': (.1, .6, .7)}),
+                  **{'mixamorig:Hips': (0, -1, .4), 'mixamorig:Spine2': (0, .9, .3), 'lunge': (-.35 * L, 0)})
+    death3 = [(0, GL, 1.3), (.1, HITV, 1.32), (.4, BACKUP, 1.0), (.65, ONBACK, .45, 'LINEAR'), (.75, dict(ONBACK, **{'mixamorig:Spine2': (0, .9, .5)}), .5),
+              (.9, ONBACK, .45), (1.1, dict(ONBACK, **sym({L_ + 'Leg': (.1, .2, 1)})), .45), (1.5, ONBACK, .45)]
+    # 死亡四 = 一头栽进地里：俯冲到一半没收住，滑出一段、尾巴翘着
+    CRASH = dict(DIVE, **{'mixamorig:Spine2': (0, -.5, -.9), 'lunge': (.9 * L, 0)})
+    SKID = dict(LIMP, **{'mixamorig:Hips': (0, -.8, .5), 'mixamorig:Spine2': (0, -.6, -.8), 'lunge': (1.2 * L, 0)},
+                **sym({L_ + 'Arm': (1, .6, .2), L_ + 'ForeArm': (.8, .8, -.1)}))
+    death4 = [(0, GL, 1.3), (.1, HITV, 1.3), (.3, DIVE, .95), (.5, CRASH, .55, 'LINEAR'), (.62, SKID, .45), (.8, dict(SKID, **{'mixamorig:Hips': (0, -1, .1)}), .45),
+              (1.4, dict(SKID, **{'mixamorig:Hips': (0, -1, .1)}), .45)]
+    # 奔跑 = 急扑翅：振幅更大、周期减半，身子前倾
+    FAST = {'mixamorig:Spine2': (0, -.85, -.25)}
+    run = [(0, dict(UP, **FAST, **sym({L_ + 'Arm': (1, 0, 1)})), 1.25), (.15, dict(DN, **FAST, **sym({L_ + 'Arm': (1, 0, -.9)})), 1.15), (.3, dict(UP, **FAST, **sym({L_ + 'Arm': (1, 0, 1)})), 1.25)]
+    clips = {'idle': [(0, GL, 1.3), (1, dict(GL, **sym({L_ + 'Arm': (1, 0, .3)})), 1.36), (2, GL, 1.3)],
+             'walk': [(0, UP, 1.3), (.3, DN, 1.2), (.6, UP, 1.3)],
+             'attack': [(0, UP, 1.3), (.25, DIVE, 1.0), (.35, dict(DIVE, lunge=(.6 * L, 0)), .8, 'LINEAR'), (.6, DN, 1.0), (.9, UP, 1.3)],
+             'hit': [(0, GL, 1.3), (.08, HITV, 1.25), (.35, GL, 1.3)], 'death': death, 'death2': death2, 'death3': death3, 'death4': death4, 'run': run,
+             'eat': [(0, FOLD, 1), (.2, PECK, .92), (.4, FOLD, 1), (.6, PECK, .92), (.8, FOLD, 1)]}   # 食腐：收翅落地啄尸体
+    return P, J, clips
+
+def deco_ape(part, z, rnd):
+    # 变异巨猿：银背、左臂异常粗大拖地、背上一排结晶骨刺、胸口发光的肿块
+    chest, a0, U = part('Spine2'), 4 + z['sh'], z.get('lift', 0)
+    box(chest, (-6, 5), (4, 5), (12 + U, 18 + U), '#b8bcc0')                                    # 银背
+    for x, k, n in ((-4, 14, 3), (-1, 15, 4), (2, 14, 3), (-3, 18, 3), (1, 18, 3)):
+        for t in range(n): chest[(x, 6 + t, k + U + t)] = ZCYAN                                  # 结晶骨刺
+    box(chest, (-4, -2), (-7, -7), (14 + U, 16 + U), ZPINK); chest[(-3, -8, 15 + U)] = ZPINK     # 胸口肿块
+    box(part('LeftArm'), (a0, a0 + 2), (-4, 2), (14 + U, 18 + U), z['skin'])                     # 粗左臂
+    box(part('LeftForeArm'), (a0 + 3, a0 + 5), (-5, 3), (13 + U, 19 + U), z['skin'])
+    box(part('LeftHand'), (a0 + 6, a0 + 9), (-5, 3), (13 + U, 19 + U), '#2a2a2e')
+    box(part('RightHand'), mx((a0 + 5, a0 + 7)), (-3, 1), (14 + U, 18 + U), '#2a2a2e')
+MUTANTS = {'dog': m_dog, 'wolf': m_wolf, 'bear': m_bear, 'vulture': m_vulture,
+           'ape': dict(skin='#4a4a50', shirt=None, pants='#3a3a40', fat=True, sh=3, k=1.8, arms='boss', hoff=(-2, -2),
+                       loco='stomp', run='sprint', attack='smash', eye=GOLD_G, skills=['roar', 'summon', 'leap'], deco=deco_ape)}
+MKS = {'dog': DOG['k'], 'wolf': WOLF['k'], 'bear': BEAR['k'], 'vulture': VULT['k']}
+
+def build_z(pre, zid, z, J=None, cells=None, clips=None):
+    """一只僵尸 / BOSS / 精英 / 变异生物 → out_dir/<pre><id>.glb。四足兽传自己的 J（关节）/ cells / clips，不缩头"""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.context.scene.render.fps = poses.FPS
+    arm = skeleton(J or zjoints(z), keep_anims=False)
+    hz = 18 + z.get('lift', 0) + z.get('hoff', (0, 0))[1]
+    mats = {c: 'glow' for c in GLOW_COLS}
+    mesh = voxmesh(pre + zid, cells or build_zombie(zid, z), V * z.get('k', 1), mats=mats,
+                   shrink={} if cells else {'mixamorig:Head': (Vector((0, z.get('hoff', (0, 0))[0], hz)), ZHEAD_K)})
+    mesh.parent = arm
+    mesh.matrix_parent_inverse = arm.matrix_world.inverted()
+    mesh.modifiers.new('arm', 'ARMATURE').object = arm
+    poses.build(arm, clips or zclips(z))
+    export([arm, mesh], os.path.join(out_dir, pre + zid + '.glb'))
+    print("ZOM_OK", zid, len(mesh.data.vertices), "tris", sum(len(p.vertices) - 2 for p in mesh.data.polygons))
+
+for kind, table, pre in (('zombies', ZOMBIES, 'vox_z_'), ('bosses', BOSSES, 'vox_b_'), ('elites', ELITES, 'vox_e_'), ('mutants', MUTANTS, 'vox_m_')):
     if kind not in only: continue
     for zid, z in table.items():
         if len(only) > 1 and zid not in only: continue
-        bpy.ops.wm.read_factory_settings(use_empty=True)
-        bpy.context.scene.render.fps = poses.FPS
-        J = zjoints(z)
-        arm = skeleton(J, keep_anims=False)
-        hz = 18 + z.get('lift', 0) + z.get('hoff', (0, 0))[1]
-        mats = {c: 'glow' for c in GLOW_COLS}
-        mesh = voxmesh(pre + zid, build_zombie(zid, z), V * z.get('k', 1), mats=mats,
-                       shrink={'mixamorig:Head': (Vector((0, z.get('hoff', (0, 0))[0], hz)), ZHEAD_K)})
-        mesh.parent = arm
-        mesh.matrix_parent_inverse = arm.matrix_world.inverted()
-        mesh.modifiers.new('arm', 'ARMATURE').object = arm
-        poses.build(arm, zclips(z))
-        export([arm, mesh], os.path.join(out_dir, pre + zid + '.glb'))
-        print("ZOM_OK", zid, len(mesh.data.vertices), "tris", sum(len(p.vertices) - 2 for p in mesh.data.polygons))
+        if callable(z):   # 四足兽 / 鸟：自带格子、关节、动作
+            P, J, clips = z(); build_z(pre, zid, {'k': MKS[zid]}, _m(J, MKS[zid]), P, clips)
+        else: build_z(pre, zid, z)
 
 
 # ══════════════ 场景物件（05 §4 / §5.2；src/data/scenes.ts）══════════════
@@ -1944,15 +2353,962 @@ AR_CHAIN = {   # 手写：基础 + 1 转 2 个 + 2 转 4 个（每方向一套�
     'ar-10': dict(AR_FACE[2], top='#8a5a3a', top2='#5a3a22', pants='#3a3a44', glove='#1f1f22', deco=look_ar10, wr='smg', k=1.03),
     'ar-11': dict(AR_FACE[3], top='#4a5a48', top2='#2e3a2c', pants='#353d33', glove='#2e3a2c', deco=look_ar11, wr='sniper', k=1.03),
 }
+# ══════════════ 法师树全部 191 个形象（同一套量产规则；key = 'mg'）══════════════
+# 树色 = 浅紫（远程施法）：0–2 转是领口宝石 / 书签，3–5 转缩成扣子，英雄上领口；p0 元素 / 秘法，p1 外放 / 引导
+# 所有法师都穿长袍：背后 + 两侧的长下摆（robe），正面开襟露腿
+MG_TC, VOID, HEX, BLOOD, SOUL = '#c8a8ff', '#16121e', '#ff7ae0', '#8a1a2a', '#9affe0'
+MG_M, MG_S = '#a03a2a', '#d07a30'   # 手写链的「主 / 辅」占位色：recolor 换成本格色谱的主色 / 辅色
+LOOK_GLOW |= {MG_TC, HEX, SOUL}; LOOK_MATS.update({MG_TC: 'glow', HEX: 'glow', SOUL: 'glow'})
+
+def w_staff(c, L, wood, metal, glow, kind=0, gem=None):
+    # 法杖：握把在原点，杖身沿 -y；杖头 kind 0 爪托宝石 / 1 圆环 / 2 叉形（雷）/ 3 骷髅 / 4 羊角 / 5 镰刀
+    box(c, (0, 0), (-L, 8), (0, 0), wood); box(c, (-1, 1), (-L, -L), (-1, 1), metal); box(c, (-1, 1), (8, 9), (-1, 1), metal)
+    y, g = -L - 1, gem or glow
+    if kind == 0:
+        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)): line(c, (0, y, 0), (dx * 2, y - 3, dz * 2), metal)
+        box(c, (-1, 1), (y - 4, y - 2), (-1, 1), g)
+    if kind == 1:
+        for i in range(24):
+            a = 2 * math.pi * i / 24; c[(round(4 * math.cos(a)), round(y - 4 + 4 * math.sin(a)), 0)] = metal
+        box(c, (0, 0), (y - 5, y - 3), (-1, 1), g); c[(0, y - 4, 0)] = glow
+    if kind == 2:
+        for s in (-1, 1): line(c, (0, y, 0), (s * 3, y - 3, 0), metal); line(c, (s * 3, y - 3, 0), (s * 2, y - 7, 0), glow)
+        box(c, (0, 0), (y - 3, y - 1), (0, 0), g)
+    if kind == 3:
+        box(c, (-2, 2), (y - 4, y), (-2, 2), BONE); box(c, (-1, 1), (y - 3, y - 2), (-3, -3), VOID)
+        for x in (-1, 1): c[(x, y - 3, -3)] = glow
+    if kind == 4:
+        box(c, (-1, 1), (y - 2, y), (-1, 1), metal)
+        for s in (-1, 1): line(c, (s, y - 1, 1), (s * 4, y - 4, 3), BONE); line(c, (s * 4, y - 4, 3), (s * 3, y - 6, 0), BONE)
+        box(c, (0, 0), (y - 4, y - 3), (0, 1), g)
+    if kind == 5:
+        box(c, (-1, 1), (y - 1, y), (-1, 1), metal)
+        for i in range(12): c[(0, y - 1 + i // 4, -1 - i)] = metal; c[(0, y + i // 4, -1 - i)] = EDGE
+        c[(0, y - 2, 0)] = glow
+def w_wand(c, L, wood, glow, tip=None):
+    box(c, (0, 0), (-L, 3), (0, 0), wood); box(c, (-1, 1), (0, 1), (-1, 1), tip or wood); box(c, (0, 0), (-L - 2, -L - 1), (0, 0), glow)
+def w_orb(c, R, shell, core, cage=None):
+    # 手持法球：托在掌前（-y 一点），外壳 + 内核；cage = 外面一圈金属箍
+    cy = -R - 1
+    for i in range(-R, R + 1):
+        for j in range(-R, R + 1):
+            for k in range(-R, R + 1):
+                d = i * i + j * j + k * k
+                if d <= R * R: c[(i, cy + j, k)] = core if d <= (R - 1.5) ** 2 else shell
+    if cage:
+        for i in range(32): a = 2 * math.pi * i / 32; c[(round((R + 1) * math.cos(a)), round(cy + (R + 1) * math.sin(a)), 0)] = cage
+def w_tome(c, cover, page, glow, big=0):
+    # 打开的书托在手上：书脊沿 y，两页摊开（±x），上方浮一枚符文
+    w, h = 4 + big, 5 + big
+    box(c, (-w, w), (-h - 2, -1), (0, 0), cover); box(c, (-w + 1, w - 1), (-h - 1, -2), (1, 1), page)
+    box(c, (0, 0), (-h - 2, -1), (1, 1), cover)
+    for s in (-1, 1): box(c, (s * 2, s * 2), (-h, -3), (1, 1), '#8a7a6a')
+    box(c, (-1, 0), (-h // 2 - 2, -h // 2 - 1), (4, 5), glow)
+LOOK_WPN.update({
+    'wand':        lambda c: w_wand(c, 10, '#6a4a2a', AMBER),
+    'wand_ivory':  lambda c: w_wand(c, 12, BONE, MG_TC, tip=GOLD),
+    'wand_hex':    lambda c: w_wand(c, 12, '#2a2030', HEX, tip=SILV),
+    'wand_star':   lambda c: w_wand(c, 14, STARW, LIGHT, tip=STARG),
+    'staff':       lambda c: w_staff(c, 26, '#6a4a2a', GOLD, AMBER),
+    'staff_prism': lambda c: w_staff(c, 30, '#4a3a2a', GOLD, CYAN, 0, EMBER),
+    'staff_storm': lambda c: w_staff(c, 32, '#3a3a44', SILV, CYAN, 2),
+    'staff_earth': lambda c: w_staff(c, 30, '#5a4030', STONE, FORT, 0, '#d8b860'),
+    'staff_void':  lambda c: w_staff(c, 32, '#2a2430', IRON, VIO, 1, VOID),
+    'staff_horn':  lambda c: w_staff(c, 30, '#3a1a1a', IRON, STICKY, 4),
+    'staff_skull': lambda c: w_staff(c, 30, '#3a3430', IRON, SOUL, 3),
+    'scythe':      lambda c: w_staff(c, 34, '#2a2620', IRON, SOUL, 5),
+    'staff_star':  lambda c: w_staff(c, 36, STARW, STARG, LIGHT, 1, '#fff6d8'),
+    'scythe_star': lambda c: w_staff(c, 38, STARW, STARG, LIGHT, 5),
+    'orb_void':    lambda c: w_orb(c, 3, '#3a2a5a', VOID, GOLD),
+    'orb_glass':   lambda c: w_orb(c, 3, GHOST, HEX),
+    'orb_star':    lambda c: w_orb(c, 4, '#fff6d8', LIGHT, STARG),
+    'tome':        lambda c: w_tome(c, '#5a3a22', '#e8dcc0', MG_TC),
+    'tome_hex':    lambda c: w_tome(c, '#3a1a1a', '#d8c8b0', STICKY, 1),
+    'tome_bone':   lambda c: w_tome(c, '#4a4440', BONE, SOUL, 1),
+    'tome_star':   lambda c: w_tome(c, STARW, '#fff6d8', LIGHT, 2),
+})
+
+def robe(part, U, n, top, trim):
+    # 法袍下摆：背后一片 + 两侧各一片（在腿外侧，不挡腿），n = 下摆长度（越高转越长），下沿一圈装饰色
+    hips = part('Hips'); z0 = 8 - n - U
+    box(hips, (-5, 4), (1, 2), (z0, 11), top); box(hips, (-5, 4), (2, 2), (z0, z0), trim)
+    for x in (-6, 5): box(hips, (x, x), (-3, 2), (z0 + 1, 11), top); box(hips, (x, x), (-3, 2), (z0 + 1, z0 + 1), trim)
+def mg_hat(head, col, band, h=6, tilt=1):
+    # 尖顶法师帽：宽檐 + 向后弯的尖顶
+    box(head, (-8, 7), (-8, 7), (28, 28), col); box(head, (-6, 5), (-6, 5), (29, 29), band)
+    for i in range(h):
+        r = max(0, 5 - i); box(head, (-r - 1 + (i > 2), r - (i > 2)), (-r - 1 + i // 3 * tilt, r + i // 3 * tilt), (30 + i, 30 + i), col)
+    head[(-1, 1 + h // 3 * tilt + 2, 30 + h)] = band
+def skull(c, x, y, z, eye, s=0):
+    box(c, (x, x + 2 + s), (y, y + 2 + s), (z, z + 2 + s), BONE); box(c, (x, x + 2 + s), (y + 1, y + 2 + s), (z - 1, z - 1), BONE)
+    c[(x, y, z + 1)] = VOID; c[(x + 2 + s, y, z + 1)] = VOID
+    if s: c[(x, y, z + 1)] = eye; c[(x + 2 + s, y, z + 1)] = eye
+def frog(c, x, y, z, body, eye):
+    box(c, (x, x + 2), (y, y + 2), (z, z + 1), body); c[(x, y, z + 2)] = eye; c[(x + 2, y, z + 2)] = eye; box(c, (x, x + 2), (y - 1, y - 1), (z, z), body)
+
+def sig_m0(part, t, v, U, rnd, F):
+    # 元素使：肩后浮着火 / 冰 / 雷三颗元素球。v0 连锁 = 三球之间连上光链、越往后链越多；v1 控相 = 胸前相位盘 + 头后一圈相环；英雄背后元素三角阵
+    chest, head = part('Spine2'), part('Head'); n = t - 3
+    P = [(8, 1, 21 + n), (-10, 1, 21 + n), (-1, 4, 25 + n)]
+    for (x, y, z), col in zip(P, (EMBER, AZURE, FORT)): box(chest, (x, x + 1 + (t >= 5)), (y, y + 1), (z, z + 1 + (t >= 5)), col)
+    if t >= 4 and v == 0:
+        for i in range(3):
+            (x0, y0, z0), (x1, y1, z1) = P[i], P[(i + 1) % 3]; line(chest, (x0, y0 + 2, z0), (x1, y1 + 2, z1), F['glow'] if i % 2 else F['top2'])
+        for i in range(2 * n): chest[(rnd.randint(-8, 7), rnd.randint(2, 4), rnd.randint(18, 26))] = (EMBER, AZURE, FORT)[i % 3]
+    if t >= 4 and v == 1:
+        box(chest, (-2, 1), (-3, -3), (13, 16), F['top2']); box(chest, (-1, 0), (-4, -4), (14, 15), F['glow'])
+        for i in range(16 + 8 * n):
+            a = 2 * math.pi * i / (16 + 8 * n); head[(round(-0.5 + (8 + n) * math.cos(a)), 7, round(24 + (8 + n) * math.sin(a)))] = F['glow'] if i % 4 == 0 else F['top2']
+    if t >= 5:
+        for side, f in SIDES: box(chest, f((4, 7)), (-3, 1), (18, 18), F['top2']); chest[(f((5, 5))[0], -3, 19)] = (EMBER, AZURE)[side == 'Right']
+    if t >= 6:
+        for (x0, _, z0), (x1, _, z1) in ((P[0], P[1]), (P[1], P[2]), (P[2], P[0])): line(chest, (x0, 6, z0 - 4), (x1, 6, z1 + 6), F['glow'])
+
+def sig_m1(part, t, v, U, rnd, F):
+    # 天候：领口后飘一条长巾。v0 狂风 = 腰间一圈半透明旋风、越往后越多圈；v1 雷云 = 头顶一朵雷云 + 下垂电光；5 转双臂电纹，英雄背后一道大闪电
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    for s in range(8 + 3 * n): chest[(3 + s // 5, 3 + s // 2, 17 - s // 3)] = F['glow'] if s % 4 == 3 else F['top2']
+    if t >= 4 and v == 0:
+        for k in range(n + 1):
+            R, z = 7 + k, 8 + 3 * k - U
+            for i in range(28):
+                a = 2 * math.pi * i / 28 + k
+                if i % 3: hips[(round(-0.5 + R * math.cos(a)), round(-0.5 + R * math.sin(a)), z + (i * 2) // 28)] = GHOST
+    if t >= 4 and v == 1:
+        for x in range(-6 - n, 6 + n): box(head, (x, x), (-2 - (x % 3 == 0), 2 + (x % 2)), (33 + (x % 2), 34 + (abs(x) < 4)), '#5a6070')
+        for x in (-6, -2, 3): line(head, (x - n, 0, 32), (x - n + 1, 0, 28 - n), F['glow'])
+    if t >= 5:
+        for side, f in SIDES: box(part(side + 'ForeArm'), f((7, 8)), (-3, 1), (16, 16), F['glow'])
+    if t >= 6:
+        pts = [(5, 5, 30), (0, 5, 24), (3, 5, 21), (-3, 5, 14), (0, 5, 12), (-6, 5, 4)]
+        for a, b in zip(pts, pts[1:]): line(chest, a, b, F['glow']); line(chest, (a[0] + 1,) + a[1:], (b[0] + 1,) + b[1:], '#fff6d8')
+
+def sig_m2(part, t, v, U, rnd, F):
+    # 地脉：双肩石质肩甲。v0 塑地 = 身边浮几块岩石、越往后越多越大；v1 连脉 = 肩甲 / 胸口 / 腿上发光的地脉纹；5 转背后立石，英雄背后一排水晶柱
+    chest = part('Spine2'); n = t - 3
+    for side, f in SIDES: box(chest, f((4, 7)), (-3, 1), (17, 18 + (t >= 5)), STONE); box(chest, f((5, 6)), (-3, 1), (19 + (t >= 5),) * 2, F['top2'])
+    if t >= 4 and v == 0:
+        for i in range(2 + 2 * n):
+            a = 2 * math.pi * i / (2 + 2 * n) + 0.4; x, y, z = round(-0.5 + 9 * math.cos(a)), round(-0.5 + 6 * math.sin(a)), 14 + 3 * (i % 3)
+            box(chest, (x, x + 1 + (i % 2) * n // 2), (y, y + 1), (z, z + 1 + n // 2), STONE); chest[(x, y, z + 2 + n // 2)] = F['glow']
+    if t >= 4 and v == 1:
+        for side, f in SIDES: line(chest, (f((5, 5))[0], -4, 18), (f((5, 5))[0], -4, 17), F['glow'])
+        for z in range(12, 17): chest[((z % 3) - 1, -3, z)] = F['glow']
+        for side, f in SIDES:
+            lg = part(side + 'UpLeg')
+            for z in range(5, 9 - (n == 0)): lg[(f((2 + z % 2, 2 + z % 2))[0], -3, z)] = F['glow']
+    if t >= 5: box(chest, (-3, 2), (3, 5), (10, 21), STONE); box(chest, (-1, 0), (6, 6), (14, 18), F['glow'])
+    if t >= 6:
+        for i in range(6):
+            x = -11 + 4 * i; ht = 22 + 6 - abs(2 * i - 5); box(chest, (x, x + 1), (5, 6), (8, ht), '#d8b860'); box(chest, (x, x + 1), (5, 6), (ht + 1, ht + 1), F['glow'])
+
+def sig_m3(part, t, v, U, rnd, F):
+    # 引力：腰间绕着暗星（越往后越多）。v0 黑洞 = 背后一张暗盘 + 亮吸积环；v1 重压 = 双腕镣铐 + 腰侧吊着坠块；英雄胸口一圈斜着的星环
+    chest, hips = part('Spine2'), part('Hips'); n = t - 3
+    for i in range(3 + n):
+        a = 2 * math.pi * i / (3 + n); x, y = round(-0.5 + 8 * math.cos(a)), round(-0.5 + 6 * math.sin(a)); box(hips, (x, x + 1), (y, y + 1), (12 - U, 13 - U), VOID); hips[(x, y, 14 - U)] = F['glow']
+    if t >= 4 and v == 0:
+        R = 5 + n
+        for i in range(-R - 2, R + 3):
+            for j in range(-R - 2, R + 3):
+                d = math.hypot(i, j)
+                if d <= R: chest[(i, 6, 18 + j)] = VOID
+                elif d <= R + 1.5 and (i + j) % 2 == 0: chest[(i, 6, 18 + j)] = F['glow']
+                elif d <= R + 2.2 and (i * j) % 5 == 0: chest[(i, 6, 18 + j)] = F['top2']
+    if t >= 4 and v == 1:
+        for side, f in SIDES:
+            box(part(side + 'ForeArm'), f((7, 8)), (-3, 1), (14, 15), IRON); x = f((6, 6))[0]
+            line(hips, (x, 0, 10), (x, 0, 7 - n - U), IRON); box(hips, (x - 1, x + 1), (-1, 1), (4 - 2 * n - U, 6 - n - U), VOID)
+    if t >= 5:
+        for side, f in SIDES: box(chest, f((7, 8)), (-1, 0), (22, 23), VOID); chest[(f((7, 7))[0], -2, 22)] = F['glow']
+    if t >= 6:
+        for i in range(48):
+            a = 2 * math.pi * i / 48; chest[(round(-0.5 + 10 * math.cos(a)), round(-0.5 + 4 * math.sin(a)), round(14 + 6 * math.sin(a)))] = F['glow'] if i % 6 == 0 else F['top2']
+
+def sig_m4(part, t, v, U, rnd, F):
+    # 幻术师：右半张白面具 + 头侧浮着镜片。v0 惑心 = 背后螺旋催眠纹；v1 隐匿 = 半透明披风；5 转镜片变大，英雄头后一圈镜屏
+    chest, head = part('Spine2'), part('Head'); n = t - 3
+    box(head, (-6, -1), (-7, -7), (19, 27), '#f4f0ea'); box(head, (-4, -3), (-8, -8), (21, 23), F['glow']); head[(-3, -8, 26)] = HEX
+    for side, f in SIDES:
+        for k in range(1 + n): x = f((8 + 2 * k, 8 + 2 * k))[0]; box(head, (x, x), (-1 + k, 0 + k), (22 + 3 * k, 24 + 3 * k + (t >= 5)), GHOST)
+    if t >= 4 and v == 0:
+        for i in range(30 + 10 * n):
+            a = i * 0.45; r = 1 + a * 0.55
+            if r > 6 + n: break
+            chest[(round(-0.5 + r * math.cos(a)), 3, round(14 + r * math.sin(a)))] = F['glow'] if i % 2 else HEX
+    if t >= 4 and v == 1:
+        for x in range(-6, 6):
+            for z in range(6 - 2 * n - U, 18):
+                if (x + z) % 2 == 0: chest[(x, 3, z)] = GHOST
+        box(chest, (-6, 5), (3, 3), (17, 18), F['top2'])
+    if t >= 5:
+        for side, f in SIDES: box(chest, f((4, 7)), (-3, 1), (18, 18), F['top2'])
+    if t >= 6:
+        for i in range(7):
+            a = math.radians(15 + 25 * i); x, z = round(-0.5 + 11 * math.cos(a)), round(23 + 9 * math.sin(a))
+            box(head, (x - 1, x + 1), (7, 7), (z - 2, z + 2), GHOST); head[(x, 7, z)] = F['glow']
+
+def sig_m5(part, t, v, U, rnd, F):
+    # 变形术士：腰带上一排药瓶 + 肩上一只青蛙。v0 群变 = 越往后身上蹲的青蛙越多；v1 畸变 = 左臂变成甲壳巨爪；5 转背后药釜，英雄背后变形法阵
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    for i in range(2 + n):
+        x = (4, 5, -5, -6, 4)[i]; y = -2 + (i // 2) * 2; box(hips, (x, x), (y, y), (7, 9), (JADE, HEX, AZURE, FORT, EMBER)[i]); hips[(x, y, 10)] = BROWN
+    frog(chest, 4, -2, 19, '#5aa040', F['glow'])
+    if t >= 4 and v == 0:
+        for (x, y, z) in ((-8, -1, 19), (-1, -2, 30), (5, 2, 10), (-7, 2, 10))[:n + 1]: frog(head if z == 30 else chest if z > 15 else hips, x, y, z, ('#5aa040', '#8a6aaa', '#c08a40', '#4a8ab0')[(x + z) % 4], F['glow'])
+    if t >= 4 and v == 1:
+        fa, hd = part('LeftForeArm'), part('LeftHand'); box(fa, (6, 9), (-3, 1), (13, 18), '#6a3a5a')
+        for z in (13, 15, 17): box(fa, (9, 9), (-3, 1), (z, z), HEX)
+        for k in range(1 + n): line(hd, (10, -2 + k, 16), (13 + n, -3 + k, 13 - k), BONE)
+    if t >= 5:
+        box(chest, (-3, 2), (3, 6), (10, 15), IRON); box(chest, (-3, 2), (3, 6), (16, 16), '#5aa040'); box(chest, (-1, 0), (4, 5), (17, 18), F['glow'])
+    if t >= 6:
+        for i in range(36):
+            a = 2 * math.pi * i / 36
+            for r in (8, 10): chest[(round(-0.5 + r * math.cos(a)), 7, round(18 + r * math.sin(a)))] = F['glow'] if r == 10 or i % 3 == 0 else F['top2']
+        for k in range(3): a = 2 * math.pi * k / 3 + 0.5; line(chest, (-0.5 + 8 * math.cos(a), 7, 18 + 8 * math.sin(a)), (-0.5 + 8 * math.cos(a + 2.1), 7, 18 + 8 * math.sin(a + 2.1)), F['glow'])
+
+def sig_m6(part, t, v, U, rnd, F):
+    # 恶魔契约：羊角（越往后越长）+ 腰间契约卷轴。v0 血契 = 背后蝠翼、越往后越大；v1 魂契 = 身边魂火 + 胸口锁链；5 转带刺尾，英雄背后五芒法阵
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    for side, f in SIDES:
+        x0, sx = f((5, 5))[0], 1 if side == 'Left' else -1
+        line(head, (x0, -2, 28), (x0 + sx * (2 + n), 0, 31 + n), '#3a2a2a'); line(head, (x0 + sx * (2 + n), 0, 31 + n), (x0 + sx * (3 + n), -2, 33 + n), BONE)
+    box(hips, (4, 5), (-2, -1), (6, 9), '#e8dcc0'); hips[(4, -2, 9)] = BLOOD
+    if t >= 4 and v == 0:
+        S = 6 + 3 * n
+        for side, f in SIDES:
+            sx = 1 if side == 'Left' else -1; x0 = f((3, 3))[0]
+            for k in range(S): chest[(x0 + sx * k, 4, 17 + k // 2)] = '#2a1a1a'
+            for k in range(S):
+                for z in range(17 + k // 2 - (S - k) // 2, 17 + k // 2): chest[(x0 + sx * k, 4, z)] = BLOOD if k % 3 else '#2a1a1a'
+            chest[(x0 + sx * S, 4, 17 + S // 2)] = F['glow']
+    if t >= 4 and v == 1:
+        for i in range(3 + 2 * n):
+            a = 2 * math.pi * i / (3 + 2 * n); x, y = round(-0.5 + 9 * math.cos(a)), round(-0.5 + 7 * math.sin(a)); box(chest, (x, x), (y, y), (19, 21), SOUL); chest[(x, y, 22)] = GHOST_E
+        line(chest, (-4, -3, 17), (3, -3, 12), IRON); line(chest, (3, -3, 17), (-4, -3, 12), IRON)
+    if t >= 5:
+        pts = [(-1, 2, 9), (-1, 5, 7), (-1, 8, 6), (-1, 10, 8), (-1, 11, 11)]
+        for a, b in zip(pts, pts[1:]): line(hips, (a[0], a[1], a[2] - U), (b[0], b[1], b[2] - U), '#3a1a1a')
+        box(hips, (-2, 0), (11, 12), (11 - U, 13 - U), F['glow'])
+    if t >= 6:
+        pts = [(-0.5 + 10 * math.cos(math.pi / 2 + 4 * math.pi * k / 5), 6, 20 + 10 * math.sin(math.pi / 2 + 4 * math.pi * k / 5)) for k in range(6)]
+        for a, b in zip(pts, pts[1:]): line(chest, a, b, F['glow'])
+
+def sig_m7(part, t, v, U, rnd, F):
+    # 亡者复苏：左肩骷髅肩甲 + 胸前骨肋。v0 尸潮 = 身边浮着小骷髅、越往后越多；v1 尸爆 = 腰间挂着发光尸囊；5 转背后脊骨，英雄背后骨翼
+    chest, hips = part('Spine2'), part('Hips'); n = t - 3
+    skull(chest, 4, -2, 18, F['glow'], 1)
+    for z in (12, 14, 16): box(chest, (-3, 2), (-3, -3), (z, z), BONE)
+    box(chest, (-1, 0), (-3, -3), (12, 17), BONE)
+    if t >= 4 and v == 0:
+        for i in range(2 + 2 * n):
+            a = 2 * math.pi * i / (2 + 2 * n) + 0.3; skull(chest, round(-1.5 + 9 * math.cos(a)), round(-1.5 + 7 * math.sin(a)), 20 + 3 * (i % 2), F['glow'])
+    if t >= 4 and v == 1:
+        for i in range(1 + n):
+            x = (-7, -7, 5)[i % 3]; y = (-2, 1, 1)[i % 3]; box(hips, (x, x + 1), (y, y + 1), (6 - U, 9 - U), '#6a8a3a'); hips[(x, y, 8 - U)] = F['glow']
+    if t >= 5:
+        for z in range(8, 22, 2): box(chest, (-1, 0), (3, 3), (z, z), BONE); chest[(-1, 4, z)] = BONE
+    if t >= 6:
+        for side, f in SIDES:
+            sx = 1 if side == 'Left' else -1
+            for k in range(4): line(chest, (f((2, 2))[0], 4, 20 - 2 * k), (f((2, 2))[0] + sx * (12 - 2 * k), 6, 26 - 3 * k), BONE); chest[(f((2, 2))[0] + sx * (12 - 2 * k), 6, 26 - 3 * k)] = F['glow']
+
+def mg_robed(sig):
+    # 3 转起所有家族都套法袍：下摆随转数变长（3 / 4 / 5 转 2 / 3 / 4 格，英雄 5 格）
+    def f(part, t, v, U, rnd, F): robe(part, U, min(t, 6) - 1, F['top'] or F['top2'], F['top2']); sig(part, t, v, U, rnd, F)
+    return f
+
+MG_FAM = [   # 8 个家族 = classes.ts MAGE styles[方向][分线]：咒术师（元素 / 天候）、法则师（地脉 / 引力）、奇术师（幻术 / 变形）、通冥师（恶魔 / 亡者）
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=AZURE, style=('short', 'long', 'long'), coat=MG_M, sig=mg_robed(sig_m0)),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=CYAN, style=('ponytail', 'spiky', 'long'), coat=MG_M, sig=mg_robed(sig_m1)),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=FORT, style=('bald', 'helmet', 'bald'), coat=MG_M, sig=mg_robed(sig_m2)),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=VIO, style=('hood', 'short', 'hood'), coat=MG_M, sig=mg_robed(sig_m3)),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=HEX, style=('long', 'ponytail', 'bun'), coat=MG_M, sig=mg_robed(sig_m4)),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=JADE, style=('bun', 'short', 'spiky'), coat=MG_M, sig=mg_robed(sig_m5)),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=STICKY, style=('spiky', 'long', 'hood'), coat=MG_M, sig=mg_robed(sig_m6)),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=SOUL, style=('hood', 'hood', 'bald'), coat=MG_M, sig=mg_robed(sig_m7)),
+]
+MG_FACE = [dict(CHARS['bom'], hair='#4a2e1e', extra=[]), dict(CHARS['ella'], extra=[]),     # TEMPLATE.mage：外放 bom / 引导 ella（bom 的橄榄发在红袍上像青苔，换深棕）
+           dict(CHARS['bom'], hair='#2a1a14', extra=['beard'], beard='#2a1a14'), dict(CHARS['ella'], extra=[], build='normal')]
+
+def mg_look_weapons(f, t, v):
+    if t == 7: return [('staff_star', 'orb_star'), ('staff_star', None), ('staff_star', 'tome_star'), ('orb_star', 'orb_star'),
+                       ('wand_star', 'orb_star'), ('wand_star', 'tome_star'), ('tome_star', 'wand_star'), ('scythe_star', None)][f]
+    if f == 0: return 'staff_prism', ('orb_glass' if v == 1 and t >= 5 else None)
+    if f == 1: return 'staff_storm', None
+    if f == 2: return ('staff_earth' if t >= 4 else 'staff'), ('tome' if v == 1 and t >= 5 else None)
+    if f == 3: return ('staff_void' if v == 0 or t == 3 else 'orb_void'), ('orb_void' if v == 1 and t >= 4 else None)
+    if f == 4: return 'wand_hex', ('orb_glass' if t >= 4 else None)
+    if f == 5: return ('wand_ivory' if v == 0 or t == 3 else 'wand_hex'), ('tome' if t >= 5 else None)
+    if f == 6: return ('tome_hex' if v == 1 or t == 3 else 'staff_horn'), ('wand_hex' if t >= 5 else None)
+    return ('scythe' if v == 1 and t >= 4 else 'staff_skull'), ('tome_bone' if t >= 5 else None)
+
+def gem(chest, y=-3): box(chest, (-1, 0), (y, y), (16, 17), MG_TC)                         # 法师树色件：领口一颗浅紫宝石
+def look_mg0(part, U, rnd):    # 法师：短袍 + 浅紫领口宝石 + 腰间书袋 + 短杖
+    chest, hips = part('Spine2'), part('Hips'); gem(chest); robe(part, U, 1, MG_M, MG_S)
+    box(hips, (4, 5), (-2, 0), (7, 10), BROWN); hips[(4, -2, 10)] = MG_TC
+def look_mg1(part, U, rnd):    # 元素法师：长袍 + 披肩 + 宝石胸针 + 法杖
+    chest = part('Spine2'); gem(chest); robe(part, U, 2, MG_M, MG_S)
+    box(chest, (-6, 5), (-3, 2), (17, 18), MG_S); box(chest, (-6, 5), (2, 2), (13, 16), MG_S)
+def look_mg1a(part, U, rnd):   # 秘法师：兜帽 + 长袍 + 腰间挂一本锁链书 + 书签（浅紫）
+    chest, hips = part('Spine2'), part('Hips'); gem(chest); robe(part, U, 2, MG_M, MG_S)
+    box(hips, (4, 6), (-2, 1), (6, 9), '#4a2a22'); box(hips, (7, 7), (-1, 0), (6, 9), '#e8dcc0'); hips[(5, -3, 5)] = MG_TC
+    line(hips, (4, -1, 10), (-3, -3, 11), IRON)
+def look_mg00(part, U, rnd):   # 咒术师：尖顶法师帽 + 长袍 + 法杖
+    chest, head = part('Spine2'), part('Head'); gem(chest); robe(part, U, 3, MG_M, MG_S); mg_hat(head, MG_M, MG_TC)
+def look_mg01(part, U, rnd):   # 法则师：头后一圈金色法环 + 袍上一排符文
+    chest, head = part('Spine2'), part('Head'); gem(chest); robe(part, U, 3, MG_M, MG_S)
+    for i in range(24): a = 2 * math.pi * i / 24; head[(round(-0.5 + 7 * math.cos(a)), 7, round(24 + 7 * math.sin(a)))] = GOLD if i % 6 else MG_TC
+    for z in (12, 14, 16): box(chest, (-1, 0), (2, 2), (z, z), MG_TC)
+def look_mg10(part, U, rnd):   # 奇术师：礼帽 + 领结 + 魔杖
+    chest, head = part('Spine2'), part('Head'); robe(part, U, 3, MG_M, MG_S)
+    box(head, (-8, 7), (-8, 7), (28, 28), BLK); box(head, (-5, 4), (-5, 4), (29, 34), BLK); box(head, (-5, 4), (-5, 4), (29, 29), MG_TC)
+    box(chest, (-3, 2), (-3, -3), (16, 17), MG_TC); box(chest, (-1, 0), (-3, -3), (16, 17), BLK)
+def look_mg11(part, U, rnd):   # 通冥师：兜帽 + 骨坠 + 腰间提灯（魂火）
+    chest, hips = part('Spine2'), part('Hips'); gem(chest); robe(part, U, 3, MG_M, MG_S)
+    box(chest, (-1, 0), (-3, -3), (12, 14), BONE); chest[(-1, -4, 13)] = MG_TC
+    line(hips, (5, -1, 10), (6, -2, 7), IRON); box(hips, (5, 7), (-3, -1), (4, 6), IRON); hips[(6, -3, 5)] = SOUL
+
+MG = dict(tree='mage', fam=MG_FAM, face=MG_FACE, wpn=mg_look_weapons, star=star_plus(MG_FAM), heavy=(2, 6), salt=5, shield=False)
+MG_CHAIN = {   # 手写：基础 + 1 转 2 个 + 2 转 4 个（每方向一套）
+    'mg':    dict(MG_FACE[0], style='short', glove=BROWN, deco=look_mg0, wr='wand'),
+    'mg-0':  dict(MG_FACE[0], style='short', glove='#3a2a1c', deco=look_mg1, wr='staff'),
+    'mg-1':  dict(MG_FACE[1], hood=MG_M, glove='#3a2a1c', deco=look_mg1a, wr='tome'),
+    'mg-00': dict(MG_FACE[0], style='short', glove='#3a2a1c', deco=look_mg00, wr='staff_prism', k=1.03),
+    'mg-01': dict(MG_FACE[1], style='long', glove='#3a2a1c', deco=look_mg01, wr='staff_earth', k=1.03),
+    'mg-10': dict(MG_FACE[2], style='short', glove=WHITE, deco=look_mg10, wr='wand_hex', k=1.03),
+    'mg-11': dict(MG_FACE[3], hood='#2a2030', glove='#2a2030', deco=look_mg11, wr='staff_skull', k=1.03),
+}
+# ══════════════ 辅助树全部 191 个形象（同一套量产规则；key = 'md'）══════════════
+# 树色 = 薄荷绿十字：0–2 转是臂章 / 胸前十字，3–5 转缩成扣子，英雄上领口；p0 随军 / 驻地（实在的医疗、自然），p1 吟咏 / 刻印（声、牌、星、符）
+MD_TC, LEAF, BARK, PAPER, VINE, THORN, INK = '#9affb8', '#5aa040', '#5a4030', '#efe6d0', '#3a6a2a', '#d8d0a0', '#b02a2a'
+NAVY, LEATHER = '#1e2440', '#6a4428'
+LOOK_GLOW |= {MD_TC}; LOOK_MATS.update({MD_TC: 'glow'})
+
+def cross(c, x, y, z, col, s=1):
+    # 十字（立在 xz 面上，中心 (x, z)，臂长 s）
+    box(c, (x - s, x + s), (y, y), (z, z), col); box(c, (x, x), (y, y), (z - s, z + s), col)
+
+def w_injector(c, body, glow, big=0):
+    # 注射枪：握把在原点，枪身沿 -y，前端针头；顶上一管发光药剂
+    box(c, (0, 0), (0, 2), (-3, 0), '#3a3a40'); box(c, (-1, 1), (-7 - big, 1), (0, 2), body); box(c, (0, 0), (-11 - big, -8 - big), (1, 1), STEEL)
+    box(c, (-1, 1), (-6 - big, -2), (3, 4), GHOST); box(c, (0, 0), (-5 - big, -3), (3, 4), glow)
+def w_branch(c, L, wood, leaf, glow):
+    # 德鲁伊枝杖：弯曲木杖，杖头分三叉挂叶子、正中一颗发光果
+    for y in range(-L, 9): c[(round(math.sin(y / 5)), y, 0)] = wood
+    y = -L
+    for dx, dz in ((-3, 1), (3, 1), (0, 3)): line(c, (0, y, 0), (dx, y - 4, dz), wood); box(c, (dx - 1, dx + 1), (y - 5, y - 4), (dz, dz + 1), leaf)
+    box(c, (0, 0), (y - 3, y - 2), (0, 1), glow)
+def w_totem(c, L, wood, paint, glow):
+    # 图腾杖：杖头一段刻面木桩（彩绘 + 发光眼）+ 两侧翅
+    box(c, (0, 0), (-L, 8), (0, 0), wood); y = -L
+    box(c, (-2, 2), (y - 7, y), (-2, 2), wood); box(c, (-2, 2), (y - 3, y - 2), (-2, 2), paint)
+    for x in (-1, 1): c[(x, y - 5, -3)] = glow; c[(x, y - 5, 3)] = glow
+    for s in (-1, 1): box(c, tuple(sorted((s * 3, s * 6))), (y - 6, y - 5), (0, 0), paint)
+def w_flask(c, R, glass, brew, cork=BROWN):
+    # 投掷药瓶：圆肚 + 细颈 + 软木塞（托在掌前）
+    cy = -R - 1
+    for i in range(-R, R + 1):
+        for j in range(-R, R + 1):
+            for k in range(-R, R + 1):
+                d = i * i + j * j + k * k
+                if d <= R * R: c[(i, cy + j, k)] = brew if d <= (R - 1) ** 2 and k <= 0 else glass
+    box(c, (0, 0), (cy, cy), (R, R + 2), glass); c[(0, cy, R + 3)] = cork
+def w_lute(c, wood, face, glow):
+    # 鲁特琴：握琴颈（原点），琴身在 -y 一侧，弦是一条亮线
+    box(c, (0, 0), (-4, 8), (0, 0), wood); box(c, (-1, 1), (7, 9), (0, 0), wood)
+    for j in range(-12, -4):
+        r = 4 - abs(j + 8) // 2
+        box(c, (-r, r), (j, j), (0, 0), wood); box(c, (-r + 1, r - 1), (j, j), (1, 1), face)
+    box(c, (0, 0), (-9, -7), (2, 2), BROWN); line(c, (0, 8, 1), (0, -11, 1), glow)
+def w_cards(c, back, face, glow):
+    # 扇形一手牌：5 张从掌心散开
+    for i in range(5):
+        a = math.radians(-40 + 20 * i)
+        for r in range(2, 9):
+            for w in (-1, 0, 1): c[(round(r * math.sin(a) + w * math.cos(a)), -1, round(r * math.cos(a) - w * math.sin(a)))] = face if i == 4 else back
+    c[(round(6 * math.sin(math.radians(40))), -2, round(6 * math.cos(math.radians(40))))] = glow
+def w_astro(c, L, rod, star, glow):
+    # 星杖（短）：细杖头顶一颗五角星
+    box(c, (0, 0), (-L, 3), (0, 0), rod); box(c, (-1, 1), (0, 1), (-1, 1), STARG); y = -L - 4
+    for k in range(10):
+        a = math.pi / 2 + math.pi * k / 5; r = 4 if k % 2 == 0 else 2
+        line(c, (0, y, 0), (round(r * math.cos(a)), round(y + r * math.sin(a)), 0), star)
+    c[(0, y, 0)] = glow
+LOOK_WPN.update({
+    'injector':      lambda c: w_injector(c, '#e8ecef', MD_TC),
+    'injector_hv':   lambda c: w_injector(c, '#c8ccd4', JADE, 2),
+    'injector_star': lambda c: w_injector(c, STARW, LIGHT, 3),
+    'branch':        lambda c: w_branch(c, 26, BARK, LEAF, JADE),
+    'branch_star':   lambda c: w_branch(c, 30, STARW, '#fff6d8', LIGHT),
+    'totem':         lambda c: w_totem(c, 24, '#6a4a2a', PAINT, AMBER),
+    'totem_star':    lambda c: w_totem(c, 28, STARW, STARG, LIGHT),
+    'flask':         lambda c: w_flask(c, 2, GHOST, STICKY),
+    'flask_big':     lambda c: w_flask(c, 3, GHOST, '#ff5ac8'),
+    'lute':          lambda c: w_lute(c, '#8a5a2a', '#e0c890', '#ff5ac8'),
+    'lute_star':     lambda c: w_lute(c, STARW, '#fff6d8', LIGHT),
+    'cards':         lambda c: w_cards(c, '#5a2a6a', PAPER, AMBER),
+    'cards_star':    lambda c: w_cards(c, STARG, STARW, LIGHT),
+    'wand_astro':    lambda c: w_astro(c, 12, '#2a2a40', STARG, AZURE),
+    'tome_rune':     lambda c: w_tome(c, '#3a3a44', PAPER, VIO),
+    'tome_seal':     lambda c: w_tome(c, '#2a2030', '#d8c8b0', INK, 1),
+})
+
+def sig_d0(part, t, v, U, rnd, F):
+    # 战地急救：背后白色急救箱 + 绿十字、腰侧一排药剂管。v0 护盾 = 左手外侧一面菱形光盾、越往后越大；v1 回生 = 胸前除颤器 + 腰上两块电极板；
+    # 5 转左肩信标灯，英雄背后一对医疗光翼
+    chest, hips = part('Spine2'), part('Hips'); n = t - 3
+    box(chest, (-3, 2), (2, 5), (11, 16), PAPER); cross(chest, -1, 6, 13, F['glow'])
+    for i in range(2 + n): hips[(-5, -2 + i, 10)] = (JADE, F['glow'], AZURE, '#ff5ac8', AMBER)[i]; hips[(-5, -2 + i, 9)] = GHOST
+    if t >= 4 and v == 0:
+        fa, R = part('LeftForeArm'), 2 + n
+        for y in range(-R, R + 1):
+            for z in range(-R, R + 1):
+                d = abs(y) + abs(z)
+                if d <= R: fa[(12, -1 + y, 16 + z)] = F['glow'] if d == R else GHOST
+    if t >= 4 and v == 1:
+        box(chest, (-2, 1), (-3, -3), (13, 15), '#3a3a40'); chest[(-1, -4, 14)] = F['glow']; chest[(0, -4, 14)] = AMBER
+        for x in ((4, 5), (-6, -5))[:1 + (n > 0)]: box(hips, x, (-3, -3), (7 - n, 9), '#e8ecef'); line(hips, (x[0], -3, 10), (-1, -3, 12), '#3a3a40')
+    if t >= 5: box(chest, (5, 7), (-1, 1), (18, 19), PAPER); box(chest, (6, 6), (0, 0), (20, 21), F['glow'])
+    if t >= 6:
+        for side, f in SIDES:
+            sx = 1 if side == 'Left' else -1; x0 = f((2, 2))[0]
+            for k in range(10):
+                for z in range(18 - k // 2, 22 + k // 3): chest[(x0 + sx * k, 4, z)] = F['glow'] if z == 21 + k // 3 or k == 9 else GHOST
+
+def sig_d1(part, t, v, U, rnd, F):
+    # 生长：双肩叶片 + 头上一圈花冠。v0 树皮橡心 = 胸前树皮甲 + 发光橡心、前臂树皮护甲（越往后越厚）；v1 荆藤 = 手臂腿上绕荆棘藤；5 转头上鹿角枝，英雄背后一棵小树
+    chest, head = part('Spine2'), part('Head'); n = t - 3
+    for side, f in SIDES:
+        for k in range(3): box(chest, f((4 + k, 5 + k)), (-2 + k % 2, 0 + k % 2), (18 + k, 18 + k), LEAF if k < 2 else F['glow'])
+    for i in range(12 + 4 * n):
+        a = 2 * math.pi * i / (12 + 4 * n); head[(round(-0.5 + 6.5 * math.cos(a)), round(-0.5 + 6.5 * math.sin(a)), 29)] = ('#ff9ac8', LEAF, F['glow'])[i % 3]
+    if t >= 4 and v == 0:
+        box(chest, (-3, 2), (-3, -3), (12, 16), BARK); box(chest, (-1, 0), (-4, -4), (14, 15), F['glow'])
+        for side, f in SIDES: box(part(side + 'ForeArm'), f((7, 8)), (-3, 1), (15 - n, 17), BARK)
+    if t >= 4 and v == 1:
+        for side, f in SIDES:
+            fa, ul = part(side + 'ForeArm'), part(side + 'UpLeg')
+            for k in range(4 + 2 * n):
+                x = f((7 + k % 2, 7 + k % 2))[0]; fa[(x, -3 if k % 4 < 2 else 1, 15 + k % 3)] = VINE
+                if k % 3 == 0: fa[(x, -4, 16)] = THORN
+            for z in range(5, 9): ul[(f((1 + z % 3, 1 + z % 3))[0], -3, z)] = VINE
+    if t >= 5:
+        for side, f in SIDES:
+            sx = 1 if side == 'Left' else -1; x0 = f((4, 4))[0]
+            line(head, (x0, 0, 29), (x0 + sx * 3, 1, 34), BARK); line(head, (x0 + sx * 3, 1, 34), (x0 + sx * 5, 2, 36), BARK); line(head, (x0 + sx * 2, 1, 32), (x0 + sx * 4, 0, 33), BARK)
+            head[(x0 + sx * 5, 2, 37)] = F['glow']
+    if t >= 6:
+        box(chest, (-1, 0), (4, 5), (8, 30), BARK)
+        for x in range(-9, 9):
+            for z in range(28, 38):
+                if ((x + .5) / 9) ** 2 + ((z - 33) / 5) ** 2 <= 1: chest[(x, 5 + (x + z) % 2, z)] = F['glow'] if rnd.random() < .12 else LEAF
+
+def sig_d2(part, t, v, U, rnd, F):
+    # 图腾：背后一根小图腾柱 + 头上羽冠。v0 雷鸣 = 柱顶雷鸟 + 双臂闪电纹；v1 先祖 = 头侧浮着先祖面具（越往后越多）+ 胸前骨珠串；5 转兽皮披肩，英雄背后三层大图腾柱
+    chest, head = part('Spine2'), part('Head'); n = t - 3
+    box(chest, (-9, -8), (3, 4), (6, 22 + n), '#6a4a2a'); box(chest, (-9, -8), (3, 4), (18, 19), PAINT); box(chest, (-10, -7), (2, 2), (20 + n, 21 + n), PAINT)
+    chest[(-9, 2, 22 + n)] = F['glow']; chest[(-8, 2, 22 + n)] = F['glow']
+    for i, x in enumerate(range(-5, 5)): box(head, (x, x), (-2, 4), (29, 30 + (i % 3 == 1) * 2), (F['glow'], PAINT, '#f0f0f0')[i % 3])
+    if t >= 4 and v == 0:
+        z = 24 + n; line(chest, (-8, 3, z), (-14 - n, 3, z + 3), '#3a3a44'); line(chest, (-9, 3, z), (-3 + n, 3, z + 3), '#3a3a44'); box(chest, (-9, -8), (2, 3), (z, z + 2), F['glow'])
+        for side, f in SIDES:
+            fa = part(side + 'ForeArm')
+            for x in range(7, 9): fa[(f((x, x))[0], -3, 15 + (x % 2) * 2)] = F['glow']
+            for x in range(4, 7): part(side + 'Arm')[(f((x, x))[0], -3, 16 + (x % 2))] = F['glow']
+    if t >= 4 and v == 1:
+        for k in range(1 + n):
+            x = (-12, 9, -12, 9)[k]; z = (22, 22, 28, 28)[k]
+            box(head, (x, x + 2), (-1, -1), (z, z + 3), BONE); head[(x, -2, z + 2)] = F['glow']; head[(x + 2, -2, z + 2)] = F['glow']; box(head, (x + 1, x + 1), (-2, -2), (z, z), '#2a1a14')
+        for x in range(-3, 3): chest[(x, -3, 17 - abs(x + .5) // 1.5)] = BONE if x % 2 else F['glow']
+    if t >= 5:
+        box(chest, (-6, 5), (-3, 3), (17, 18), FUR); box(chest, (-6, 5), (3, 3), (13, 16), FUR)
+    if t >= 6:
+        box(chest, (-3, 2), (4, 7), (6, 34), '#6a4a2a')
+        for z, col in ((10, PAINT), (18, '#3a7a8a'), (26, PAINT)): box(chest, (-3, 2), (3, 7), (z, z + 3), col); chest[(-2, 8, z + 2)] = F['glow']; chest[(1, 8, z + 2)] = F['glow']
+        for s in (-1, 1): box(chest, tuple(sorted((s * 4 - (s < 0), s * 12 - (s < 0)))), (5, 6), (31, 32), PAINT); chest[(s * 12 - (s < 0), 5, 33)] = F['glow']
+
+def sig_d3(part, t, v, U, rnd, F):
+    # 炼金调配：额头护目镜 + 胸前斜挎一排药瓶（越往后越多）。v0 酸蚀 = 背后两罐酸液；v1 炼成 = 身边浮着空瓶 + 发光核；5 转皮围裙 + 背后小蒸馏球，英雄背后大蒸馏器
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    box(head, (-6, 5), (-6, 5), (26, 26), LEATHER)
+    for x in ((-5, -2), (1, 4)): box(head, x, (-7, -7), (25, 27), '#3a3a40'); box(head, (x[0] + 1, x[1] - 1), (-8, -8), (26, 26), F['glow'])
+    for k in range(4 + n):
+        x, z = 3 - 2 * k, 13 + k
+        if x < -5: break
+        box(chest, (x, x), (-4, -4), (z, z + 1), (STICKY, '#ff5ac8', AZURE, AMBER, JADE)[k % 5]); chest[(x, -4, z + 2)] = BROWN
+    if t >= 4 and v == 0:
+        for x in ((-4, -2), (1, 3))[:1 + (n > 0)]:
+            box(chest, x, (2, 4), (9, 16 + n), GHOST); box(chest, (x[0], x[1]), (3, 3), (10, 14 + n), STICKY); box(chest, x, (2, 4), (17 + n, 17 + n), IRON)
+        part('LeftHand')[(10, -1, 14)] = STICKY; part('LeftHand')[(10, -1, 13)] = STICKY
+    if t >= 4 and v == 1:
+        for i in range(2 + n):
+            a = 2 * math.pi * i / (2 + n) + 0.5; x, y, z = round(-0.5 + 9 * math.cos(a)), round(-0.5 + 6 * math.sin(a)), 18 + 3 * (i % 2)
+            box(chest, (x, x + 1), (y, y + 1), (z, z + 1), GHOST); chest[(x, y, z + 2)] = GHOST; chest[(x, y, z)] = F['glow']
+    if t >= 5:
+        box(chest, (-4, 3), (-3, -3), (12, 13), LEATHER)
+        for z in range(6 - U, 9): box(hips, (-5, -4), (-3, -3), (z, z), LEATHER); box(hips, (3, 4), (-3, -3), (z, z), LEATHER)
+    if t >= 5 and t < 6: box(chest, (-2, 1), (3, 5), (17, 19), GHOST); box(chest, (-1, 0), (4, 4), (17, 18), F['glow']); box(chest, (-1, -1), (4, 4), (20, 22), IRON)
+    if t >= 6:
+        for i in range(-5, 6):
+            for j in range(-5, 6):
+                for k in range(-5, 6):
+                    d = i * i + j * j + k * k
+                    if 16 < d <= 25 or d <= 9 and k <= 0: chest[(i, 9 + j, 18 + k)] = F['glow'] if d <= 9 else GHOST
+        line(chest, (0, 9, 23), (0, 9, 30), IRON); line(chest, (0, 9, 30), (-8, 5, 32), IRON); box(chest, (-9, -8), (4, 5), (31, 33), F['glow'])
+
+def sig_d4(part, t, v, U, rnd, F):
+    # 乐曲：歪戴贝雷帽 + 羽毛、背后斜背一把鲁特琴。v0 战歌 = 腰侧战鼓 + 鼓槌（越往后鼓越大）；v1 挽歌 = 长披风 + 身边浮着音符；5 转金扣肩章，英雄背后发光竖琴
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    box(head, (-7, 5), (-6, 6), (29, 29), F['top2']); box(head, (-5, 3), (-4, 4), (30, 30), F['top2']); line(head, (3, 2, 30), (8, 5, 35), F['glow']); head[(8, 5, 36)] = '#f0f0f0'
+    for i in range(-4, 5):
+        for j in range(-3, 4):
+            if (i / 4.5) ** 2 + (j / 3.5) ** 2 <= 1: chest[(-3 + i, 4, 9 + j)] = '#8a5a2a'
+    chest[(-3, 5, 9)] = '#2a1a14'; line(chest, (-3, 4, 12), (4, 4, 22), '#6a4a2a'); chest[(4, 4, 23)] = '#3a2a1a'
+    if t >= 4 and v == 0:
+        r = 2 + n // 2
+        box(hips, (5, 5 + 2 * r), (-1 - r, -1 + r), (8 - U - r, 8 - U + r), '#a03a2a'); box(hips, (5, 5), (-1 - r, -1 + r), (8 - U - r, 8 - U + r), PAPER); box(hips, (6 + 2 * r, 6 + 2 * r), (-1 - r, -1 + r), (8 - U - r, 8 - U + r), PAPER)
+        for k in range(1 + n): line(part('RightHand'), (-11, -1, 16), (-13, -4 - k, 19 + k), '#d8c8a0')
+    if t >= 4 and v == 1:
+        box(chest, (-5, 4), (3, 3), (6 - 2 * n - U, 17), F['top']); box(chest, (-5, 4), (3, 3), (6 - 2 * n - U, 6 - 2 * n - U), F['glow'])
+        for i in range(2 + n):
+            x, z = (-9, 8, -7, 9, -10)[i], (20, 22, 25, 17, 14)[i]; box(chest, (x, x + 1), (-1, -1), (z, z), F['glow']); line(chest, (x + 1, -1, z), (x + 1, -1, z + 3), F['glow'])
+    if t >= 5:
+        for side, f in SIDES: box(chest, f((4, 6)), (-2, 0), (18, 18), GOLD); box(chest, f((5, 5)), (-3, -3), (17, 17), GOLD)
+        for z in (12, 14, 16): chest[(2, -4, z)] = GOLD
+    if t >= 6:
+        pts = [(-0.5 + 9 * math.cos(math.radians(a)), 6, 20 + 9 * math.sin(math.radians(a))) for a in range(200, 361, 20)]
+        for a, b in zip(pts, pts[1:]): line(chest, a, b, GOLD)
+        line(chest, pts[0], (-6, 6, 34), GOLD); line(chest, (-6, 6, 34), pts[-1], GOLD)
+        for x in range(-7, 9, 2): line(chest, (x, 6, 18), (x, 6, 31), F['glow'])
+
+def sig_d5(part, t, v, U, rnd, F):
+    # 命运牌：头巾 + 头侧浮着牌（越往后越多）。v0 豪赌 = 腰间筹码袋 + 肩头一颗大骰子；v1 预言 = 额前第三只眼 + 左手边水晶球；5 转背后扇形牌阵，英雄背后命运之轮
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    box(head, (-6, 5), (-6, 5), (27, 28), F['top2']); box(head, (-1, 0), (6, 8), (24, 27), F['top2'])
+    for i in range(2 + n):
+        x, z = (8, -11, 10, -13, 9)[i], (24, 22, 29, 28, 33)[i]; box(head, (x, x + 1), (-1, -1), (z, z + 2), PAPER); head[(x, -2, z + 1)] = F['glow'] if i % 2 else INK
+    if t >= 4 and v == 0:
+        box(chest, (-9, -7), (-1, 1), (19, 21), PAPER); chest[(-8, -2, 20)] = INK; chest[(-9, -1, 21)] = INK
+        for k in range(1 + n): box(hips, (4, 5), (-2 + k, -2 + k), (8, 9), (INK, F['glow'], '#2a2a40', GOLD)[k])
+    if t >= 4 and v == 1:
+        head[(-1, -7, 26)] = F['glow']; head[(0, -7, 26)] = F['glow']; head[(-1, -7, 27)] = PAPER
+        hd, R = part('LeftHand'), 1 + n
+        for i in range(-R, R + 1):
+            for j in range(-R, R + 1):
+                for k in range(-R, R + 1):
+                    if i * i + j * j + k * k <= R * R: hd[(12 + R + i, -1 + j, 16 + k)] = F['glow'] if i * i + j * j + k * k <= (R - 1) ** 2 else GHOST
+    if t >= 5:
+        for i in range(5):
+            a = math.radians(50 + 20 * i); x0, z0 = round(-0.5 + 6 * math.cos(a)), round(16 + 6 * math.sin(a))
+            box(chest, (x0 - 1, x0 + 1), (3, 3), (z0, z0 + 3), '#5a2a6a' if i % 2 else PAPER)
+    if t >= 6:
+        for i in range(64):
+            a = 2 * math.pi * i / 64
+            for r in (10, 11): chest[(round(-0.5 + r * math.cos(a)), 7, round(18 + r * math.sin(a)))] = GOLD
+        for k in range(8):
+            a = 2 * math.pi * k / 8; line(chest, (-0.5, 7, 18), (-0.5 + 10 * math.cos(a), 7, 18 + 10 * math.sin(a)), GOLD); chest[(round(-0.5 + 12 * math.cos(a)), 7, round(18 + 12 * math.sin(a)))] = F['glow']
+
+def sig_d6(part, t, v, U, rnd, F):
+    # 星图：深蓝星斗披风 + 左胸星形胸针。v0 连星 = 头前浮着一组星座连线（越往后越多星）；v1 主星 = 右肩上方一颗大星 + 一圈轨道；5 转星斗肩甲，英雄背后浑天仪
+    chest, head = part('Spine2'), part('Head'); n = t - 3
+    box(chest, (-5, 4), (3, 3), (8 - U, 17), NAVY)
+    for x, z in ((-4, 15), (2, 13), (-1, 10), (3, 9), (-3, 11)): chest[(x, 4, z)] = F['glow']
+    cross(chest, 2, -3, 15, GOLD); chest[(2, -4, 15)] = F['glow']
+    if t >= 4 and v == 0:
+        S = [(-9, -3, 30), (-5, -4, 33), (0, -4, 32), (4, -4, 35), (8, -3, 31), (11, -3, 34)][:3 + n]
+        for a, b in zip(S, S[1:]): line(head, a, b, GHOST)
+        for p in S: head[p] = F['glow']
+    if t >= 4 and v == 1:
+        R = 2 + n // 2; cx, cz = -9, 27 + n
+        for k in range(10):
+            a = math.pi / 2 + math.pi * k / 5; r = R if k % 2 == 0 else max(1, R // 2)
+            line(chest, (cx, -1, cz), (cx + round(r * math.cos(a)), -1, cz + round(r * math.sin(a))), F['glow'])
+        for i in range(24 + 8 * n): a = 2 * math.pi * i / (24 + 8 * n); chest[(round(cx + (R + 3) * math.cos(a)), round(-1 + 2 * math.sin(a)), round(cz + (R + 3) * math.sin(a) * .5))] = GHOST
+    if t >= 5:
+        for side, f in SIDES: box(chest, f((4, 7)), (-3, 1), (18, 19), NAVY); chest[(f((6, 6))[0], -4, 19)] = F['glow']
+    if t >= 6:
+        for i in range(48):
+            a = 2 * math.pi * i / 48; chest[(round(-0.5 + 10 * math.cos(a)), 6, round(22 + 10 * math.sin(a)))] = GOLD
+            chest[(round(-0.5 + 10 * math.cos(a) * .4), 6 + round(3 * math.sin(a)), round(22 + 10 * math.sin(a)))] = GOLD
+            chest[(round(-0.5 + 10 * math.cos(a)), 6, round(22 + 10 * math.sin(a) * .35))] = F['glow'] if i % 4 == 0 else NAVY
+        box(chest, (-2, 1), (5, 7), (21, 23), F['glow'])
+
+def sig_d7(part, t, v, U, rnd, F):
+    # 符文封印：胸前 / 双肩贴纸符 + 肩旁浮着符石（越往后越多）。v0 禁魔 = 胸前交叉封印锁链 + 金锁、前臂缠链；v1 咒刻 = 双臂和眼下发光咒纹；
+    # 5 转腰间一圈符文环，英雄背后大石碑
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    for x, z in ((-3, 15), (2, 13), (5, 18), (-6, 18)): box(chest, (x, x), (-4, -4), (z - 2, z), PAPER); chest[(x, -4, z - 1)] = INK
+    for i in range(2 + n):
+        x, y, z = (9, -11, 10, -12, 8)[i], (0, 0, 2, 2, 3)[i], (20, 21, 25, 26, 30)[i]; box(chest, (x, x + 1), (y, y + 1), (z, z + 2), STONE); chest[(x, y - 1, z + 1)] = F['glow']
+    if t >= 4 and v == 0:
+        line(chest, (-5, -4, 17), (4, -4, 11), IRON); line(chest, (4, -4, 17), (-5, -4, 11), IRON); box(chest, (-1, 0), (-5, -5), (13, 15), GOLD); chest[(-1, -6, 14)] = INK
+        for side, f in SIDES:
+            if n >= 1: fa = part(side + 'ForeArm'); [fa.__setitem__((f((x, x))[0], -3, 15 + (x % 2) * 2), IRON) for x in (7, 8)]
+            if n >= 2: up = part(side + 'Arm'); [up.__setitem__((f((x, x))[0], -3, 15 + (x % 2) * 2), IRON) for x in (4, 5, 6)]
+    if t >= 4 and v == 1:
+        for side, f in SIDES:
+            fa = part(side + 'ForeArm')
+            for z in range(15, 18 - (n == 0)): fa[(f((7, 7))[0], -3, z)] = F['glow']
+            if n >= 1: part(side + 'Arm')[(f((5, 5))[0], -3, 16)] = F['glow']; part(side + 'Arm')[(f((5, 5))[0], -3, 17)] = F['glow']
+        for x in ((-4, -3), (2, 3))[:1 + (n > 0)]: box(head, x, (-7, -7), (22, 22), F['glow'])
+    if t >= 5:
+        for i in range(36):
+            a = 2 * math.pi * i / 36; hips[(round(-0.5 + 8 * math.cos(a)), round(-0.5 + 7 * math.sin(a)), 9 - U)] = PAPER if i % 3 == 0 else F['glow'] if i % 3 == 1 else GHOST
+    if t >= 6:
+        box(chest, (-7, 6), (5, 6), (6, 32), STONE); box(chest, (-7, 6), (5, 6), (32, 33), '#6a6458')
+        for x in range(-5, 5, 3): box(chest, (x, x + 1), (4, 4), (26, 29), F['glow']); chest[(x, 7, 30)] = F['glow']
+
+MD_FAM = [   # 8 个家族 = classes.ts MEDIC styles[方向][分线]：随军医师（急救 / 生长）、驻地医师（图腾 / 调配）、吟咏师（乐曲 / 命运牌）、刻印师（星图 / 符文）
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=JADE, style=('bun', 'short', 'helmet'), coat=MG_M, sig=sig_d0),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=STICKY, style=('long', 'spiky', 'long'), coat=MG_M, sig=sig_d1),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=CYAN, style=('spiky', 'bald', 'spiky'), coat=MG_M, sig=sig_d2),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=AMBER, style=('short', 'bun', 'bald'), coat=MG_M, sig=sig_d3),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow='#ff5ac8', style=('ponytail', 'short', 'long'), coat=MG_M, sig=sig_d4),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=VIO, style=('long', 'bun', 'ponytail'), coat=MG_M, sig=sig_d5),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=AZURE, style=('hood', 'long', 'hood'), coat=MG_M, sig=sig_d6),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=SOUL, style=('hood', 'bald', 'short'), coat=MG_M, sig=sig_d7),
+]
+MD_FACE = [dict(CHARS['lian'], extra=[]), dict(CHARS['shaman'], extra=['paint']),                 # TEMPLATE.medic：lian / shaman 交替
+           dict(CHARS['lian'], extra=[], build='normal'), dict(CHARS['shaman'], extra=[], build='slim')]
+
+def md_look_weapons(f, t, v):
+    if t == 7: return [('injector_star', None), ('branch_star', None), ('totem_star', None), ('injector_star', 'flask_big'),
+                       ('lute_star', None), ('cards_star', 'orb_star'), ('wand_star', 'orb_star'), ('tome_star', 'wand_star')][f]
+    if f == 0: return ('injector_hv' if t >= 5 else 'injector'), None
+    if f == 1: return 'branch', None
+    if f == 2: return 'totem', None
+    if f == 3: return ('flask_big' if v == 0 and t >= 5 else 'flask'), ('injector' if v == 1 and t >= 4 else None)
+    if f == 4: return 'lute', None
+    if f == 5: return 'cards', ('orb_glass' if v == 1 and t >= 4 else None)
+    if f == 6: return 'wand_astro', ('tome' if t >= 5 else None)
+    return ('tome_seal' if v == 0 else 'tome_rune'), ('wand_astro' if t >= 5 else None)
+
+def armband(part):   # 辅助树色件：左上臂一圈白臂章 + 薄荷绿十字
+    up = part('LeftArm'); box(up, (5, 5), (-3, 1), (14, 18), PAPER); up[(5, -4, 16)] = MD_TC; up[(5, -4, 15)] = MD_TC; up[(5, -4, 17)] = MD_TC
+def look_md0(part, U, rnd):    # 辅助师：白臂章 + 腰间药包 + 注射枪
+    hips = part('Hips'); armband(part); box(hips, (4, 5), (-2, 0), (7, 10), PAPER); hips[(4, -3, 9)] = MD_TC
+def look_md1(part, U, rnd):    # 医疗兵：背后急救箱 + 护士帽（绿十字）
+    chest, head = part('Spine2'), part('Head'); armband(part)
+    box(chest, (-3, 2), (2, 4), (11, 16), PAPER); cross(chest, -1, 5, 13, MD_TC)
+    box(head, (-4, 3), (-4, 3), (29, 31), PAPER); cross(head, -1, -5, 30, MD_TC)
+def look_md1a(part, U, rnd):   # 秘术师：金链吊坠 + 肩旁浮着一张符纸
+    chest = part('Spine2'); armband(part)
+    for x in range(-3, 3): chest[(x, -3, 17 - (abs(x + .5) > 2))] = GOLD
+    box(chest, (-1, 0), (-4, -4), (13, 14), MD_TC); box(chest, (7, 8), (-1, -1), (21, 24), PAPER); chest[(7, -2, 22)] = INK
+def look_md00(part, U, rnd):   # 随军医师：白头盔绿十字 + 斜挎带 + 腰侧急救包
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); armband(part)
+    box(head, (-7, 6), (-7, 6), (24, 30), PAPER); box(head, (-6, 5), (-6, 5), (31, 31), PAPER); cross(head, -1, -8, 28, MD_TC)
+    for k in range(12, 18): chest[(k - 14, -3, k)] = BROWN
+    box(hips, (-6, -5), (-2, 0), (7, 10), PAPER); hips[(-6, -3, 9)] = MD_TC
+def look_md01(part, U, rnd):   # 驻地医师：兽皮披肩 + 背后小图腾
+    chest = part('Spine2'); armband(part)
+    box(chest, (-6, 5), (-3, 3), (17, 18), FUR); box(chest, (-1, 0), (3, 4), (8, 22), '#6a4a2a'); box(chest, (-2, 1), (3, 3), (19, 20), PAINT); chest[(-1, 2, 21)] = MD_TC
+def look_md10(part, U, rnd):   # 吟咏师：贝雷帽 + 羽毛 + 背后鲁特琴
+    chest, head = part('Spine2'), part('Head'); armband(part)
+    box(head, (-7, 5), (-6, 6), (29, 29), MG_S); box(head, (-5, 3), (-4, 4), (30, 30), MG_S); line(head, (3, 2, 30), (7, 5, 34), MD_TC)
+    for i in range(-3, 4):
+        for j in range(-2, 3):
+            if (i / 3.5) ** 2 + (j / 2.5) ** 2 <= 1: chest[(-2 + i, 4, 9 + j)] = '#8a5a2a'
+    line(chest, (-2, 4, 11), (3, 4, 19), '#6a4a2a')
+def look_md11(part, U, rnd):   # 刻印师：深蓝星斗披风 + 肩旁浮着一枚符石
+    chest = part('Spine2'); armband(part)
+    box(chest, (-5, 4), (3, 3), (6 - U, 17), NAVY)
+    for x, z in ((-3, 14), (2, 11), (0, 8)): chest[(x, 4, z)] = MD_TC
+    box(chest, (8, 9), (0, 1), (21, 23), STONE); chest[(8, -1, 22)] = MD_TC
+
+MD = dict(tree='medic', fam=MD_FAM, face=MD_FACE, wpn=md_look_weapons, star=star_plus(MD_FAM), heavy=(1, 2), salt=7, shield=False)
+MD_CHAIN = {   # 手写：基础 + 1 转 2 个 + 2 转 4 个（每方向一套）
+    'md':    dict(MD_FACE[0], glove=WHITE, deco=look_md0, wr='injector'),
+    'md-0':  dict(MD_FACE[0], glove=WHITE, deco=look_md1, wr='injector'),
+    'md-1':  dict(MD_FACE[1], style='long', glove='#3a2014', deco=look_md1a, wr='wand_astro'),
+    'md-00': dict(MD_FACE[0], style='short', glove=WHITE, deco=look_md00, wr='injector_hv', k=1.03),
+    'md-01': dict(MD_FACE[1], glove='#3a2014', deco=look_md01, wr='totem', k=1.03),
+    'md-10': dict(MD_FACE[2], style='ponytail', glove=WHITE, deco=look_md10, wr='lute', k=1.03),
+    'md-11': dict(MD_FACE[3], style='hood', hood=NAVY, glove='#2a2030', deco=look_md11, wr='tome_rune', k=1.03),
+}
+
+# ══════════════ 技术树全部 191 个形象（同一套量产规则；key = 'te'）══════════════
+# 树色 = 钢蓝灰护目镜：0–2 转是额头护目镜 / 安全帽，3–5 转缩成扣子，英雄上领口；p0 遥控 / 工事（机器、工程），p1 突击 / 阵地（喷、挖、场、炮）
+TE_TC, HAZ, OLIVE, RED_L = '#aab6c4', '#e8c020', '#5a6040', '#ff3a3a'
+LOOK_GLOW |= {RED_L}; LOOK_MATS.update({RED_L: 'glow'})
+
+def w_wrench(c, L, metal, grip):
+    # 扳手：握柄在原点，柄沿 -y，头部开口扳口
+    box(c, (0, 0), (-L, 3), (0, 0), metal); box(c, (-1, 1), (-2, 3), (-1, 1), grip)
+    box(c, (-3, 3), (-L - 5, -L), (0, 0), metal); box(c, (-1, 1), (-L - 5, -L - 3), (0, 0), BLK)
+    for (i, j, k) in [q for q in c if c[q] == BLK]: del c[(i, j, k)]
+def w_remote(c, body, glow):
+    # 遥控器：双摇杆手柄 + 天线
+    box(c, (-3, 3), (-4, 0), (0, 1), body); box(c, (-3, -2), (-2, -2), (2, 2), GUN); box(c, (2, 3), (-2, -2), (2, 2), GUN)
+    c[(0, -3, 2)] = glow; line(c, (2, -4, 1), (3, -10, 5), STEEL); c[(3, -10, 6)] = glow
+def w_detonator(c, body, glow):
+    # 起爆器：方盒 + T 形压柄 + 红灯
+    box(c, (-2, 2), (-4, 0), (-1, 2), body); box(c, (0, 0), (-2, -2), (3, 6), STEEL); box(c, (-2, 2), (-2, -2), (7, 7), STEEL); c[(-2, -5, 2)] = glow
+def w_drill(c, L, body, bit, glow):
+    # 手持钻：握把 + 电机 + 沿 -y 收尖的钻头（螺纹亮暗交替）
+    box(c, (0, 0), (0, 2), (-3, 0), GUN); box(c, (-2, 2), (-6, 0), (0, 3), body); c[(0, -3, 4)] = glow
+    for j in range(L):
+        r = max(0, 2 - j * 3 // L)
+        box(c, (-r, r), (-7 - j, -7 - j), (1 - r + 1, 1 + r + 1), bit if j % 2 else EDGE)
+def w_emitter(c, R, body, glow):
+    # 力场发生器：握把 + 掌前一圈六边形发射环 + 中心核
+    box(c, (0, 0), (0, 2), (-3, 0), GUN); box(c, (-1, 1), (-4, 0), (0, 2), body)
+    for i in range(6):
+        a, b = math.pi / 3 * i, math.pi / 3 * (i + 1)
+        line(c, (round(R * math.cos(a)), -5, round(1 + R * math.sin(a))), (round(R * math.cos(b)), -5, round(1 + R * math.sin(b))), body)
+    box(c, (0, 0), (-6, -5), (1, 1), glow)
+LOOK_WPN.update({
+    'wrench':        lambda c: w_wrench(c, 10, STEEL, '#c03a2a'),
+    'wrench_big':    lambda c: w_wrench(c, 18, IRON, HAZ),
+    'wrench_star':   lambda c: w_wrench(c, 20, STARW, STARG),
+    'remote':        lambda c: w_remote(c, '#3a3a40', CYAN),
+    'remote_star':   lambda c: w_remote(c, STARW, LIGHT),
+    'detonator':     lambda c: w_detonator(c, '#a03a2a', RED_L),
+    'detonator_star': lambda c: w_detonator(c, STARW, LIGHT),
+    'drill':         lambda c: w_drill(c, 10, HAZ, STEEL, AMBER),
+    'drill_star':    lambda c: w_drill(c, 13, STARW, STARG, LIGHT),
+    'emitter':       lambda c: w_emitter(c, 4, '#4a5a7a', VIO),
+    'emitter_star':  lambda c: w_emitter(c, 5, STARW, LIGHT),
+    'spray_acid':    lambda c: w_sprayer(c, '#6a8a2a', STICKY),
+    'spray_star':    lambda c: w_sprayer(c, STARW, LIGHT),
+})
+
+def drone(c, x, y, z, glow, eye=None):
+    # 小无人机：机身 + 四角旋翼 + 底部灯（eye = 前脸一颗眼灯）
+    box(c, (x, x + 2), (y, y + 2), (z, z), '#e6ecef'); box(c, (x + 1, x + 1), (y + 1, y + 1), (z - 1, z - 1), glow)
+    for dx in (-1, 3):
+        for dy in (-1, 3): c[(x + dx, y + dy, z + 1)] = '#555b60'
+    if eye: c[(x + 1, y - 1, z)] = eye
+
+def sig_e0(part, t, v, U, rnd, F):
+    # 无人机群：背后天线背包 + 肩旁一架无人机。v0 猎杀 = 身边绕着红眼攻击无人机（越往后越多）；v1 标定 = 头戴标定目镜 + 头顶一架信标机；5 转背后机巢，英雄背后蜂巢架 + 一群机
+    chest, head = part('Spine2'), part('Head'); n = t - 3
+    box(chest, (-3, 2), (2, 4), (10, 16), '#3a3a40'); line(chest, (2, 3, 17), (3, 3, 24 + n), STEEL); chest[(3, 3, 25 + n)] = F['glow']
+    drone(chest, 7, -1, 22, F['glow'])
+    if t >= 4 and v == 0:
+        for i in range(1 + 2 * n):
+            a = 2 * math.pi * i / (1 + 2 * n) + 1.2; drone(chest, round(-1.5 + 10 * math.cos(a)), round(-1.5 + 7 * math.sin(a)), 19 + 3 * (i % 2), RED_L, RED_L)
+    if t >= 4 and v == 1:
+        box(head, (-6, 5), (-7, -7), (24, 25), '#3a3a40'); box(head, (-4, -2), (-8, -8), (24, 25), F['glow']); head[(3, -8, 25)] = RED_L
+        drone(head, -2, -1, 33 + n, F['glow'])
+        if n >= 1: line(head, (-1, 0, 32 + n), (-1, -6, 29), F['glow'])
+    if t >= 5: box(chest, (-5, 4), (3, 6), (17, 21), '#4a4f53'); box(chest, (-4, 3), (6, 6), (18, 20), F['glow'])
+    if t >= 6:
+        for x in range(-12, 12, 3):
+            for z in range(16, 31, 3):
+                if abs(x + .5) + abs(z - 23) * 1.2 <= 13: box(chest, (x, x + 2), (6, 6), (z, z + 2), '#4a4f53'); chest[(x + 1, 7, z + 1)] = F['glow']
+        for x, z in ((-14, 30), (12, 30), (-15, 22), (13, 22)): drone(chest, x, 4, z, F['glow'], RED_L)
+
+def sig_e1(part, t, v, U, rnd, F):
+    # 载具：左肩液压大肩甲 + 背后一根排气管。v0 突击 = 背后双推进喷口（越往后焰越长）；v1 重甲 = 胸前加厚装甲 + 双前臂护甲；5 转头上天线，英雄背后机甲骨架臂
+    chest, head = part('Spine2'), part('Head'); n = t - 3
+    box(chest, (4, 8), (-3, 2), (17, 19), IRON); box(chest, (4, 8), (-4, -4), (18, 18), HAZ); box(chest, (6, 6), (-4, -4), (17, 17), BLK)
+    box(chest, (-6, -5), (3, 4), (12, 21), '#4a4f53'); chest[(-6, 3, 22)] = '#2a2a2e'
+    if t >= 4 and v == 0:
+        for x in ((-3, -2), (1, 2)):
+            box(chest, x, (3, 5), (10, 14), IRON)
+            for k in range(2 + 2 * n): box(chest, x, (4, 4), (9 - k, 9 - k), F['glow'] if k < 2 + n else EMBER)
+    if t >= 4 and v == 1:
+        box(chest, (-4, 3), (-4, -4), (12, 16), IRON); box(chest, (-3, 2), (-5, -5), (13 + (n == 0), 15), '#4a4f53')
+        for side, f in SIDES: box(part(side + 'ForeArm'), f((7, 8)), (-4, 2), (14 - n, 18), IRON); part(side + 'ForeArm')[(f((7, 7))[0], -5, 16)] = F['glow']
+    if t >= 5: line(head, (4, 2, 28), (5, 2, 35), STEEL); head[(5, 2, 36)] = F['glow']; box(head, (3, 5), (1, 3), (27, 28), IRON)
+    if t >= 6:
+        for side, f in SIDES:
+            sx = 1 if side == 'Left' else -1; x0 = f((3, 3))[0]
+            box(chest, tuple(sorted((x0, x0 + sx))), (3, 5), (10, 24), IRON); line(chest, (x0 + sx, 4, 24), (x0 + sx * 7, 2, 27), IRON); line(chest, (x0 + sx * 7, 2, 27), (x0 + sx * 9, -2, 25), IRON)
+            box(chest, tuple(sorted((x0 + sx * 8, x0 + sx * 10))), (-3, -1), (23, 25), '#4a4f53'); chest[(x0 + sx * 9, -4, 24)] = F['glow']
+
+def sig_e2(part, t, v, U, rnd, F):
+    # 炮台：腰间工具带 + 右肩一座迷你炮塔。v0 群塔 = 背后折叠架上插满小炮台（越往后越多）；v1 巨塔 = 右肩炮塔换成大炮（越往后炮管越长）；5 转安全帽，英雄背后双管炮塔
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    box(hips, (-5, 4), (-3, 2), (10, 10), '#5a3a22')
+    for x in (-5, 3): box(hips, (x, x + 1), (-3, -3), (8, 10), '#6a4428')
+    box(chest, (-8, -6), (-2, 0), (18, 20), IRON); line(chest, (-7, -3, 20), (-7, -8, 20), GUN); chest[(-7, -2, 21)] = F['glow']
+    if t >= 4 and v == 0:
+        box(chest, (-1, 0), (2, 4), (8, 22), '#4a4f53')
+        for i in range(2 + 2 * n):
+            x, z = (-6, 4, -7, 5, -5, 3, -8, 6)[i], (22, 22, 17, 17, 27, 27, 12, 12)[i]
+            box(chest, (x, x + 2), (3, 5), (z, z + 1), IRON); line(chest, (x + 1, 2, z + 1), (x + 1, -1, z + 1), GUN); chest[(x + 1, 6, z)] = F['glow']
+    if t >= 4 and v == 1:
+        box(chest, (-10, -6), (-3, 1), (18, 22), IRON); line(chest, (-8, -4, 21), (-8, -10 - 2 * n, 21), GUN); line(chest, (-7, -4, 21), (-7, -10 - 2 * n, 21), GUN)
+        chest[(-8, -11 - 2 * n, 21)] = F['glow']
+    if t >= 5: box(head, (-7, 6), (-7, 6), (26, 29), HAZ); box(head, (-8, 7), (-8, -7), (26, 26), HAZ); box(head, (-1, 0), (-7, 6), (30, 30), HAZ)
+    if t >= 6:
+        box(chest, (-3, 2), (3, 7), (14, 30), '#4a4f53'); box(chest, (-5, 4), (2, 8), (31, 35), IRON)
+        for x in (-3, 1): box(chest, (x, x + 1), (-8, 1), (33, 34), GUN); chest[(x, -9, 33)] = F['glow']
+        box(chest, (-5, 4), (8, 8), (32, 34), F['glow'])
+
+def jaw(c, x, y, z, R, col, tooth):
+    # 张开的捕兽夹：上下两片半圆夹口（xz 面），齿朝里
+    for i in range(16):
+        a = math.pi * i / 15
+        c[(round(x + R * math.cos(a)), y, round(z + 1 + R * .7 * math.sin(a)))] = col; c[(round(x + R * math.cos(a)), y, round(z - 1 - R * .7 * math.sin(a)))] = col
+        if i % 3 == 1: c[(round(x + (R - 1) * math.cos(a)), y, round(z + R * .7 * math.sin(a)))] = tooth; c[(round(x + (R - 1) * math.cos(a)), y, round(z - R * .7 * math.sin(a)))] = tooth
+
+def sig_e3(part, t, v, U, rnd, F):
+    # 陷阱：左腰挂一只捕兽夹 + 胸前斜缠绊线卷。v0 爆破 = 胸前 / 背后绑成捆的炸药（越往后越多）；v1 夹具 = 背后一张张开的大夹口；5 转前臂黑黄警示纹，英雄背后巨型捕兽夹
+    chest, hips = part('Spine2'), part('Hips'); n = t - 3
+    jaw(hips, 6, -1, 8 - U, 2, IRON, EDGE)
+    for k in range(12, 18): chest[(k - 15, -3, k)] = '#c8a868'
+    box(chest, (2, 3), (-4, -4), (16, 17), '#c8a868'); chest[(3, -5, 17)] = F['glow']
+    if t >= 4 and v == 0:
+        for i in range(1 + n):
+            for y, x0 in ((-4, (-4, 0, 1, -3)[i]), (3, (-3, 1, -1, -3)[i])):
+                box(chest, (x0, x0 + 2), (y, y), (12 + 2 * i, 13 + 2 * i), '#c03a2a'); chest[(x0 + 1, y - (y < 0) + (y > 0), 14 + 2 * i)] = F['glow']
+    if t >= 4 and v == 1: jaw(chest, -1, 4, 17, 4 + n, IRON, EDGE); chest[(-1, 4, 17)] = F['glow']
+    if t >= 5:
+        for side, f in SIDES:
+            for x in (7, 8): box(part(side + 'ForeArm'), f((x, x)), (-3, 1), (15, 17), HAZ if x % 2 else BLK)
+    if t >= 6:
+        jaw(chest, -1, 6, 21, 9, IRON, EDGE); box(chest, (-2, 1), (6, 6), (20, 22), F['glow'])
+        for z in range(10, 18, 2): chest[(-1, 6, z)] = IRON
+
+def tank(c, x0, x1, z0, z1, body, liquid):
+    box(c, (x0, x1), (2, 4), (z0, z1), body); box(c, (x0, x1), (2, 4), (z1 + 1, z1 + 1), IRON); box(c, (x0, x0), (2, 2), (z0 + 1, z1 - 1), liquid)
+
+def sig_e4(part, t, v, U, rnd, F):
+    # 锥形喷射：背后双罐 + 防毒面具。v0 冰雾 = 冰蓝罐 + 身边浮着冰晶（越往后越多）；v1 酸蚀 = 酸绿罐 + 腰间滴酸；5 转第三罐 + 软管到右手，英雄背后一排罐 + 泄压阀
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    liq = (GHOST_E, STICKY)[v] if t >= 4 else F['glow']
+    for x in ((-4, -2), (1, 3)): tank(chest, x[0], x[1], 9, 17, '#8a8f94', liq)
+    box(head, (-3, 2), (-7, -7), (19, 22), '#3a3a40'); box(head, (-1, 0), (-8, -8), (19, 20), STEEL); box(head, (-5, -4), (-7, -7), (23, 24), F['glow']); box(head, (3, 4), (-7, -7), (23, 24), F['glow'])
+    if t >= 4 and v == 0:
+        for i in range(2 + 2 * n):
+            a = 2 * math.pi * i / (2 + 2 * n) + .4; x, y, z = round(-0.5 + 9 * math.cos(a)), round(-0.5 + 6 * math.sin(a)), 13 + 4 * (i % 3)
+            box(chest, (x, x), (y, y), (z - 1, z + 1), GHOST); box(chest, (x - 1, x + 1), (y, y), (z, z), GHOST); chest[(x, y, z)] = GHOST_E
+    if t >= 4 and v == 1:
+        for k in range(1 + n): x = (-5, 4, -1, 2)[k]; box(hips, (x, x), (-3, -3), (7 - n - U, 9), STICKY)
+    if t >= 5: tank(chest, -1, 0, 18, 22, '#8a8f94', liq); line(chest, (-1, 3, 12), (-6, -1, 13), '#2a2a2e')
+    if t >= 6:
+        for x0 in (-10, -7, 5, 8): tank(chest, x0, x0 + 1, 10, 22, '#6a6f74', liq); chest[(x0, 3, 24)] = F['glow']
+        for x in (-9, 6): line(chest, (x, 3, 23), (x, 3, 27), STEEL); box(chest, (x - 1, x + 1), (2, 4), (28, 28), F['glow'])
+
+def sig_e5(part, t, v, U, rnd, F):
+    # 地道：矿灯头盔 + 背后一把短镐。v0 突袭 = 左前臂装钻头（越往后越长）；v1 坑道 = 背后铲子 + 腰侧矿石袋；5 转肩上碎石 + 矿晶，英雄背后一台大钻机
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    box(head, (-7, 6), (-7, 6), (26, 28), HAZ); box(head, (-6, 5), (-6, 5), (29, 30), HAZ); box(head, (-1, 0), (-8, -8), (27, 28), '#fff6d8')
+    line(chest, (-5, 3, 9), (4, 3, 21), '#6a4a2a'); line(chest, (1, 3, 22), (7, 3, 19), IRON); line(chest, (1, 3, 22), (-2, 3, 24), IRON)
+    if t >= 4 and v == 0:
+        fa = part('LeftForeArm'); box(fa, (7, 9), (-3, 1), (14, 18), HAZ)
+        for j in range(3 + 2 * n):
+            r = max(0, 2 - j * 3 // (3 + 2 * n)); box(fa, (10 + j, 10 + j), (-1 - r, -1 + r), (16 - r, 16 + r), STEEL if j % 2 else EDGE)
+    if t >= 4 and v == 1:
+        line(chest, (3, 4, 8), (-3, 4, 22), '#6a4a2a'); box(chest, (-5, -2), (4, 4), (22, 26), IRON)
+        for k in range(1 + n): box(hips, (-7 + k, -5 + k), (-2 + k, 0 + k), (7 - U, 9 - U), '#8a7050'); hips[(-6 + k, -3 + k, 9 - U)] = F['glow']
+    if t >= 5:
+        for side, f in SIDES: box(chest, f((4, 6)), (-2, 0), (18, 18), STONE); chest[(f((5, 5))[0], -1, 19)] = F['glow']
+    if t >= 6:
+        box(chest, (-4, 3), (3, 7), (10, 16), HAZ); box(chest, (-3, 2), (8, 8), (12, 14), F['glow'])
+        for j in range(16):
+            r = max(0, 4 - j // 4); box(chest, (-1 - r, r), (4, 6), (17 + j, 17 + j), STEEL if j % 2 else IRON)
+
+def sig_e6(part, t, v, U, rnd, F):
+    # 屏障：双肩场节点（发光短柱）+ 背后发生器。v0 反射 = 身边浮着镜面板（越往后越多）；v1 重压 = 身周一圈脉冲环（越往后越多圈）；5 转肩节点长成天线柱，英雄背后半透明穹顶网格
+    chest, hips = part('Spine2'), part('Hips'); n = t - 3
+    for side, f in SIDES: box(chest, f((5, 6)), (-1, 0), (18, 19), '#4a5a7a'); box(chest, f((5, 6)), (-1, 0), (20, 20 + (t >= 5) * 4), F['glow'])
+    box(chest, (-3, 2), (2, 4), (11, 16), '#4a5a7a'); box(chest, (-2, 1), (5, 5), (12, 15), F['glow'])
+    if t >= 4 and v == 0:
+        for i in range(2 + n):
+            a = 2 * math.pi * i / (2 + n) + .8; x, y = round(-0.5 + 10 * math.cos(a)), round(-0.5 + 7 * math.sin(a))
+            box(chest, (x - 1, x + 1), (y, y), (15, 20), EDGE); box(chest, (x - 1, x + 1), (y, y), (21, 21), F['glow'])
+    if t >= 4 and v == 1:
+        for k in range(1 + n):
+            R, z = 8 + 2 * k, 10 + 3 * k - U
+            for i in range(32): a = 2 * math.pi * i / 32; hips[(round(-0.5 + R * math.cos(a)), round(-0.5 + R * .8 * math.sin(a)), z)] = F['glow'] if i % 4 == 0 else GHOST
+    if t >= 6:
+        for i in range(-12, 12):
+            for z in range(10, 34):
+                d = math.hypot(i + .5, (z - 18) * 1.1)
+                if 11 <= d <= 12.2 or d < 11 and ((i + z) % 4 == 0 or (i - z) % 4 == 0) and z > 18: chest[(i, 6, z)] = F['glow'] if d >= 11 else GHOST
+
+def sig_e7(part, t, v, U, rnd, F):
+    # 远程炮击：背后电台 + 长天线（越往后越长）+ 胸前望远镜。v0 徐进 = 胸前斜挎炮弹带 + 腰间信号弹；v1 制导 = 右肩激光指示器 + 耳机；5 转小雷达盘，英雄背后一排炮弹架
+    chest, head, hips = part('Spine2'), part('Head'), part('Hips'); n = t - 3
+    box(chest, (-3, 2), (2, 5), (10, 17), OLIVE); box(chest, (-2, 1), (6, 6), (12, 13), F['glow'])
+    line(chest, (-3, 4, 18), (-6, 5, 28 + 2 * n), '#2a2a2e'); chest[(-6, 5, 29 + 2 * n)] = F['glow']
+    box(chest, (-1, 0), (-4, -4), (14, 15), '#2a2a2e'); box(chest, (-2, -2), (-5, -5), (15, 15), '#4a86c8'); box(chest, (1, 1), (-5, -5), (15, 15), '#4a86c8')
+    if t >= 4 and v == 0:
+        for k in range(12, 18): chest[(k - 15, -4, k)] = BELT; chest[(k - 14, -4, k)] = '#c8a020'
+        for k in range(1 + n): box(hips, (5, 5), (-2 + k, -2 + k), (7, 9), (RED_L, F['glow'], '#f0f0f0', AMBER)[k])
+    if t >= 4 and v == 1:
+        box(chest, (-8, -6), (-3, 0), (19, 20), '#3a3a40'); line(chest, (-7, -4, 20), (-7, -7 - n, 20), GUN); chest[(-7, -8 - n, 20)] = RED_L
+        for x in (-7, 6): box(head, (x, x), (-1, 1), (21, 24), '#2a2a2e')
+        box(head, (-7, 6), (0, 0), (29, 29), '#2a2a2e')
+    if t >= 5:
+        for i in range(12): a = 2 * math.pi * i / 12; chest[(round(3.5 + 3 * math.cos(a)), 6, round(21 + 3 * math.sin(a)))] = STEEL
+        chest[(3, 6, 21)] = F['glow']; line(chest, (3, 5, 18), (3, 5, 20), IRON)
+    if t >= 6:
+        box(chest, (-8, 7), (6, 6), (8, 24), OLIVE)
+        for x in range(-7, 7, 2):
+            for z in (12, 19): box(chest, (x, x), (5, 5), (z, z + 4), '#c8a020'); chest[(x, 5, z + 5)] = RED_L if x % 4 else '#c03a2a'
+
+TE_FAM = [   # 8 个家族 = classes.ts TECH styles[方向][分线]：遥控兵（无人机 / 载具）、工事兵（炮台 / 陷阱）、突击兵（喷射 / 地道）、阵地兵（屏障 / 炮击）
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=CYAN, style=('short', 'ponytail', 'short'), coat=MG_M, sig=sig_e0),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=AMBER, style=('helmet', 'spiky', 'helmet'), coat=MG_M, sig=sig_e1),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=EMBER, style=('short', 'bald', 'spiky'), coat=MG_M, sig=sig_e2),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=FORT, style=('spiky', 'short', 'bald'), coat=MG_M, sig=sig_e3),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=AZURE, style=('bald', 'short', 'bald'), coat=MG_M, sig=sig_e4),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=JADE, style=('short', 'bald', 'short'), coat=MG_M, sig=sig_e5),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=VIO, style=('long', 'ponytail', 'long'), coat=MG_M, sig=sig_e6),
+    dict(top=MG_M, top2=MG_S, pants=MG_M, glow=RED_L, style=('helmet', 'short', 'helmet'), coat=MG_M, sig=sig_e7),
+]
+TE_FACE = [dict(CHARS['sif'], extra=[]), dict(CHARS['nox'], extra=[], style='short'),            # TEMPLATE.tech：sif / nox / jet / vera
+           dict(CHARS['jet'], extra=[]), dict(CHARS['vera'], extra=[])]
+
+def te_look_weapons(f, t, v):
+    if t == 7: return [('remote_star', 'pistol'), ('wrench_star', None), ('wrench_star', 'smg'), ('detonator_star', 'grenade'),
+                       ('spray_star', None), ('drill_star', None), ('emitter_star', 'emitter_star'), ('glauncher', 'laser')][f]
+    if f == 0: return 'remote', ('pistol' if t >= 5 else None)
+    if f == 1: return 'wrench_big', None
+    if f == 2: return 'wrench', ('smg' if v == 0 else 'pistol') if t >= 4 else None
+    if f == 3: return 'detonator', ('grenade' if v == 0 and t >= 4 else None)
+    if f == 4: return ('freezer' if v == 0 else 'spray_acid') if t >= 4 else 'flamer', None
+    if f == 5: return 'drill', None
+    if f == 6: return 'emitter', ('emitter' if t >= 5 else None)
+    return ('glauncher' if v == 0 or t == 3 else 'laser'), None
+
+def goggles(head, y=-7):   # 技术树色件：额头一副钢蓝灰护目镜
+    box(head, (-6, 5), (-6, 5), (26, 26), '#3a3a40')
+    for x in ((-5, -2), (1, 4)): box(head, x, (y, y), (25, 27), TE_TC); box(head, (x[0] + 1, x[1] - 1), (y - 1, y - 1), (26, 26), CYAN)
+def look_te0(part, U, rnd):    # 技师：护目镜 + 腰间工具带（扳手挂在右腰）+ 手枪
+    hips = part('Hips'); goggles(part('Head')); box(hips, (-5, 4), (-3, 2), (10, 10), '#5a3a22'); line(hips, (-5, -3, 10), (-5, -3, 6), STEEL)
+def look_te1(part, U, rnd):    # 工程师：护目镜 + 背后工具箱 + 扳手
+    chest = part('Spine2'); goggles(part('Head')); box(chest, (-3, 2), (2, 4), (11, 15), '#c03a2a'); box(chest, (-2, 1), (2, 4), (16, 16), STEEL)
+def look_te1a(part, U, rnd):   # 装备兵：护目镜 + 胸前插板背心 + 左肩甲 + 冲锋枪
+    chest = part('Spine2'); goggles(part('Head')); box(chest, (-3, 2), (-3, -3), (12, 16), '#4a4f53'); box(chest, (4, 7), (-3, 1), (17, 18), '#4a4f53')
+def look_te00(part, U, rnd):   # 遥控兵：护目镜 + 天线背包 + 肩上一架无人机 + 遥控器
+    chest = part('Spine2'); goggles(part('Head')); box(chest, (-3, 2), (2, 4), (10, 16), '#3a3a40'); line(chest, (2, 3, 17), (3, 3, 24), STEEL); drone(chest, 7, -1, 22, CYAN)
+def look_te01(part, U, rnd):   # 工事兵：钢蓝灰安全帽 + 工具带 + 扳手 / 手枪
+    head, hips = part('Head'), part('Hips'); box(head, (-7, 6), (-7, 6), (26, 29), TE_TC); box(head, (-8, 7), (-8, -7), (26, 26), TE_TC); box(head, (-1, 0), (-7, 6), (30, 30), TE_TC)
+    box(hips, (-5, 4), (-3, 2), (10, 10), '#5a3a22')
+def look_te10(part, U, rnd):   # 突击兵：护目镜 + 背后燃料罐 + 喷火器
+    chest = part('Spine2'); goggles(part('Head'))
+    for x in ((-4, -2), (1, 3)): tank(chest, x[0], x[1], 9, 17, '#8a8f94', EMBER)
+def look_te11(part, U, rnd):   # 阵地兵：护目镜 + 背后电台 + 天线 + 榴弹发射器
+    chest = part('Spine2'); goggles(part('Head')); box(chest, (-3, 2), (2, 5), (10, 17), OLIVE); line(chest, (-3, 4, 18), (-6, 5, 27), '#2a2a2e')
+
+TE = dict(tree='tech', fam=TE_FAM, face=TE_FACE, wpn=te_look_weapons, star=star_plus(TE_FAM), heavy=(1, 4), salt=9, shield=False)
+TE_CHAIN = {   # 手写：基础 + 1 转 2 个 + 2 转 4 个（每方向一套）
+    'te':    dict(TE_FACE[0], glove='#2a2a2e', deco=look_te0, wr='pistol'),
+    'te-0':  dict(TE_FACE[0], glove='#2a2a2e', deco=look_te1, wr='wrench'),
+    'te-1':  dict(TE_FACE[1], glove='#2a2a2e', deco=look_te1a, wr='smg'),
+    'te-00': dict(TE_FACE[0], style='ponytail', glove='#2a2a2e', deco=look_te00, wr='remote', k=1.03),
+    'te-01': dict(TE_FACE[1], style='short', glove='#5a3a22', deco=look_te01, wr='wrench', wl='pistol', k=1.03),
+    'te-10': dict(TE_FACE[2], glove='#2a2a2e', deco=look_te10, wr='flamer', k=1.03),
+    'te-11': dict(TE_FACE[3], style='helmet', glove='#2a2a2e', deco=look_te11, wr='glauncher', k=1.03),
+}
+
 def cid(path, ult=False, key='sw'): return key + ('-' + ''.join(map(str, path)) if path else '') + ('+' if ult else '')
 PATHS = [[(i >> (d - 1 - b)) & 1 for b in range(d)] for d in range(7) for i in range(2 ** d)]
 LOOKS = {}
-for key, T, chain in (('sw', SW, CHAIN), ('ar', AR, AR_CHAIN)):
+for key, T, chain in (('sw', SW, CHAIN), ('ar', AR, AR_CHAIN), ('mg', MG, MG_CHAIN), ('md', MD, MD_CHAIN), ('te', TE, TE_CHAIN)):
     for p, ult in [(p, False) for p in PATHS] + [(p, True) for p in PATHS if len(p) == 6]:
         lid, t = cid(p, ult, key), 7 if ult else len(p); C = pal(T['tree'], t, u_of(p))
         L = dict(chain[lid], top=C['main'], top2=C['sub'], pants=C['pants']) if lid in chain else gen_look(p, ult, T)
         LOOKS[lid] = dict(L, t=t, pal=C, tree=T['tree'])
-assert len(LOOKS) == 382 and set(CHAIN) | set(AR_CHAIN) <= set(LOOKS)
+assert len(LOOKS) == 955 and set(CHAIN) | set(AR_CHAIN) | set(MG_CHAIN) | set(MD_CHAIN) | set(TE_CHAIN) <= set(LOOKS)
 
 def lift_parts(P, U):
     """腿加长 U 格（对上 zjoints：膝 +U/2、髋及以上 +U）：小腿、大腿各在中段补一截，大腿以上整体上移 U。"""
@@ -1977,7 +3333,7 @@ def recolor(P, L):
     # 髋部前半、腰带以下、两腿之间的格子删掉：下摆只许在背后和两侧，不挡腿
     p, t = L['pal'], L['t']
     M = {GOLDY: p['trim'], AR_TC: p['trim'], STARG: p['trim'], STARW: p['main'], '#4a6a3a': p['main'], '#6a7a4a': p['pants'],
-         '#3a4a2a': p['sub'], '#3e4a2a': p['pants'], '#3a4a38': p['sub'], '#4c5e2e': p['sub']}
+         '#3a4a2a': p['sub'], '#3e4a2a': p['pants'], '#3a4a38': p['sub'], '#4c5e2e': p['sub'], MG_M: p['main'], MG_S: p['sub']}
     if L['tree'] == 'swordsman': M |= {VIO: AZURE, VIO_D: '#2a4a9a', SHD: '#1e2838', SHD2: '#2c3a54'}   # 剑士不用紫：飘带 / 光效 / 龙翼的紫换成蓝
     rules = [r for i, r in enumerate((lambda x, z: z == 12, lambda x, z: abs(x + .5) - .5 == 16 - z,
                                       lambda x, z: abs(x + .5) - .5 == 13 - z, lambda x, z: z % 2 == 0 and (x - z) % 4 == 0)) if t >= (2, 4, 5, 6)[i]]
@@ -1999,7 +3355,7 @@ def look_cells(lid):
     return P
 
 if 'looks' in only:
-    # 两棵树 382 个互不相同：体素 + 武器整体做指纹，撞了就是招牌件参数没生效
+    # 五棵树 955 个互不相同：体素 + 武器整体做指纹，撞了就是招牌件参数没生效
     seen = {}
     for lid, L in LOOKS.items():
         fp = hash((frozenset((g, c, v) for g, cs in look_cells(lid).items() for c, v in cs.items()), L['wr'], L.get('wl')))
@@ -2028,3 +3384,23 @@ if 'looks' in only:
         if lid == 'sw': poses.build(arm)
         export([arm, char], os.path.join(out_dir, 'vox_%s.glb' % lid.replace('+', '_star')))   # '+' 进 URL 会被当空格
         print("LOOK_OK", lid, "tris", sum(len(p.vertices) - 2 for p in char.data.polygons), "h_m", round(max(v.co.z for v in char.data.vertices) * k, 2))
+
+if 'ghost' in only:
+    # 半透明人形（残影 / 灵体用）：拿 sw-000000 那套体素整块改色成 GHOST，LOOK_MATS 把它映射成 _glass 后缀材质，
+    # 运行时 prep() 认名字 → transparent + opacity .42 + depthWrite false。之前 _glass 只有武器宝珠在用，人形没上过。
+    # 骨架同其余形象：只带 idle/run/walk 的裸骨，动作运行时借 sw 的片段（见 look_file / clipsFor）。
+    SRC = 'sw-000000'
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.context.scene.render.fps = poses.FPS
+    U, k, HL = LOOKS[SRC].get('lift', 0), LOOKS[SRC].get('k', 1), LOOKS[SRC].get('head_k', HEAD_K)
+    cells = look_cells(SRC)
+    for g in cells:
+        for c in cells[g]: cells[g][c] = GHOST
+    arm = skeleton(zjoints({'lift': U, 'k': k}), keep_anims=False)
+    char = voxmesh('vox_ghost', cells, V * k, mats=LOOK_MATS, shrink={'mixamorig:Head': (Vector((0, 0, 18 + U)), HL)})
+    char.parent = arm
+    char.matrix_parent_inverse = arm.matrix_world.inverted()
+    char.modifiers.new('arm', 'ARMATURE').object = arm
+    export([arm, char], os.path.join(out_dir, 'vox_ghost.glb'))
+    print("GHOST_OK", "tris", sum(len(p.vertices) - 2 for p in char.data.polygons),
+          "h_m", round(max(v.co.z for v in char.data.vertices) * k, 2), "mats", [m.name for m in char.data.materials])

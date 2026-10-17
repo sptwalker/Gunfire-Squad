@@ -1,4 +1,4 @@
-<!-- M0 验证台：「职业」页签按同心圆摆出全部职业（内基础 → 外五星，地面写职业名、按五大类上色）；「样板·武器」页签看 12 名样板角色 + 运行时换武器；「僵尸」页签方阵摆出全部僵尸类型（脚下写名字）；「BOSS」页签看 3 个关底 BOSS；「场景物件」页签按地图分组看障碍 / 植被 / 增益。职业名册与僵尸表直接读 src/data/*.ts，要用 Vite 起服务（npx vite），打开 /proto/m0/ -->
+<!-- M0 验证台：「职业」页签按同心圆摆出全部职业（内基础 → 外五星，地面写职业名、按五大类上色）；「样板·武器」页签看 12 名样板角色 + 运行时换武器；「敌对目标」页签方阵摆出全部僵尸 / 精英 / 变异生物（脚下地牌写名字）（脚下写名字）；「BOSS」页签看 3 个关底 BOSS；「场景物件」页签按地图分组看障碍 / 植被 / 增益。职业名册与僵尸表直接读 src/data/*.ts，要用 Vite 起服务（npx vite），打开 /proto/m0/ -->
 <meta charset="utf-8">
 <title>M0 绑骨验证台</title>
 <style>
@@ -39,9 +39,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { bakeCrowd } from './crowd.js';
 import { TIER_CLASSES, TIERS } from './gamedata.js';
 import { ZOMBIES as SRC_Z } from '../../src/data/zombies.ts';
+import { ELITES, MUTANTS } from '../../src/data/enemies.ts';
+import { ORDER_Z } from './gamedata.js';
 import { CLASSES } from '../../src/data/classes.ts';
 
 // 握持方式 → 攻击 / 跑动动画（05 §2.3）。换武器 = 换挂点模型 + 换这一组，其余动作不动
@@ -65,12 +66,13 @@ const HEROES = [
   ['vera', '薇拉', 'sniper'], ['jet', '杰特', 'smg'], ['ella', '艾拉', 'freezer'], ['bom', '博姆', 'grenade'],
   ['lian', '莉安', 'pistol'], ['shaman', '萨满', 'flamer'], ['nox', '诺克斯', 'boomerang'], ['sif', '西芙', 'laser'],
 ];
-// 剑士 / 射手树各 191 个职业形象（tools/voxel.py LOOKS → assets/looks.json：wr / wl = 右 / 左手武器，hips = 臀高 m）
+// 剑士 / 射手 / 法师 / 辅助 / 技术树各 191 个职业形象（tools/voxel.py LOOKS → assets/looks.json：wr / wl = 右 / 左手武器，hips = 臀高 m）
 const LMETA = await (await fetch('assets/looks.json')).json();
-const LTREE = { looks: 'swordsman', looks_ar: 'archer' }, isLooks = (t) => t in LTREE;   // 页签 → 树
+const LTREE = { looks: 'swordsman', looks_ar: 'archer', looks_mg: 'mage', looks_md: 'medic', looks_te: 'tech' }, isLooks = (t) => t in LTREE;   // 页签 → 树
 const LOOKS = CLASSES.filter((c) => Object.values(LTREE).includes(c.tree));
 const STATES = { idle: 'Q', run: 'W', attack: 'E', hit: 'R', death: 'T' };
-const LSTATES = { idle: 'F', run: 'G', attack: 'H', hit: 'J', death: 'K' };   // 形象页：QWE 给镜头
+const LSTATES = { idle: 'F', run: 'G', attack: 'H', hit: 'J', death: 'K',   // 形象页：QWE 给镜头；末尾 7 个按钮对应后补的 8 条 clip，见 proto/m0/anim-gaps.md
+  leap: 'Y', spin: 'U', summon: 'I', cast: 'O', guard: 'P', aim: 'L', roll: ';' };   // aim 按钮按握法分流 aim / aim_pistol
 const N = HEROES.length, COLS = 6;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -88,7 +90,7 @@ scene.add(new THREE.GridHelper(140, 140, 0x4c564a, 0x444c42));
 const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 400);
 const VIEWS = { front: [[0, 2.2, 10], [0, 0.6, -0.8]], top: [[0, 13, 6], [0, 0, -0.8]],
   bfront: [[0, 3.6, 15], [0, 1.5, -0.8]], btop: [[0, 18, 9], [0, 0, -0.8]],
-  zfront: [[0, 12, 17], [0, 0, 0.6]], ztop: [[0, 24, 4], [0, 0, 0]],
+  zfront: [[0, 19, 25], [0, 0, 1.5]], ztop: [[0, 40, 5], [0, 0, 0]],
   cfront: [[0, 42, 92], [0, 0, 4]], ctop: [[0, 150, 1], [0, 0, 0]],
   lfront: [[0, 21, 46], [0, 0, 4]], ltop: [[0, 66, 6], [0, 0, 0]] };
 let view = 'front';
@@ -97,18 +99,22 @@ const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.mouseButtons = { LEFT: null, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE };
 renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
 // BOSS 是 2-2.6 倍大、僵尸方阵与职业圆盘更大，各用一组拉远的机位
-function setView(v) { view = v; const b = { bosses: 'b', zombies: 'z', classes: 'c', looks: 'l', looks_ar: 'l' }[tab] ?? ''; camera.position.set(...VIEWS[b + v][0]); orbit.target.set(...VIEWS[b + v][1]); orbit.update(); }
+function setView(v) { view = v; const b = { bosses: 'b', zombies: 'z', classes: 'c', looks: 'l', looks_ar: 'l', looks_mg: 'l', looks_md: 'l', looks_te: 'l' }[tab] ?? ''; camera.position.set(...VIEWS[b + v][0]); orbit.target.set(...VIEWS[b + v][1]); orbit.update(); }
 let tab = 'classes';
 setView('front');
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const load = (f) => new Promise((ok, err) => loader.load(f, ok, undefined, err));
 const wIds = Object.keys(WEAPONS);
-// 僵尸（zombies.html 同一张表）：skill = 专属动作；分裂小复用分裂的模型缩到 0.4
+// 敌对目标（zombies.html 同一张表）：僵尸 / 精英 / 变异生物，file = assets/vox_<file>.glb；skill = 专属动作；分裂小复用分裂的模型缩到 0.4
+const ZSKILL = { bomber: 'swell', splitter: 'split', leaper: 'leap', ward: 'block', spitter: 'spit', herald: 'roar', summoner: 'summon', flyer: 'leap', screamer: 'roar',
+  dog: 'leap', wolf: 'roar', bear: 'smash', vulture: 'eat', ape: 'leap' };
+const zent = (group, z, file, ai) => ({ group, id: z.id, name: z.name, skill: ZSKILL[ai], file, scale: z.id === 'spawnling' ? 0.4 : 1 });
 const ZOMBIES = [
-  ['normal', '普通'], ['runner', '高速'], ['brute', '高防胖'], ['toxic', '毒液'], ['bomber', '爆炸', 'swell'],
-  ['splitter', '分裂', 'split'], ['leaper', '跳跃', 'leap'], ['ward', '护盾', 'block'], ['spitter', '喷吐', 'spit'], ['spawnling', '分裂小'],
-].map(([id, , skill]) => ({ id, name: SRC_Z[id].name, skill, file: id === 'spawnling' ? 'splitter' : id, scale: id === 'spawnling' ? 0.4 : 1 }));
+  ...ORDER_Z.map((id) => zent('z', SRC_Z[id], id === 'spawnling' ? 'z_splitter' : 'z_' + id, id)),
+  ...Object.values(ELITES).map((e) => zent('e', e, 'e_' + e.base, e.base)),
+  ...Object.values(MUTANTS).map((m) => zent('m', m, 'm_' + m.id, m.id)),
+];
 const zFiles = [...new Set(ZOMBIES.map((z) => z.file))];
 // BOSS（src/data/run.ts BOSSES）：skill = 专属动作，第二个是「专属 2」
 const BOSSES = [
@@ -134,7 +140,7 @@ const LW = [...new Set(LOOKS.flatMap((c) => [LMETA[c.id].wr, LMETA[c.id].wl]).fi
 const [chars, wpns, zgl, bgl, pgl, lgl, lwgl] = await Promise.all([
   Promise.all(HEROES.map(([id]) => load(`assets/vox_${id}.glb`))),
   Promise.all(wIds.map((id) => load(WEAPONS[id].file))),
-  Promise.all(zFiles.map((f) => load(`assets/vox_z_${f}.glb`))),
+  Promise.all(zFiles.map((f) => load(`assets/vox_${f}.glb`))),
   Promise.all(BOSSES.map((b) => load(`assets/vox_b_${b.file}.glb`))),
   Promise.all(pIds.map((id) => load(`assets/prop_${id}.glb`))),
   Promise.all(LOOKS.map(({ id }) => load(`assets/vox_${id.replace('+', '_star')}.glb`))),
@@ -169,7 +175,7 @@ function plates(items, cw, ch, w, h, ty, font) {
 }
 
 // ── 职业圆盘：全部职业按转数一圈圈往外排（内基础 → 1–6 转 → 外五星），每圈五大类各占 1/5 扇区，扇区跨圈对齐 ──
-// 职业没有自己的模型，站的是它借的样板角色（gamedata.js TIER_CLASSES 的 hero）；955 个 → 动画烘焙 + 实例化（crowd.js）
+// 站的是各职业自己的形象模型（形象页的 lunits，切到本页时挪到圈上）；名牌带编号「S 3.5」= 树字母 + 形象页的 转.序号
 // 名牌沿半径朝外写、人站在牌子内端；左半圈整块转 180° 免得字倒着
 const TREE_COL = { swordsman: '#d4a017', archer: '#7fd0ff', mage: '#b89cf0', medic: '#8fe39a', tech: '#aab6c4' };
 const RING_R = [5, 10, 15.5, 21.5, 28, 36, 45, 55];
@@ -181,16 +187,8 @@ const CLS = RING_R.flatMap((R, k) => {
       plate: { text: c.full, fill: TREE_COL[c.tree], x: (R + 1.35) * Math.cos(a), z: (R + 1.35) * Math.sin(a), rot: flip ? a + Math.PI : a, tx: flip ? 0.375 : 0.625 } };
   });
 });
-console.assert(CLS.length === 955 && CLS.every((c) => TREE_COL[c.tree] && HEROES.some(([id]) => id === c.hero)), 'classes', CLS.length);
-// 要在 units 摆位之前烘焙：骨骼矩阵是世界矩阵，根节点挪过就会带进贴图
-const crowds = {}, cgroup = new THREE.Group(); cgroup.visible = false; scene.add(cgroup);
-for (const c of CLS) c.slot = (crowds[c.hero] ??= { n: 0 }).n++;
-HEROES.forEach(([id], i) => { if (!crowds[id]) return; const n = crowds[id].n; crowds[id] = bakeCrowd(chars[i], ['idle'], n); crowds[id].count = n; cgroup.add(crowds[id].group); });
-const cplate = plates(CLS.map((c) => c.plate), 320, 64, 3.6, 0.72, 0.5, 30);
-function classTick(t) {
-  for (const c of CLS) { const cr = crowds[c.hero]; cr.set(c.slot, c.pos, c.rotY, 1, 'idle', (t + c.phase) % cr.clips.idle.dur); }
-  for (const cr of Object.values(crowds)) cr.commit();
-}
+console.assert(CLS.length === 955 && CLS.every((c) => TREE_COL[c.tree]), 'classes', CLS.length);
+const TREE_CODE = { swordsman: 'S', mage: 'M', archer: 'A', medic: 'H', tech: 'T' };
 const RING_NAME = (k) => (k === 0 ? '基础' : k === 7 ? '五星' : `${k} 转`);
 legend.innerHTML = Object.entries(TREE_COL).map(([t, col]) => `<span><i class="sw" style="background:${col}"></i>${CLS.find((c) => c.tree === t).treeName}</span>`).join('')
   + `<span style="color:var(--dim)">内 → 外：${RING_NAME(0)} … ${RING_NAME(7)}（${RING_R.map((_, k) => CLS.filter((c) => c.tier === k).length).join(' / ')}）</span>`;
@@ -238,10 +236,14 @@ function equip(u, id) {
   if (u.state === 'attack' || u.state === 'run') play(u, u.state, true);
 }
 
+const MISSING = new Set();   // 缺 clip 只报一次，别刷屏
 function play(u, state, force) {
   if (u.state === state && !force) return;
   const name = state === 'attack' || state === 'run' ? WEAPONS[u.weaponId][state] : state;
-  const a = u.mixer.clipAction(clipOf(u.anims, name));
+  const clip = clipOf(u.anims, name);
+  // clipOf 找不到时返回 undefined，clipAction(undefined) 会从 three.js 内部抛出来（看不出是哪个动作缺）
+  if (!clip) { if (!MISSING.has(name)) { MISSING.add(name); console.warn(`缺 clip「${name}」：${u.id} 的动作集只有 ${u.anims.map((a) => a.name).join(', ')}`); } return; }
+  const a = u.mixer.clipAction(clip);
   const once = state === 'hit' || state === 'death';
   a.reset().setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
   a.clampWhenFinished = state === 'death';
@@ -271,17 +273,22 @@ const mkUnits = (list, src, gap) => list.map((z, i) => {
   return u;
 });
 const zunits = mkUnits(ZOMBIES, ZSRC, 1.2), bunits = mkUnits(BOSSES, BSRC, 5);
-// 僵尸方阵：src 僵尸表里的每一种都占一格（6 × 3），名字写在脚下的地牌上；还没出模型的只留牌子
-const ZIDS = Object.keys(SRC_Z), ZCOLS = 6;
-const zcell = (i) => [(i % ZCOLS - (ZCOLS - 1) / 2) * 2.6, (Math.floor(i / ZCOLS) - (Math.ceil(ZIDS.length / ZCOLS) - 1) / 2) * 4.2];
-zunits.forEach((u) => { const [x, z] = zcell(ZIDS.indexOf(u.z.id)); u.root.position.set(x, 0, z - 0.3); u.tag.remove(); });
-const zplate = plates(ZIDS.map((id, i) => { const [x, z] = zcell(i), has = ZOMBIES.some((m) => m.id === id);
-  return { text: SRC_Z[id].name, sub: has ? null : '未建模', fill: has ? '#c9bfa3' : '#6d7470', x, z, rot: 0, tx: 0.5 }; }), 256, 176, 2.2, 1.51, 0.72, 40);
-const ZSTATES = { idle: ['待机', 'Q'], walk: ['移动', 'W'], attack: ['攻击', 'E'], skill: ['专属', 'S'], skill2: ['专属 2', 'D'], hit: ['受击', 'R'], death: ['死亡', 'T'] };
+// 敌对目标方阵：一排 9 格，每组另起一排（变异生物体型大，格距放宽）；名字写在脚下的地牌上，牌色分组
+const ZCOLS = 9, ZGAP = { z: 2.6, e: 2.6, m: 4.2 }, ZFILL = { z: '#c9bfa3', e: '#d9c06a', m: '#9fc28a' }, ZSUB = { z: null, e: null, m: '变异生物' };
+const zcells = [];
+for (const g of ['z', 'e', 'm']) {
+  const list = ZOMBIES.filter((z) => z.group === g), r0 = zcells.length ? zcells.at(-1).r + 1 : 0;
+  list.forEach((z, i) => { const n = Math.min(ZCOLS, list.length - Math.floor(i / ZCOLS) * ZCOLS); zcells.push({ z, r: r0 + Math.floor(i / ZCOLS), x: (i % ZCOLS - (n - 1) / 2) * ZGAP[g] }); });
+}
+const zrows = zcells.at(-1).r + 1;
+zcells.forEach((c) => (c.zz = (c.r - (zrows - 1) / 2) * 4.2));
+zunits.forEach((u, i) => { u.root.position.set(zcells[i].x, 0, zcells[i].zz - 0.3); u.tag.remove(); });
+const zplate = plates(zcells.map(({ z, x, zz }) => ({ text: z.name, sub: ZSUB[z.group], fill: ZFILL[z.group], x, z: zz, rot: 0, tx: 0.5 })), 256, 176, 2.2, 1.51, 0.72, 40);
+const ZSTATES = { idle: ['待机', 'Q'], walk: ['移动', 'W'], run: ['奔跑', 'F'], attack: ['攻击', 'E'], skill: ['专属', 'S'], skill2: ['专属 2', 'D'], hit: ['受击', 'R'], death: ['死亡', 'T'] };
 function zplay(u, state) {
-  // 死亡三选一：后仰打飞 / 跪倒扑脸 / 打转侧倒
-  const name = state === 'skill' ? u.z.skill || 'attack' : state === 'skill2' ? u.z.skill2 || u.z.skill || 'attack' : state === 'death' ? ['death', 'death2', 'death3'][Math.floor(Math.random() * 3)] : state;
-  const a = u.mixer.clipAction(clipOf(u.anims, name));
+  // 死亡四选一：后仰打飞 / 跪倒扑脸 / 打转侧倒 / 瘫坐后仰（兽类、鸟各有自己的四种）；没有奔跑动作的退回走路
+  const name = state === 'skill' ? u.z.skill || 'attack' : state === 'skill2' ? u.z.skill2 || u.z.skill || 'attack' : state === 'death' ? ['death', 'death2', 'death3', 'death4'][Math.floor(Math.random() * 4)] : state;
+  const a = u.mixer.clipAction(clipOf(u.anims, name) ?? clipOf(u.anims, 'walk'));
   const once = ['hit', 'death', 'skill', 'skill2'].includes(state) && name !== 'block';
   a.reset().setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
   a.clampWhenFinished = once && state !== 'hit';
@@ -349,16 +356,29 @@ const lunits = LOOKS.map(({ id, name, tree }, i) => {
 const lplate = Object.fromEntries(Object.entries(LTREE).map(([k, tr]) => [k, plates(LOOKS.filter((c) => c.tree === tr).map((c) => {
   const [x, z, j] = lpos.get(c.id); return { text: `${c.tier}.${j} ${c.name}`, sub: LSUB[c.tier], fill: TREE_COL[tr], x, z: z + 0.9, rot: 0, tx: 0.5 }; }),
   256, 128, 1.5, 0.75, 0.42, 40)]));
+const cplate = plates(CLS.map((c) => ({ ...c.plate, text: `${TREE_CODE[c.tree]} ${c.tier}.${lpos.get(c.id)[2]} ${c.full}` })), 384, 64, 4.3, 0.72, 0.5, 30);
+const lunit = new Map(lunits.map((u) => [u.id, u]));
+// 圈上 / 形象页共用同一批模型：切页时换位置朝向
+function placeLooks(ring) {
+  for (const c of CLS) { const u = lunit.get(c.id), [x, z] = lpos.get(c.id);
+    if (ring) u.root.position.copy(c.pos), u.root.rotation.y = c.rotY; else u.root.position.set(x, 0, z), u.root.rotation.y = 0; }
+}
 // 攻击 / 跑动按右手武器的握法：已有武器查 WEAPONS，形象专用的按名字归类
-const lgrip = (w) => WEAPONS[w] ?? GRIPS[/bow|amr|sniper|rail|gl/.test(w) ? 'rifle' : /revolver/.test(w) ? 'onehand' : /lasso|hook|boom/.test(w) ? 'throw' : 'melee'];
-function lplay(s) { lunits.filter((u) => u.tree === LTREE[tab]).forEach((u, i) => { const n = { attack: lgrip(LMETA[u.id].wr).attack, run: lgrip(LMETA[u.id].wr).run }[s] ?? s; const a = u.mixer.clipAction(clipOf(u.anims, n));
-  u.mixer.stopAllAction(); a.reset().setLoop(s === 'death' || s === 'hit' ? THREE.LoopOnce : THREE.LoopRepeat, Infinity); a.clampWhenFinished = true; setTimeout(() => a.play(), (i % LPER) * 60); }); }
+const lgrip = (w) => WEAPONS[w] ?? GRIPS[/bow|amr|sniper|rail|gl|spray/.test(w) ? 'rifle' : /revolver|wand|orb|tome|remote|detonator|emitter|injector/.test(w) ? 'onehand' : /lasso|hook|boom|flask|card/.test(w) ? 'throw' : 'melee'];
+function lplay(s) { lunits.filter((u) => u.tree === LTREE[tab]).forEach((u, i) => { const g = lgrip(LMETA[u.id].wr);   // aim 分双持/单手两种，其余新动作不分握法
+    const n = { attack: g.attack, run: g.run, aim: g.attack === 'attack_rifle' ? 'aim' : 'aim_pistol' }[s] ?? s; const a = u.mixer.clipAction(clipOf(u.anims, n));
+  u.mixer.stopAllAction(); a.reset().setLoop(ONCE.has(s) ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);   // 一次性动作播完定格
+  a.clampWhenFinished = true; setTimeout(() => a.play(), (i % LPER) * 60); }); }
 
+// 播一遍就定格的动作（其余循环）：死亡 / 受击 + 新增的跳 / 滚 / 召唤 / 吟唱
+const ONCE = new Set(['death', 'hit', 'leap', 'roll', 'summon', 'cast']);
 const btn = (parent, label, on) => { const b = document.createElement('button'); b.innerHTML = label; b.onclick = on; parent.append(b); return b; };
 const wBtns = {}, sBtns = {};
 wBtns.own = btn(weapons, '各自武器 <kbd>0</kbd>', () => setWeapon('own'));
 for (const [id, w] of Object.entries(WEAPONS)) wBtns[id] = btn(weapons, w.name, () => setWeapon(id));
-for (const [s, k] of Object.entries(STATES)) sBtns[s] = btn(states, `${s} <kbd>${k}</kbd>`, () => setState(s));
+// 按钮按两页签的并集建：形象页多出的动作（跳/滚/召唤…）在样板角色页也用了同一个 mixer
+const SB = { ...STATES }; for (const s of Object.keys(LSTATES)) SB[s] ??= LSTATES[s];
+for (const [s, k] of Object.entries(SB)) sBtns[s] = btn(states, `${s} <kbd>${k}</kbd>`, () => setState(s));
 const zBtns = {}, tBtns = {};
 for (const [s, [n, k]] of Object.entries(ZSTATES)) zBtns[s] = btn(zstates, `${n} <kbd>${k}</kbd>`, () => setZState(s));
 const monsters = () => (tab === 'bosses' ? bunits : zunits);
@@ -385,20 +405,23 @@ function setTab(t) {
   weapons.hidden = t !== 'heroes'; states.hidden = t !== 'heroes' && !isLooks(t); zstates.hidden = t === 'heroes' || t === 'props' || t === 'classes' || isLooks(t); tags.hidden = t === 'heroes';
   pscenes.hidden = t !== 'props'; ground.visible = t !== 'props';
   zBtns.skill2.hidden = t !== 'bosses';
-  cgroup.visible = cplate.visible = t === 'classes'; legend.hidden = t !== 'classes'; zplate.visible = t === 'zombies'; lunits.forEach((u) => (u.root.visible = u.tree === LTREE[t])); for (const [k, p] of Object.entries(lplate)) p.visible = k === t; lground.visible = isLooks(t);
+  cplate.visible = t === 'classes'; placeLooks(t === 'classes'); legend.hidden = t !== 'classes'; zplate.visible = t === 'zombies'; lunits.forEach((u) => (u.root.visible = t === 'classes' || u.tree === LTREE[t])); for (const [k, p] of Object.entries(lplate)) p.visible = k === t; lground.visible = isLooks(t);
   [...zunits, ...bunits].forEach((u) => (u.tag.hidden = !monsters().includes(u)));
   setPScene(pscene);
   if (t !== 'props') setView(view);
   for (const [k, b] of Object.entries(tBtns)) b.setAttribute('aria-selected', k === t), b.setAttribute('aria-pressed', k === t);
-  for (const [st, b] of Object.entries(sBtns)) b.innerHTML = `${st} <kbd>${(isLooks(t) ? LSTATES : STATES)[st]}</kbd>`;
+  for (const [st, b] of Object.entries(sBtns)) b.innerHTML = `${st} <kbd>${(isLooks(t) ? LSTATES : STATES)[st] ?? ''}</kbd>`;
 }
 tBtns.classes = btn(tabs, `职业 ${CLS.length} <kbd>1</kbd>`, () => setTab('classes'));
 tBtns.heroes = btn(tabs, '样板角色 · 武器 <kbd>2</kbd>', () => setTab('heroes'));
-tBtns.zombies = btn(tabs, `僵尸 ${ZIDS.length} 种 <kbd>3</kbd>`, () => setTab('zombies'));
+tBtns.zombies = btn(tabs, `敌对目标 ${ZOMBIES.length} 种 <kbd>3</kbd>`, () => setTab('zombies'));
 tBtns.bosses = btn(tabs, 'BOSS <kbd>4</kbd>', () => setTab('bosses'));
 tBtns.props = btn(tabs, '场景物件 <kbd>5</kbd>', () => setTab('props'));
 tBtns.looks = btn(tabs, '剑士形象 <kbd>6</kbd>', () => setTab('looks'));
 tBtns.looks_ar = btn(tabs, '射手形象 <kbd>7</kbd>', () => setTab('looks_ar'));
+tBtns.looks_mg = btn(tabs, '法师形象 <kbd>8</kbd>', () => setTab('looks_mg'));
+tBtns.looks_md = btn(tabs, '辅助形象 <kbd>9</kbd>', () => setTab('looks_md'));
+tBtns.looks_te = btn(tabs, '技术形象 <kbd>0</kbd>', () => setTab('looks_te'));
 for (const b of Object.values(tBtns)) b.setAttribute('role', 'tab');
 function mark(map, cur) { for (const [k, b] of Object.entries(map)) b.setAttribute('aria-pressed', k === cur); }
 // 'own' = 每人拿自己的主武器；其余 = 全员换同一把（验"换武器只换挂点 + 动作组"）
@@ -407,7 +430,8 @@ function setState(s) { if (isLooks(tab)) { lplay(s); mark(sBtns, s); return; } u
 cam.onclick = () => { view = view === 'front' ? 'top' : 'front'; tab === 'props' ? propView() : setView(view); };
 addEventListener('keydown', (e) => {
   const k = e.key.toUpperCase();
-  const tk = ['classes', 'heroes', 'zombies', 'bosses', 'props', 'looks', 'looks_ar'][+k - 1];
+  // 0 = 技术形象；英雄页签里 0 仍是「各拿自己的武器」
+  const tk = !/^\d$/.test(k) || tab === 'heroes' && k === '0' ? null : ['classes', 'heroes', 'zombies', 'bosses', 'props', 'looks', 'looks_ar', 'looks_mg', 'looks_md', 'looks_te'][(+k + 9) % 10];
   if (tk) setTab(tk);
   if (tab === 'props' || tab === 'classes') {}
   else if (isLooks(tab)) { for (const [s, key] of Object.entries(LSTATES)) if (key === k) setState(s); }
@@ -441,13 +465,13 @@ const gl = renderer.getContext();
 const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
 const pending = [], gpu = [];
 let frames = 0, t0 = performance.now(), fps = 0;
-const stats = (window.__m0 = { gpuMs: null, fps: 0, tris: 0, CLS, crowds, cplate, zplate, lunits, units, zunits, bunits, pgroups, setPScene, setTab, setZState, setWeapon, setState, setView, WEAPONS, camera, orbit });
+const stats = (window.__m0 = { gpuMs: null, fps: 0, tris: 0, CLS, cplate, zplate, lunits, units, zunits, bunits, pgroups, setPScene, setTab, setZState, setWeapon, setState, setView, WEAPONS, camera, orbit });
 const tp = new THREE.Vector3();
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
   const dt = clock.getDelta();
   flyCam(dt);
-  if (tab === 'classes') classTick(clock.elapsedTime);
+  if (tab === 'classes') lunits.forEach((u) => u.mixer.update(dt));
   if (isLooks(tab)) lunits.forEach((u) => u.tree === LTREE[tab] && u.mixer.update(dt));
   units.forEach((u) => {
     u.mixer.update(dt);

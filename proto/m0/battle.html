@@ -9,16 +9,16 @@
   a { color: var(--acc); }
   #stat { position: fixed; left: 16px; top: calc(12px + env(safe-area-inset-top, 0px)); background: var(--panel); padding: 6px 10px; border-radius: 4px;
           white-space: pre; font-variant-numeric: tabular-nums; color: var(--dim); max-width: calc(100% - 32px); overflow: hidden; }
-  #team { position: fixed; left: 16px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 360px); }
+  #team { position: fixed; left: 16px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 500px); }
   .card { background: var(--panel); border-radius: 4px; padding: 6px 8px; width: 150px; display: grid; gap: 4px; }
   .card.dead { opacity: .45; }
   .bar { height: 5px; background: #2f3632; border-radius: 2px; overflow: hidden; } .bar i { display: block; height: 100%; background: var(--acc); }
   .sk { display: flex; gap: 4px; } .sk button { flex: 1; position: relative; overflow: hidden; padding: 2px 4px; font-size: 12px; }
   .sk button i { position: absolute; left: 0; bottom: 0; height: 100%; background: #0008; pointer-events: none; }
-  #panel { position: fixed; right: 0; top: 0; bottom: 0; width: 320px; background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column;
+  #panel { position: fixed; right: 0; top: 0; bottom: 0; width: 460px; background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column;
            padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px); }
   #panel header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); }
-  #pbody { overflow-y: auto; padding: 4px 12px 16px; display: grid; gap: 6px; align-content: start; }
+  #pbody { overflow-y: auto; padding: 4px 14px 16px; display: grid; gap: 7px; align-content: start; }
   #panel.fold { width: auto; bottom: auto; } #panel.fold #pbody { display: none; }
   h3 { margin: 10px 0 0; font-size: 12px; color: var(--dim); font-weight: normal; letter-spacing: .08em; }
   .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -33,21 +33,89 @@
   button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--acc); }
   output { min-width: 3em; text-align: right; font-variant-numeric: tabular-nums; }
   .dim { color: var(--dim); font-size: 12px; margin: 0; }
-  body.lab .battle { display: none; } body:not(.lab) .lab { display: none !important; }
+  body.lab .battle { display: none !important; } body:not(.lab) .lab { display: none !important; }
   body.level .nolevel { display: none !important; } body:not(.level) .levelonly { display: none !important; }
-  #skl { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) minmax(0, 1fr); gap: 4px; align-items: center; }
-  #skl .nm { padding: 2px 4px; text-align: left; border-color: transparent; background: none; } #skl .nm.on { color: var(--acc); }
-  #skl b { font-weight: normal; white-space: nowrap; } #skl button { padding: 2px 4px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #skl button.on { border-color: var(--acc); color: var(--acc); }
+  #labPick { display: grid; gap: 4px; } #labPick select { min-width: 0; width: 100%; padding: 4px 6px; }
+  /* 评审面板：跟「角色（实时切换）」共用一份选择——先选树、再逐级选职业（场上立刻换人），下面逐条列它的技能填意见 */
+  #revGrp { display: grid; gap: 4px; }
+  #revCur { font-size: 12px; color: var(--dim); }
+  #revTarget { font-size: 12px; line-height: 1.55; white-space: pre-line; border-left: 3px solid #4a7; padding: 4px 0 4px 8px; margin: 0 0 6px; }
+  #revTarget code { color: var(--dim); }
+  #revProg { font-variant-numeric: tabular-nums; }
+  #revProg b { color: var(--fg); font-weight: normal; }
+  #revList { display: grid; gap: 5px; }
+  #revList .rev { border: 1px solid var(--line); border-radius: 3px; padding: 5px 7px; display: grid; gap: 4px; }
+  #revList .rev.ok { border-color: #4a6a3a; }
+  #revList .rev > .hd { display: flex; gap: 6px; align-items: center; }
+  #revList .rev > .hd b { font-weight: normal; }
+  #revList .rev > .hd .k { color: var(--dim); font-size: 11px; margin-left: auto; text-align: right; }
+  #revList .rev > .hd button.see { padding: 1px 6px; font-size: 11px; }
+  #revList .rev > p { font-size: 12px; line-height: 1.45; color: var(--dim); }
+  #revList .rev textarea { width: 100%; box-sizing: border-box; font: 12px/1.5 inherit; resize: vertical; min-height: 3.6em; padding: 4px 6px; }
+  #revList .rev .mine { font-size: 12px; line-height: 1.5; color: var(--acc); border-left: 2px solid var(--line); padding-left: 6px; }
+  #revList .rev .mine i { display: block; color: var(--dim); font-style: normal; }
+  #revList .rev .new { font-size: 11px; color: #d4a017; }
+  #revList .rev .share { font-size: 11px; color: #b8c4bd; white-space: pre-line; line-height: 1.5; }
+  #revRev { font-size: 12px; line-height: 1.5; }
+  #revRev .badge { display: inline-block; padding: 1px 7px; border-radius: 9px; border: 1px solid #4a6a3a; color: #9fbf6a; font-size: 11px; }
+  #revRev .badge.none { border-color: var(--line); color: var(--dim); }
+  #revRev .none { color: var(--dim); }
+  #revHist { display: grid; gap: 6px; }
+  #revHist .hrow { border: 1px solid var(--line); border-left: 3px solid var(--acc); border-radius: 3px; padding: 5px 7px; display: grid; gap: 4px; }
+  #revHist .hrow > .hh { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+  #revHist .hrow > .hh .rn { color: var(--acc); }
+  #revHist .hrow > .hh .tm { color: var(--dim); font-size: 11px; }
+  #revHist .hrow > .hh button { padding: 1px 6px; font-size: 11px; margin-left: auto; }
+  #revHist .hrow > .slot { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  #revHist .hrow > .fb { font-size: 12px; line-height: 1.5; color: var(--fg); white-space: pre-line; }
+  #revHist .hrow > .cc { font-size: 11px; line-height: 1.45; color: #d4a017; white-space: pre-line; }
+  #revList .rev .mine .rv { color: var(--acc); font-style: normal; }
+  /* 页签：一页是原来那套评审台，另一页是全职业总表。切页只切 #pbody 的 tbl 类 */
+  #ptabs { display: flex; gap: 4px; align-items: center; position: sticky; top: 0; z-index: 2; background: var(--panel); padding: 4px 0 3px; border-bottom: 1px solid var(--line); }
+  #ptabs button { padding: 3px 10px; }
+  #ptabs button.on { border-color: var(--acc); color: var(--acc); }
+  #pbody.tbl > *:not(#ptabs):not(#revTable) { display: none !important; }
+  #revTable { display: none; }
+  #pbody.tbl #revTable { display: block; }
+  #revTable table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+  #revTable th { position: sticky; top: 36px; z-index: 1; background: var(--panel); text-align: left; font-weight: normal; color: var(--dim);   /* 36 = #ptabs 的实测高度，压住会被页签栏盖掉一条 */
+                 border-bottom: 1px solid var(--line); padding: 3px 4px; }
+  #revTable th.num, #revTable td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  #revTable td { padding: 2px 4px; border-bottom: 1px solid #2a302c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #revTable tr.grp td { color: var(--acc); padding-top: 8px; border-bottom: 1px solid var(--line); }
+  /* display 必须显式写：全局 .row（:24 的 flex 布局类）会命中 tr.row，flex 容器一上来 td 就变 block，表格栅格全废 */
+  #revTable tr.row { display: table-row; cursor: pointer; }
+  #revTable tr.row:hover td { background: #ffffff10; }
+  #revTable tr.row.cur td { background: #9fbf6a1f; }
+  #revTable td .id { color: var(--dim); }
+  #revTable td.sk { color: var(--dim); font-size: 11px; }
+  #revTable .pend { color: #d4a017; }
+  #revTable .none { color: var(--dim); }
+  /* 缺口块：黄 = 缺动作（最重），其余按严重度递减。红只留给错误，这里不用 */
+  #revList .rev.gap { border-left: 2px solid #d4a017; }
+  #revList .rev .gaps { display: grid; gap: 2px; font-size: 11px; line-height: 1.5; border-left: 2px solid var(--line); padding-left: 6px; }
+  #revList .rev .gaps b { font-weight: normal; color: #d4a017; }
+  #revList .rev .gaps span { color: var(--dim); }
+  #revList .rev .gaps span.noact { color: #d4a017; }
+  #revList .rev .gaps span.clip { color: #c9b06a; }
+  #revList .rev button.fill { justify-self: end; font-size: 11px; padding: 1px 6px; }
+  #revList .rev label { display: flex; gap: 4px; align-items: center; font-size: 11px; }
+  #revList .rev label input { margin: 0; }
   #orders button.on { border-color: var(--acc); color: var(--acc); }
   #labmsg { min-height: 1.5em; }
-  .grid2 select { flex: 1; min-width: 0; width: 0; }
+  /* 开局设置的队员：一人一格，格内是「职业（树）+ 一路往下点」的一排下拉 */
+  #squad { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; }
+  #squad .slot { border: 1px solid var(--line); border-radius: 3px; padding: 4px 6px; display: grid; gap: 4px; }
+  #squad .slot > .axes { display: grid; gap: 3px; }
+  #squad .slot select { min-width: 0; width: 100%; }
+  #squad .slot > .dim.lag { color: #d4a017; }
   /* 开局设置：游戏开始前必须先定僵尸强度与队伍，之后战斗面板的数值不可再动 */
   #prep { position: fixed; inset: 0; background: #0b0e0ccc; display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; overflow: auto; }
   #prep .box { width: min(560px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 16px; display: grid; gap: 8px; }
   #prep h2 { margin: 0; font-size: 15px; } #prep h3 { margin: 6px 0 0; }
   #prep .box > p.dim { margin: 0; }
   body.playing #prep { display: none; }
+  body.lab #reopen { display: none; }   /* 技能台没有开局这一步，重开无意义 */
   body.playing .battle :is(input, select) { opacity: .45; }
   @media (max-width: 700px) { #panel { width: 100%; top: auto; max-height: 55%; } #team { max-width: calc(100% - 32px); bottom: calc(56% + 8px); } }
 </style>
@@ -59,7 +127,7 @@
   <h3>小队等级</h3>
   <div class="row"><label for="tier">转数</label><select id="tier"></select></div>
   <p class="dim" id="tierHint"></p>
-  <h3>小队（同级职业里选 5，先定的职业决定其余 4 人的树）</h3>
+  <h3>小队（同级职业里各选一名，五个位置互不影响）</h3>
   <div id="squad" class="grid2"></div>
   <h3>僵尸强度</h3>
   <div class="row"><label for="zhp">生命 ×</label><input id="zhp" type="range" min="0.2" max="5" step="0.1" value="1"><output id="zhpv"></output></div>
@@ -72,16 +140,41 @@
 <aside id="panel">
   <header><span><a href="home.html">← 测试首页</a> · <b id="ptitle">调试台</b></span><button id="fold">收起</button></header>
   <section id="pbody">
-    <h3 class="lab">技能（点一下 = 换上该队员并施放，无视冷却）</h3>
-    <div id="skl" class="lab"></div>
+    <div id="ptabs" class="lab"><button id="ptab1" class="on">评审台</button><button id="ptab2">职业总表</button><span id="ptabsMsg" class="dim"></span></div>
+    <div id="revTable" class="lab"></div>
+    <p id="revTarget" class="lab"></p>
+    <h3 class="lab">1｜选职业树与等级</h3>
+    <div id="revTop" class="lab"></div>
+
+    <h3 class="lab">2｜评审进度</h3>
+    <p id="revProg" class="dim lab"></p>
+    <div class="row lab"><button id="revFill">一键填缺口 → 本树</button><button id="revFillAll">全部 790</button><span id="revMsg2" class="dim"></span></div>
+    <p class="dim lab">把自动审计查出的缺口抄进意见框（只填还空着的，不覆盖你写过的东西）。填完自己删改，再「导出」贴回对话。</p>
+
+    <h3 class="lab">3｜选具体角色</h3>
+    <div id="labPick" class="lab"></div>
+    <p id="revCur" class="lab"></p>
+    <p id="revRev" class="lab"></p>
+    <div id="revHist" class="lab"></div>
+    <p id="labInfo" class="dim lab"></p>
+
+    <h3 class="lab">4｜角色与僵尸设置</h3>
+    <div class="row lab"><label><input type="checkbox" id="rep" checked> 自动技能（冷却好就放）</label><button id="recast">再放一次</button></div>
+    <div class="row lab"><label><input type="checkbox" id="heroAtk"> 自动普攻</label><label><input type="checkbox" id="mateAI" checked> 队友自动战斗</label></div>
+    <p class="dim lab">场上 1 号位是正在评审的角色，另外 2 个是队友（同一职业，给治疗 / 号令 / 光环类技能当对象）。关掉「队友自动战斗」他们就只跟阵、不索敌不放技能。</p>
+    <div class="row lab"><label><input type="checkbox" id="wander" checked> 僵尸游走（不追人，被嘲讽才过来）</label></div>
+    <p class="dim lab">WASD / 方向键走位（按镜头方向），镜头跟随角色。勾「自动普攻」后，停下时自动打身边的僵尸。</p>
+
+    <h3 class="lab">5｜技能卡（点「看」= 立刻放一次）</h3>
+    <div id="revList" class="lab"></div>
     <p id="labmsg" class="dim lab"></p>
-    <div class="row lab"><label><input type="checkbox" id="rep" checked> 自动重放，每</label><input id="repT" type="number" min="0.5" max="30" step="0.5" value="4"><label for="repT">秒一次（再点亮着的技能 = 停）</label></div>
-    <div class="row lab"><label><input type="checkbox" id="heroAtk"> 自动普攻</label><button id="recast">再放一次</button></div>
-    <p class="dim lab">WASD / 方向键走位（按镜头方向），镜头跟随队员。勾「自动普攻」后，停下时自动打身边的僵尸。</p>
-    <h3 class="lab">僵尸</h3>
-    <div class="row lab"><label for="labN">固定数量</label><input id="labN" type="number" min="0" max="200" step="5" value="30"><button id="reset">重刷</button></div>
-    <div class="row lab"><label><input type="checkbox" id="wander" checked> 游走（不追人，被嘲讽才过来）</label></div>
-    <div class="row lab"><label><input type="checkbox" id="undying"> 不死（打空血量回满，方便反复看）</label></div>
+    <div class="row lab"><button id="revCopy">复制意见</button><button id="revClear">清空本职业意见</button></div>
+    <p id="revMsg" class="dim lab"></p>
+    <textarea id="revOut" class="lab" readonly style="display:none; width:100%; box-sizing:border-box; font:12px/1.5 inherit; min-height:8em"></textarea>
+    <p class="dim lab">意见只存在浏览器本地（gs.skillreview）。点「复制意见」把 markdown 贴回对话给我，我改完表现会写进 skillnotes.mjs，刷新页面就能在每条下面看到修改回复。</p>
+
+    <h3 class="lab">6｜暂停</h3>
+    <div class="row lab"><button id="labPause">暂停</button></div>
     <h3 class="levelonly">关卡</h3>
     <p id="lvinfo" class="dim levelonly"></p>
     <div class="row levelonly"><button id="restart">重开关卡</button><label><input type="checkbox" id="showMask"> 显示碰撞格</label><a href="editor.html">编辑器</a><a href="tuning.html">调参</a></div>
@@ -98,6 +191,7 @@
       <label for="rate">每秒刷</label><input id="rate" type="number" min="0" max="60" step="1" value="8"></div>
     <p class="dim nolevel">种类比例（勾掉 = 不刷；按比例抽取，0–200）</p>
     <div id="mix" class="grid2 nolevel"></div>
+    <div class="row lab"><button id="bossBtn">刷 BOSS</button><span id="bossMsg" class="dim"></span></div>
     <div class="row battle"><button id="wave">立即刷 30 只</button><button id="clear">清场</button></div>
     <h3 class="battle">技能</h3>
     <div class="row battle"><label><input type="checkbox" id="auto" checked> 冷却好就自动放</label></div>
@@ -116,7 +210,7 @@
     <div class="row"><label for="zs">僵尸步幅</label><input id="zs" type="range" min="0.5" max="2" step="0.05" value="1"><output id="zsv"></output></div>
     <div class="row"><label for="ts">时间流速</label><input id="ts" type="range" min="0.05" max="2" step="0.05" value="1"><output id="tsv"></output></div>
     <p class="dim">队员步幅 = 每个跑步循环前进的距离 ÷ 模型身高。僵尸步速从走路动画的着地脚实测，步幅是它的倍率，1 = 贴地。播放速率 = 移速 ÷ 步幅；配合时间流速慢放看。</p>
-    <div class="row"><button id="pause">暂停</button></div>
+    <div class="row"><button id="pause">暂停</button><button id="reopen">重新开局</button></div>
   </section>
 </aside>
 <script type="importmap">
@@ -133,10 +227,13 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // ── 数据：全部来自 gamedata.js（调参页 tuning.html 改了，这里原地生效）。G / ZT / ZB / W 是活引用：别把里面的数抄成局部常量 ──
-import { T, CELL, ZIDS, HIDS, WIDS, MIX0, PICK0, PROPS, SCENES, TILES, FACING, levelFromURL, buildMask, flowField, flowDir, pushOut, cellOf, tileAt, stageAt, rateAt, flowLen, AI, ROLE, RINGS, CMD_OVER, TIERS, rankMul, GROWTH, TIER_CLASSES, TREE_OF_HERO } from './gamedata.js';
+import { SNOTES } from './skillnotes.mjs';
+import { T, CELL, ZIDS, HIDS, WIDS, MIX0, PICK0, PROPS, SCENES, TILES, FACING, levelFromURL, buildMask, flowField, flowDir, pushOut, cellOf, tileAt, stageAt, rateAt, flowLen, AI, ROLE, RINGS, CMD_OVER, TIERS, rankMul, GROWTH, TIER_CLASSES, TREE_OF_HERO,
+  BOSSES, CLASS_BY_ID, SKILLS, weaponFor, schoolFor, WMODEL, lookFile, BOSS_TIMEOUT, BOSS_PHASE_SPAWN_MUL,
+  CLASS_TREES, TEMPLATE, axisAt, archetypeOf, className } from './gamedata.js';
 const { G, ZT, ZB, W } = T;
 const GRIPS = { melee: ['attack_melee1h', 'run_melee1h'], heavy: ['attack_heavy', 'run_melee1h'], thrust: ['attack_thrust', 'run_melee1h'],
-  rifle: ['attack_rifle', 'run_rifle'], onehand: ['attack_pistol', 'run'], throw: ['attack_throw', 'run'] };
+  rifle: ['attack_rifle', 'run_rifle'], bow: ['attack_rifle', 'run_rifle'], onehand: ['attack_pistol', 'run'], throw: ['attack_throw', 'run'] };
 const LAB = new URLSearchParams(location.search).has('lab');
 const keys = {};   // 键盘走位（技能台与关卡共用）
 // 只有「正在打字」时才不收键：滑杆 / 勾选框拿焦点时，WASD 照样能走
@@ -194,28 +291,50 @@ if (!LV) {
   camera.position.set(LV.start[0], 24, LV.start[1] + 19); orbit.target.set(LV.start[0], 0, LV.start[1]);
 }
 
+// 模型文件名：僵尸是 z_<基础种>（幼体复用分裂体），精英 / 变异生物的建模名就是自己的 id（见 tools/voxel.py 的 build 名）
+const ZF = (id) => (id === 'spawnling' ? 'z_splitter' : id.startsWith('e_') || id.startsWith('m_') ? id : 'z_' + id);
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const load = (f) => new Promise((ok, err) => loader.load(f, ok, undefined, err));
 const PIDS = LV ? [...new Set(LV.props.map((p) => p[0]))].filter((id) => PROPS[id]) : ['ruin', 'shop', 'car', 'fence', 'barrel', 'rubble', 'partition', 'sandbag'];
-const [hgl, wgl, zgl, pgl] = await Promise.all([
+const [hgl, wgl, zgl, pgl, bgl, ghostg] = await Promise.all([
   Promise.all(HIDS.map((id) => load(`assets/vox_${id}.glb`))),
-  Promise.all(WIDS.map((id) => load(`assets/vox_${id}.glb`))),
-  Promise.all(ZIDS.map((id) => load(`assets/vox_z_${id === 'spawnling' ? 'splitter' : id}.glb`))),
+  Promise.all(WIDS.map((id) => load(`assets/vox_${WMODEL[id] ?? id}.glb`))),
+  Promise.all(ZIDS.map((id) => load(`assets/vox_${ZF(id)}.glb`))),   // 精英的 1.18 倍体量在建模时就烘进 GLB 了
   Promise.all(PIDS.map((id) => load(`assets/prop_${id}.glb`))),
+  Promise.all(BOSSES.map((b) => load(`assets/vox_b_${b.file}.glb`))),
+  load('assets/vox_ghost.glb'),   // 残影人形（voxel.py ghost 子命令）；没有也照跑，auraRing 会退掉
 ]);
 const glow = new THREE.MeshBasicMaterial({ vertexColors: true });
-for (const g of [...hgl, ...wgl, ...zgl, ...pgl]) g.scene.traverse((o) => {
-  if (!o.isMesh) return;
-  if (o.material.name.endsWith('_glow')) o.material = glow;
-  else if (o.material.name.endsWith('_glass')) Object.assign(o.material, { transparent: true, opacity: 0.42, depthWrite: false });
-});
 // 调色：僵尸压暗、降对比、去饱和；队员提亮、加饱和。在 sRGB 空间改顶点色，原值留底，滑块可反复调
 const GRADE = { z: { bri: .75, con: .8, sat: .55 }, h: { bri: 1.2, con: 1, sat: 1.35 } }, colSrc = [];
-for (const [gls, k] of [[hgl, 'h'], [wgl, 'h'], [zgl, 'z']]) for (const g of gls) g.scene.traverse((o) => {
-  const a = o.isMesh && o.material !== glow && o.geometry.attributes.color; if (!a) return;
-  const src = new Float32Array(a.count * 3); for (let i = 0; i < a.count; i++) { src[i * 3] = a.getX(i); src[i * 3 + 1] = a.getY(i); src[i * 3 + 2] = a.getZ(i); }
-  colSrc.push([a, src, k]);
-});
+function prep(g, k) {   // 发光 / 玻璃材质 + 登记调色（k 为空 = 不调色，场景物件）
+  g.scene.traverse((o) => {
+    if (!o.isMesh) return;
+    if (o.material.name.endsWith('_glow')) o.material = glow;
+    else if (o.material.name.endsWith('_glass')) Object.assign(o.material, { transparent: true, opacity: 0.42, depthWrite: false });
+    const a = k && o.material !== glow && o.geometry.attributes.color; if (!a) return;
+    const src = new Float32Array(a.count * 3); for (let i = 0; i < a.count; i++) { src[i * 3] = a.getX(i); src[i * 3 + 1] = a.getY(i); src[i * 3 + 2] = a.getZ(i); }
+    colSrc.push([a, src, k]);
+  });
+}
+for (const [gls, k] of [[hgl, 'h'], [wgl, 'h'], [zgl, 'z'], [pgl, ''], [bgl, 'z']]) for (const g of gls) prep(g, k);
+prep(ghostg, '');   // 残影不进调色队列（k 为空）：它整身是 _glass，染色只会把半透明壳压出脏边
+const GHOSTG = { scene: ghostg.scene, animations: ghostg.animations };
+// 造一具残影：克隆 + 独立材质（不 clone 会连累原模型的不透明度）+ 跑一个 idle/run 循环 + 按 k 整身淡出。
+// upd(o, k) 由调用方补「每帧挪到哪」，淡出这条不用重复写；每帧推一下 o.userData.mx 才动。
+function makeGhost(u, life, upd) {
+  if (!GHOSTG) return null;
+  const gh = SkeletonUtils.clone(GHOSTG.scene);
+  gh.name = 'ghostfx'; gh.userData.ghost = true;
+  gh.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); o.material.blending = THREE.NormalBlending; o.material.opacity = .5; o.renderOrder = 2; } });
+  const mx = new THREE.AnimationMixer(gh), gc = clipOf(GHOSTG.animations, u && u.spd > .2 ? 'run' : 'idle');
+  if (gc) mx.clipAction(gc).play();
+  gh.userData.mx = mx;
+  // 缩放对齐本体：残影骨架比角色模型高（1.63 vs 1.33 骨骼高），不缩会从本体头顶冒出来。
+  // 量骨骼世界跨度再比，是因为两个模型都套同一套 mixamorig 骨、但原始网格高度不同。
+  if (u) gh.scale.multiplyScalar(boneH(u.root) / boneH(gh));
+  return transient(gh, life, (o, k) => { o.userData.mx.update(1 / 60); upd?.(o, k); o.traverse((c) => { if (c.isMesh) c.material.opacity = .5 * (1 - k); }); });
+}
 function regrade() {
   const f = (c, l, G) => Math.min(1, Math.max(0, ((l + (c - l) * G.sat - .5) * G.con + .5) * G.bri)) ** 2.2;
   for (const [a, src, k] of colSrc) {
@@ -228,6 +347,12 @@ function regrade() {
   }
 }
 const clipOf = (anims, name) => anims.find((a) => a.name === name || a.name.startsWith(name + '_'));
+// 骨骼世界高度跨度：SkinnedMesh 的 geometry.boundingBox 是绑定姿势，跟屏幕上的姿态对不上，只能采样骨骼
+function boneH(root) {
+  const P = new THREE.Vector3(); let lo = Infinity, hi = -Infinity;
+  root.traverse((o) => { if (o.isBone) { o.getWorldPosition(P); lo = Math.min(lo, P.y); hi = Math.max(hi, P.y); } });
+  return hi - lo;
+}
 // 持武器跑：上半身钉在持枪 / 持剑姿势上（同 index.html）
 function overlay(anims, name, pose, bones) {
   const run = clipOf(anims, 'run'), hold = clipOf(anims, pose);
@@ -247,7 +372,26 @@ function heightOf(root) {
   return h > .3 && h < 6 ? h : 1.2;
 }
 const HH = hgl.map((g) => heightOf(g.scene));
-const ZH = zgl.map((g, i) => heightOf(g.scene) * (ZIDS[i] === 'spawnling' ? .4 : 1));
+const BH = bgl.map((g) => heightOf(g.scene));
+const LMETA = await (await fetch('assets/looks.json')).json(), LK = {}, LWG = {};   // LK[职业] = { g, h, wr, wl, anims }；LWG[武器名] = 模型
+let swClips = null;
+const clipsFor = (id) => id === 'sw' ? swClips : swClips.map((c) => { const k = LMETA[id].hips / LMETA.sw.hips, cl = c.clone();
+  cl.tracks = cl.tracks.filter((t) => !t.name.endsWith('.position') || t.name.includes('Hips'));
+  for (const t of cl.tracks) if (t.name.endsWith('.position')) t.values = t.values.map((v) => v * k);
+  return cl; });
+async function loadLooks(ids) {
+  if (!swClips) { const g = await load(lookFile('sw')); prep(g, 'h'); swClips = g.animations;
+    overlay(swClips, 'run_rifle', 'attack_rifle', /mixamorig(Spine1|Spine2|Neck|Head|Left|Right)(?!.*(UpLeg|Leg|Foot|Toe))/);
+    overlay(swClips, 'run_melee1h', 'hold_melee1h', /mixamorigRight(Arm|ForeArm|Hand$)/);
+    LK.sw = { g, h: heightOf(g.scene), wr: LMETA.sw.wr, wl: LMETA.sw.wl, anims: swClips }; }
+  ids = [...new Set(ids)].filter((id) => LMETA[id] && !LK[id]);
+  const ws = [...new Set([...ids, 'sw'].flatMap((id) => [LMETA[id].wr, LMETA[id].wl]))].filter((w) => w && !LWG[w]);
+  const [gs, wg] = await Promise.all([Promise.all(ids.map((id) => load(lookFile(id)))), Promise.all(ws.map((w) => load(`assets/vox_${w}.glb`)))]);
+  ws.forEach((w, k) => { prep(wg[k], 'h'); LWG[w] = wg[k].scene; });
+  ids.forEach((id, k) => { const g = gs[k]; prep(g, 'h'); LK[id] = { g, h: heightOf(g.scene), wr: LMETA[id].wr, wl: LMETA[id].wl, anims: clipsFor(id) }; });
+  regrade();
+}
+const ZH0 = Object.fromEntries(ZIDS.map((id, i) => [id, heightOf(zgl[i].scene) * (id === 'spawnling' ? .4 : 1)]));
 // 原地走路动画：着地脚在根空间里匀速后移，这个速度就是动画「本来」的前进速度（米 / 动画秒）。
 // 旧做法按身高估步幅（0.9 × 身高 ≈ 1.2 m），实测僵尸蹒跚步每循环只走 0.3–0.5 m，于是动画放太慢、脚底打滑
 function gaitSpeed(g, name) {
@@ -266,7 +410,12 @@ function gaitSpeed(g, name) {
 }
 // ponytail: 均值测法对拖腿/小跑类偏低，按逐类型滑移扫描（STRIDE.zombie 0.6-3）取贴地点的经验倍率；换模型要重扫
 const GAITK = { runner: 2.5, ward: 2.7, splitter: 1.4, spawnling: 1.25, bomber: 1.15 };
-const ZGV = zgl.map((g, i) => gaitSpeed(g, 'walk') * (GAITK[ZIDS[i]] ?? 1));   // 0 = 量不出来，回退到按步幅估
+const ZGV0 = Object.fromEntries(ZIDS.map((id, i) => [id, gaitSpeed(zgl[i], 'walk') * (GAITK[id] ?? 1)]));   // 0 = 量不出来，回退到按步幅估
+// 精英（e_<基础种>）只是把基础种放大一遍：体量烘在模型里，身高与实测步速直接跟基础种
+const ZH = {}, ZGV = {};
+for (const id of ZIDS) { const b = ZT[id].base ?? id; ZH[id] = ZH0[b] ?? ZH0[id]; ZGV[id] = ZGV0[b] ?? ZGV0[id]; }
+const ZG = Object.fromEntries(ZIDS.map((id, i) => [id, zgl[i]]));
+const BGV = bgl.map((g) => gaitSpeed(g, 'walk'));
 
 // 道具：外圈建筑挡住四角，路口敞开；中圈零散车辆/路障
 let seed = 7; const srand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -314,6 +463,23 @@ function stepPool(P, dt) {
   }
   P.ps.length = k; P.m.count = k; P.m.instanceMatrix.needsUpdate = true; P.m.instanceColor.needsUpdate = true;
 }
+// 单位头顶标记：一圈底色 + 中间的字（一个字符最清楚，两个勉强）。Sprite 常驻朝屏幕，
+// depthTest 关掉才不会被自己的模型挡掉。glyph 为空就画一个纯色圆点（残影那种没有字号的标记用）。
+const badgeTex = (glyph, color) => canvasTex(64, (cx) => {
+  cx.clearRect(0, 0, 64, 64);
+  cx.beginPath(); cx.arc(32, 32, 26, 0, Math.PI * 2);
+  cx.fillStyle = 'rgba(14,16,20,.72)'; cx.fill();
+  cx.lineWidth = 4; cx.strokeStyle = '#' + color.toString(16).padStart(6, '0'); cx.stroke();
+  if (!glyph) return;
+  cx.fillStyle = '#fff'; cx.font = 'bold 34px sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillText(glyph, 32, 34);
+});
+function unitBadge(u, glyph, color, dur, y) {
+  const b = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTex(glyph, color), transparent: true, depthTest: false, opacity: 0 }));
+  b.scale.setScalar(.55); scene.add(b);
+  transient(b, dur, (o, k) => { o.position.set(u.pos.x, y, u.pos.z); o.material.opacity = k < .1 ? k * 10 : k > .85 ? (1 - k) / .15 : 1; });
+  return b;
+}
 // 延时动作按模拟时间走（暂停 / 慢放时同步）
 const later = [];
 const after = (fn, ms) => later.push({ t: ms / 1000, fn });
@@ -343,6 +509,19 @@ function slash(u, reach, color) {   // 三层刀光（主色 / 白芯 / 外晕�
     transient(m, .24, (o, k) => { o.position.set(x, y, z); o.scale.setScalar(reach * s * (.6 + .5 * k)); o.material.opacity = a * (1 - k); });
   }
   for (let i = -2; i <= 2; i++) { const t = ry + i * .45; emit(GLOW, 2, x + Math.sin(t) * reach * .9, .7, z + Math.cos(t) * reach * .9, { color, spd: 1.5, up: 1, size: .07, life: .3, grav: 2 }); }
+}
+// 弧形刀光：一片 ARC 扇面从 yaw-from 扫到 yaw+to，中途留几个越来越淡的残影（同一片扇面复制着转）。
+// slash() 是「刀光一闪」的定格，这个是「刀走了一路」——冲刺后的挥刀、连射的扫射都用它交代范围。
+function sweep(u, reach, color, from = -1.5, to = 1.5, T = .3) {
+  const yaw = u.root.rotation.y, x = u.pos.x, z = u.pos.z;
+  const g = new THREE.Group(); scene.add(g);
+  const blades = [[.7, 1, color, 1], [.75, .8, 0xffffff, .85], [.55, 1.12, color, .45]];
+  for (const [y, s, c, a] of blades) {
+    const m = new THREE.Mesh(ARC, add(c, a)); m.position.set(x, y, z); m.scale.setScalar(reach * s); m.rotation.y = yaw + from; g.add(m);
+  }
+  transient(g, T, (o, k) => { o.rotation.y = 0; for (let i = 0; i < 3; i++) o.children[i].rotation.y = yaw + from + (to - from) * k; });
+  for (let i = 0; i <= 6; i++) { const a = yaw + from + (to - from) * (i / 6);
+    after(() => emit(GLOW, 2, x + Math.sin(a) * reach * .9, .7, z + Math.cos(a) * reach * .9, { color, spd: 1.6, up: 1.2, size: .07, life: .28, grav: 2 }), i / 6 * T * 1000); }
 }
 let shake = 0;
 const SCORCH = new THREE.MeshBasicMaterial({ color: 0x0c0b0a, transparent: true, opacity: .55, depthWrite: false });
@@ -379,12 +558,12 @@ function matFor(base, c, bone) {
 function cloneMats(root) {
   const r = []; root.traverse((o) => o.isMesh && o.material !== glow && o.material.emissive && r.push([o, o.material])); return r;
 }
-const ONCE = /^(hit|death|swell|spit|split|leap)/;
+const ONCE = /^(hit|death|swell|spit|split|leap|summon|roar|smash|eat|throw)/;
 function play(u, name, fade = .15, force = false) {
   if (u.cur === name && !force) return u.acts[name];
   let a = u.acts[name];
   if (!a) {
-    const clip = clipOf(u.anims, name); if (!clip) return null;
+    const clip = clipOf(u.anims, name); if (!clip) return null;   // 变异生物（熊 / 狼 / 秃鹫 / 猿）各有自己的一套动作名，模型里没有的（如 eat）静默跳过
     a = u.acts[name] = u.mixer.clipAction(clip);
     if (ONCE.test(name)) { a.setLoop(THREE.LoopOnce); a.clampWhenFinished = true; }
   }
@@ -402,33 +581,45 @@ const HALO = new THREE.RingGeometry(.34, .46, 40).rotateX(-Math.PI / 2), HALO_CA
 const HALO_OUT = new THREE.RingGeometry(.7, .76, 48).rotateX(-Math.PI / 2), HALO_FILL = new THREE.CircleGeometry(.42, 40).rotateX(-Math.PI / 2);
 const haloMat = add(0x2ecc55, .8), capMat = add(0x66ff77), capOut = add(0x66ff77, .5), capFill = add(0x33aa44, .18);
 function makeHero(id, slot) {
-  const i = HIDS.indexOf(id), def = T.HERO[id], g = hgl[i], w = W[def.weapon];
-  // 小队等级选的是「那一级的职业」：名字、星级、定位来自职业表，模型 / 武器 / 技能 / AI 仍借该职业的样板英雄（TEMPLATE）。
-  // 成长率用样板英雄那条轴的 GROWTH，不读 cl.growth——后者是职业自己那条轴的数，与借来的英雄对不上，等级一换血量就跳错
-  const cl = cur.classes[i], nm = cl ? `${cl.full || cl.name}（${def.name}）` : def.name, gr = GROWTH[id] ?? 0;
+  // 小队等级选的是「那一级的职业」：形象（vox_<职业>.glb + looks.json 的手持武器）、武器数值（weaponFor）、AI / 定位、技能（slots → SKILLS）全来自职业表。
+  // 血量 / 成长率仍借样板英雄（TEMPLATE）：职业表里没有血量，GROWTH 与 rankMul 按样板那条轴算。技能台不选职业，整套借样板
+  const i = HIDS.indexOf(id), def = T.HERO[id], cl = cur.classes[slot], C = cl && CLASS_BY_ID[cl.id], lk = C && LK[cl.id];
+  const g = lk?.g ?? hgl[i], w = C ? { ...W[weaponFor(C)], school: schoolFor(C) } : W[def.weapon];
+  const nm = C ? cl.full || cl.name : cl ? `${cl.full || cl.name}（${def.name}）` : def.name, gr = GROWTH[id] ?? 0;
   const root = SkeletonUtils.clone(g.scene); scene.add(root);
   const a = slot / 5 * Math.PI * 2, c0 = LV?.start ?? [0, 0], home = new THREE.Vector3(c0[0] + Math.sin(a) * 1.6, 0, c0[1] + Math.cos(a) * 1.6);
   root.position.copy(home); root.rotation.y = a; root.updateMatrixWorld(true);
-  const socket = root.getObjectByName('socket_hand_r'), weapon = wgl[WIDS.indexOf(def.weapon)].scene.clone(), s = new THREE.Vector3();
-  weapon.quaternion.copy(GRIP); socket.getWorldScale(s); weapon.scale.setScalar(1 / s.x); socket.add(weapon);
+  const s = new THREE.Vector3(), hold = (sock, o) => { const k = root.getObjectByName(sock); o.quaternion.copy(GRIP); k.getWorldScale(s); o.scale.setScalar(1 / s.x); k.add(o); return o; };
+  const socket = root.getObjectByName('socket_hand_r'), weapon = hold('socket_hand_r', lk ? LWG[lk.wr].clone() : wgl[WIDS.indexOf(def.weapon)].scene.clone());
+  if (lk?.wl) hold('socket_hand_l', LWG[lk.wl].clone());
   const mul = rankMul(id, TIERS[cur.tier].rank);   // 军衔成长：只加血与伤害（C7-5），现算不查表
+  // 职业技能：A / B / D 主动（kind 执行器 K），C 被动光环（每秒 aura()）
+  const sl = C ? C.slots.map((x) => ({ ...SKILLS[x.skill], desc: x.text })) : [], act = sl.filter((P) => P.kind !== 'aura');
+  const skp = C ? act : def.sk, skf = C ? act.map((P) => KV[P.key] || K[P.kind]) : S[id];
   const u = { hero: true, id, def, w, root, pos: root.position, home, socket, weapon, mixer: new THREE.AnimationMixer(root), mats: cloneMats(root),
-    anims: g.animations, acts: {}, cur: null, h: HH[i], r: HERO_R, name: nm, growth: gr, id2: cl?.id,
+    anims: lk ? lk.anims : g.animations, acts: {}, cur: null, h: lk ? lk.h : HH[i], r: HERO_R, name: nm, growth: gr, id2: cl?.id,
+    ai: C?.ai ?? AI[id], role: C?.role ?? ROLE[id], skp, skf, aura: sl.filter((P) => P.kind === 'aura'),
     hp: def.hp * mul, maxHp: def.hp * mul, vel: new THREE.Vector3(),
-    cd: Math.random() * .5, sk: [2 + Math.random() * 4, 5 + Math.random() * 6], buf: {}, lock: 0, atkT: 0, flash: 0, target: null, dead: false, deadT: 0, spd: 0 };
+    cd: Math.random() * .5, sk: skp.map((P, k) => (k ? 5 : 2) + Math.random() * (4 + 2 * k)), buf: {}, lock: 0, atkT: 0, flash: 0, target: null, dead: false, deadT: 0, spd: 0 };
   const halo = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.position.y = .04; m.renderOrder = 1; root.add(m); return m; };
   u.halo = slot ? [halo(HALO, haloMat)] : [halo(HALO_CAP, capMat), halo(HALO_OUT, capOut), halo(HALO_FILL, capFill)];
   play(u, 'idle'); return u;
 }
-function makeZombie(type, x, z, ry = 0) {
-  const i = ZIDS.indexOf(type), t = ZT[type], g = zgl[i];
+// 行为参数：僵尸自己有，精英没有（只有基础种有），所以统一从基础种取；变异生物键就是自己的 id
+const ZP = (t) => ZB[t.base ?? t.id];
+function makeZombie(type, x, z, ry = 0, g = ZG[type]) {   // g：BOSS 换模型
+  const t = ZT[type], B = ZP(t), base = t.base ?? type;   // 盾牌 / 伏地 / 腾空这些表现按基础种走
   const root = SkeletonUtils.clone(g.scene); if (type === 'spawnling') root.scale.setScalar(.4);
   root.rotation.order = 'YXZ';   // 击倒绕自身左右轴仰倒
   root.position.set(x, 0, z); root.rotation.y = ry; scene.add(root);
   const u = { type, t, root, pos: root.position, mixer: new THREE.AnimationMixer(root), mats: cloneMats(root), anims: g.animations, acts: {}, cur: null,
-    h: ZH[i], gv: ZGV[i], r: t.r * .7, hp: t.hp * G.zhp, vel: new THREE.Vector3(), cd: t.ai * Math.random(), skCd: 1 + Math.random() * 3, lock: 0, state: 'walk',
-    flash: 0, slow: 0, slowT: 0, frz: 0, burn: 0, mark: 0, vuln: 0, shield: type === 'ward' ? ZB.ward.shield : 0, sly: Math.random() < t.cun,
-    dead: false, deadT: 0, spd: 0, leap: null, lane: Math.random() < .4 ? 0 : 1 + (Math.random() < .5), side: Math.random() * 2 - 1 };
+    h: ZH[type], gv: ZGV[type], r: t.r * .7, hp: t.hp * G.zhp, maxHp: t.hp * G.zhp, hide: t.beh === 'stealth' || t.beh === 'burrow', under: t.beh === 'burrow', air: t.beh === 'flying', vel: new THREE.Vector3(), cd: t.ai * Math.random(), skCd: 1 + Math.random() * 3, lock: 0, state: 'walk',
+    flash: 0, slow: 0, slowT: 0, frz: 0, burn: 0, mark: 0, vuln: 0, shield: base === 'ward' ? ZB.ward.shield : 0, sly: Math.random() < t.cun,
+    // 变异生物几个专属状态的计时器：啄食回血 / 狂暴 / 抛石冷却 / 侧翼站位 / 嚎叫（变异犬与狼是同一套）
+    peck: 0, peckCd: 1 + Math.random() * 2, rage: false, rageCd: 0, throwCd: 2, side: Math.random() * 2 - 1,
+    dead: false, deadT: 0, spd: 0, leap: null, lane: Math.random() < .4 ? 0 : 1 + (Math.random() < .5) };
+  if (t.beh === 'pack') u.pack = B.pack;   // 变异犬：一次刷一群，其余各带固定侧偏（见 spawnOne）
+  if (t.beh === 'charge') u.spdMul = 1;    // 狂暴时把移速乘在这里，不动物种数据
   play(u, 'walk'); u.acts.walk.time = Math.random() * 1.2;
   zs.push(u); return u;
 }
@@ -441,12 +632,12 @@ function removeUnit(u) {
 let kills = 0;
 const live = (u) => !u.dead;
 const d2 = (a, b) => (a.x - b.x) ** 2 + (a.z - b.z) ** 2;
-function nearZ(p, r, out = []) { const r2 = r * r; for (const z of zs) if (!z.dead && d2(z.pos, p) < r2) out.push(z); return out; }
-function nearestZ(p, r = 99) { let b = null, bd = r * r; for (const z of zs) if (!z.dead) { const d = d2(z.pos, p); if (d < bd) { bd = d; b = z; } } return b; }
+function nearZ(p, r, out = []) { const r2 = r * r; for (const z of zs) if (!z.dead && !z.hide && d2(z.pos, p) < r2) out.push(z); return out; }
+function nearestZ(p, r = 99) { let b = null, bd = r * r; for (const z of zs) if (!z.dead && !z.hide) { const d = d2(z.pos, p); if (d < bd) { bd = d; b = z; } } return b; }
 // 目标优先级（src AIProfile.targetPriority）：最近 / 最脆（现血最少）/ 最硬（现血最多）。先筛半径再比，超出索敌半径的一概不选
 function pickZ(p, r, pri = 'closest') {
   let b = null, bv = -Infinity;
-  for (const z of zs) { if (z.dead) continue; const d = d2(z.pos, p); if (d > r * r) continue;
+  for (const z of zs) { if (z.dead || z.hide) continue; const d = d2(z.pos, p); if (d > r * r) continue;
     const v = pri === 'closest' ? -d : pri === 'weakest' ? -z.hp : z.hp;   // 统一成「越大越优先」
     if (v > bv) { bv = v; b = z; } }
   return b;
@@ -512,10 +703,14 @@ function push(u, fx, fz, force) {   // force → 初速 m/s；摩擦在 move() �
   u.vel.x += fx / d * v; u.vel.z += fz / d * v;
 }
 // o: knock 击退力 / from 来源点 / color 命中火花色 / slow / frz / burn / noHit
+// school 伤害系别 / pen 破甲（shred）/ ground 地面范围（打不到空中的蝠翼）
 function hitZ(z, dmg, o = {}) {
-  if (z.dead) return;
-  const from = o.from ?? z.pos, fx = z.pos.x - from.x, fz = z.pos.z - from.z;
-  dmg *= G.armorK / (G.armorK + z.t.armor * G.zarmor * (1 - (o.pen ?? 0))) * (1 - (z.t.dr ?? 0) * (1 - (o.pen ?? 0)));
+  if (z.dead || z.under || z.air && o.ground) return;
+  const from = o.from ?? z.pos, fx = z.pos.x - from.x, fz = z.pos.z - from.z, pen = o.pen ?? 0, sc = o.school ?? 'physical';
+  const res = Math.min(1, ((sc === 'magic' ? z.t.mr : z.t.dr) ?? 0) + (z.aura > 0 ? ZB.herald.res : 0));
+  dmg *= sc === 'electric' ? 1 - (z.t.ef ?? 0) : (sc === 'magic' ? 1 : G.armorK / (G.armorK + z.t.armor * G.zarmor * (1 - pen))) * (1 - res * (1 - pen));
+  if (pen) z.antiT = ZB.regenerator.dur;   // 破甲命中：增生僵尸回血被压
+  if (z.cast > 0) { z.cast = 0; z.lock = 0; z.skCd = ZB.screamer.cd / 2; }   // 尖啸吟唱被打断
   dmg *= (1 + (z.mark > 0 ? G.markBonus : 0) + (z.vuln > 0 ? G.vulnBonus : 0)) * (1 + teamBuf('atk')) * squadMul;
   // 护盾：正面 ±60° 来的伤害先扣盾；盾破 3 s 易伤
   if (z.shield > 0 && (fx || fz)) {
@@ -526,6 +721,11 @@ function hitZ(z, dmg, o = {}) {
       if (z.lock <= 0 && z.state !== 'block') { z.state = 'block'; z.lock = .5; play(z, 'block', .08); }
       if (z.shield <= 0) { z.vuln = ZB.ward.vuln; ring(z.pos.x, z.pos.z, 1.2, 0x66ccff, .4); emit(GLOW, 20, z.pos.x, z.h * .6, z.pos.z, { color: 0x99ddff, spd: 4, size: .12 }); }
     }
+  }
+  if (o.from && heroes[0] && !heroes[0].dead) {
+    let u = heroes[0], bd = 1e9;
+    for (const h of heroes) { const d = d2(h.pos, o.from); if (d < bd) { bd = d; u = h; } }
+    u.dmg = (u.dmg ?? 0) * .995 + dmg;   // 熊狂暴后盯着他；衰减让近期输出说了算
   }
   z.hp -= dmg; z.flash = .12;
   emit(GLOW, 4, z.pos.x, z.h * .55, z.pos.z, { color: o.color ?? 0xffdd88, spd: 3, up: 2.5, size: .08, life: .3, vx: fx, vz: fz });
@@ -542,12 +742,12 @@ function hitZ(z, dmg, o = {}) {
   if (z.hp <= 0 && !undead(z)) return killZ(z);
   if ((knocked || dmg > z.t.hp * .25) && !o.noHit && z.lock <= .1 && z.frz <= 0 && !z.leap) { z.state = 'hit'; z.lock = .35; play(z, 'hit', .06, true); }
 }
-const undead = (z) => LAB && undying.checked && ((z.hp = z.t.hp), true);   // 技能台「不死」：血量打空就回满
+const undead = () => false;   // 技能台的僵尸不再不死——god 已保证角色不掉血，靶子留血条才能看伤害
 function killZ(z) {
-  z.dead = true; z.deadT = 0; kills++; z.lock = 99; z.leap = null;
-  if (z.type === 'splitter') { play(z, 'split', .08, true); z.splitAt = .5; return; }
-  if (z.type === 'bomber') return blowBomber(z);
-  if (z.down > 0) z.lie = true; else play(z, ['death', 'death2', 'death3'][(Math.random() * 3) | 0], .08, true);   // 躺着被打死就直接躺平
+  z.dead = true; z.deadT = 0; kills++; z.lock = 99; z.leap = null; z.root.visible = true;
+  if (z.type === 'splitter' || z.t.base === 'splitter') { play(z, 'split', .08, true); z.splitAt = .5; return; }
+  if (z.type === 'bomber' || z.t.base === 'bomber') return blowBomber(z);
+  if (z.down > 0) z.lie = true; else play(z, ['death', 'death2', 'death3', 'death4'][(Math.random() * 4) | 0], .08, true);   // 躺着被打死就直接躺平
   emit(SOLID, 12, z.pos.x, z.h * .5, z.pos.z, { color: 0x5b2a24, spd: 2.5, up: 3.5, size: .1, life: 1 });
   emit(GLOW, 6, z.pos.x, z.h * .5, z.pos.z, { color: 0xffcc88, spd: 2, up: 2, size: .08, life: .3 });
   if (z.type === 'toxic') zone(z.pos.x, z.pos.z, ZB.toxic.r, 0x66dd33, ZB.toxic.dur, (zo, dt) => { for (const h of team()) if (d2(h.pos, zo) < zo.r ** 2) hurt(h, ZB.toxic.dps * dt, {}); });
@@ -585,9 +785,21 @@ const shots = [];
 const glowMesh = (geo, color, sx, sy = sx, sz = sx) => { const m = new THREE.Mesh(geo, add(color)); m.scale.set(sx, sy, sz); scene.add(m); return m; };
 const MUZ = new THREE.Vector3();
 function muzzle(h) { h.weapon.getWorldPosition(MUZ); MUZ.y = Math.max(MUZ.y, .6); return MUZ.clone(); }
-// 直线弹：沿途按「点到线段」查僵尸；pierce 表示可穿透数
+// 箭矢几何：细杆 + 锥头 + 尾羽。形状是「一看就知道是箭」，不是发光的方块——枪走 bullet，弓走这个
+const ARROW_G = (() => {
+  const g = new THREE.Group();
+  const m = add(0xe8f0ff, .95);
+  const sh = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, 1.5, 5).rotateX(Math.PI / 2), m);
+  const hd = new THREE.Mesh(new THREE.ConeGeometry(.09, .3, 4).rotateX(Math.PI / 2), add(0xdfe8ff, 1));
+  const fl = new THREE.Mesh(new THREE.ConeGeometry(.11, .34, 4).rotateX(-Math.PI / 2), add(0xb8c8e0, .9));
+  hd.position.z = .82; fl.position.z = -.68;
+  g.add(sh, hd, fl); return g; })();
+// 直线弹：沿途按「点到线段」查僵尸；pierce 表示可穿透数。o.mesh = 自定义弹体（弓的箭）
 function bullet(from, dir, spd, range, o) {
-  const m = glowMesh(BOX, o.color ?? 0xffe08a, o.w ?? .05, o.w ?? .05, o.len ?? .6), hit = new Set();
+  let m;
+  if (o.mesh) { m = o.mesh.clone(); scene.add(m); }
+  else m = glowMesh(BOX, o.color ?? 0xffe08a, o.w ?? .05, o.w ?? .05, o.len ?? .6);
+  const hit = new Set();
   const s = { m, pos: from.clone(), dir: dir.clone().setY(0).normalize(), left: range, pierce: o.pierce ?? 0,
     step(dt) {
       const d = Math.min(spd * dt, this.left), a = this.pos.clone(); this.pos.addScaledVector(this.dir, d); this.left -= d;
@@ -595,7 +807,7 @@ function bullet(from, dir, spd, range, o) {
       emit(GLOW, .5, this.pos.x, this.pos.y, this.pos.z, { color: o.color ?? 0xffe08a, spd: 0, up: 0, size: (o.w ?? .05) * 1.6, life: .12, grav: 0 });   // 拖尾
       if (M && M.shot[cellOf(M, this.pos.x, this.pos.z)]) { emit(GLOW, 4, this.pos.x, this.pos.y, this.pos.z, { color: 0xffcc88, spd: 2, up: 1, size: .06, life: .2 }); return false; }   // 打在墙上
       for (const z of zs) {
-        if (z.dead || hit.has(z)) continue;
+        if (z.dead || z.hide || hit.has(z)) continue;
         const t = THREE.MathUtils.clamp((z.pos.x - a.x) * this.dir.x + (z.pos.z - a.z) * this.dir.z, 0, d);
         if ((a.x + this.dir.x * t - z.pos.x) ** 2 + (a.z + this.dir.z * t - z.pos.z) ** 2 < (z.r + .1) ** 2) {
           hit.add(z); hitZ(z, o.dmg, { ...o, from: a });
@@ -630,7 +842,7 @@ function boomerang(h, target) {
       if (k >= 1 && hit.size && !this.back) { hit.clear(); this.back = true; }
       m.position.set(h.pos.x + out.x * d + out.z * Math.sin(k * Math.PI) * 1.2, .8, h.pos.z + out.z * d - out.x * Math.sin(k * Math.PI) * 1.2);
       m.rotation.y += dt * 25;
-      for (const z of nearZ(m.position, .9)) if (!hit.has(z)) { hit.add(z); hitZ(z, W.boomerang.dmg, { knock: W.boomerang.knock, from: m.position, color: 0xffee99 }); }
+      for (const z of nearZ(m.position, .9)) if (!hit.has(z)) { hit.add(z); hitZ(z, W.boomerang.dmg, { knock: W.boomerang.knock, from: m.position, color: 0xffee99, school: W.boomerang.school }); }
       return k < 2;
     } };
   shots.push(s);
@@ -643,7 +855,7 @@ function laser(h, target) {
     done.add(z); const b = z.pos.clone().setY(z.h * .55);
     beam(a, b, i ? 0x88ffee : 0x44ffdd, .2, i ? .08 : .13); beam(a, b, 0xffffff, .1, .03);
     emit(GLOW, 3, b.x, b.y, b.z, { color: 0x88ffee, spd: 2, up: 1.5, size: .07, life: .25 });
-    hitZ(z, W.laser.dmg * (i ? .7 : 1), { knock: W.laser.knock, from: a, color: 0x88ffee });
+    hitZ(z, W.laser.dmg * (i ? .7 : 1), { knock: W.laser.knock, from: a, color: 0x88ffee, school: W.laser.school });
     a = b; let nb = null, nd = 16;
     for (const c of nearZ(z.pos, 4)) if (!done.has(c)) { const d = d2(c.pos, z.pos); if (d < nd) { nd = d; nb = c; } }
     z = nb;
@@ -656,6 +868,13 @@ const IMPACT = { melee: .45, grenade: .42, boomerang: .42 };
 function attack(h, z) {
   const w = h.w, rate = w.rate * (1 + buf(h, 'rate') + teamBuf('rate'));
   h.cd = 1 / rate;
+  // 连珠箭的双发：主箭出手后再补一箭，动作时间压缩到 0.55，读起来就是"拉弓连射两支"
+  if (h.burst && h.burst.t > 0 && (w.kind === 'bullet' || w.kind === 'bow')) {
+    const b = h.burst;
+    h.cd = Math.min(h.cd, b.gap * 3.2);
+    after(() => { if (h.dead || z.dead) return; const a = play(h, GRIPS[w.grip][0], .04, true);
+      if (a) { a.setEffectiveTimeScale(1.8); } fire(h, z); }, b.gap * 1000);
+  }
   if (IMPACT[w.kind]) {
     const a = play(h, GRIPS[w.grip][0], .08, true), dur = a.getClip().duration;
     a.setEffectiveTimeScale(Math.max(1, dur * rate * 1.1));
@@ -673,39 +892,77 @@ function fire(h, z) {
       const hitList = nearZ(h.pos, reach + .5).filter((c) => { const dx = c.pos.x - h.pos.x, dz = c.pos.z - h.pos.z, d = Math.hypot(dx, dz) || 1; return (dx * fwd.x + dz * fwd.z) / d > .3; })
         .sort((a, b) => d2(a.pos, h.pos) - d2(b.pos, h.pos)).slice(0, w.cleave);
       slash(h, reach, h.id === 'kai' ? 0x99ccff : 0xffeecc);
-      for (const c of hitList) hitZ(c, w.dmg, { knock: w.knock * (1 + buf(h, 'knock')), from: h.pos, color: 0xffffff });
+      for (const c of hitList) hitZ(c, w.dmg, { knock: w.knock * (1 + buf(h, 'knock')), from: h.pos, color: 0xffffff, school: w.school, ground: 1 });
       break;
     }
     case 'bullet':
       flash(from.x, from.y, from.z, h.id === 'vera' ? .5 : .3, 0xffdd66, .07);
       emit(GLOW, 2, from.x, from.y, from.z, { color: 0xffee99, spd: .8, up: .5, vx: dir.x / (dir.length() || 1) * 5, vz: dir.z / (dir.length() || 1) * 5, size: .06, life: .12, grav: 0 });
-      bullet(from, dir, h.id === 'vera' ? 90 : 45, w.range * CELL * (1 + buf(h, 'range')), { dmg: w.dmg, knock: w.knock, pierce: w.pass, slow: buf(h, 'slowShot'),
+      bullet(from, dir, h.id === 'vera' ? 90 : 45, w.range * CELL * (1 + buf(h, 'range')), { dmg: w.dmg, knock: w.knock, pierce: w.pass, slow: buf(h, 'slowShot'), school: w.school,
         color: h.id === 'vera' ? 0xffffff : 0xffe08a, w: h.id === 'vera' ? .07 : .04, len: h.id === 'vera' ? 2 : .5 });
       break;
     case 'grenade':
-      lob(from, to.setY(.1), .7, BALL, 0x99aa66, .12, (p) => { explode(p.x, p.z, w.aoe * CELL, 0xffaa44); for (const c of nearZ(p, w.aoe * CELL)) hitZ(c, w.dmg, { knock: w.knock + buf(h, 'knock'), from: p, slow: buf(h, 'slowShot') }); });
+      lob(from, to.setY(.1), .7, BALL, 0x99aa66, .12, (p) => { explode(p.x, p.z, w.aoe * CELL, 0xffaa44); for (const c of nearZ(p, w.aoe * CELL)) hitZ(c, w.dmg, { knock: w.knock + buf(h, 'knock'), from: p, slow: buf(h, 'slowShot'), school: w.school, ground: 1 }); });
       break;
     case 'flame': {
       const R = w.range * CELL, n = dir.clone().setY(0).normalize();
       emit(GLOW, 6, from.x, from.y, from.z, { color: Math.random() < .5 ? 0xff6622 : 0xffcc33, spd: 1, up: .6, vx: n.x * R * 2.2, vz: n.z * R * 2.2, size: .14, grow: 3, life: .45, grav: -1 });
-      for (const c of nearZ(h.pos, R)) { const dx = c.pos.x - h.pos.x, dz = c.pos.z - h.pos.z; if ((dx * n.x + dz * n.z) / (Math.hypot(dx, dz) || 1) > .8) hitZ(c, w.dmg, { knock: w.knock, from: h.pos, burn: 2, color: 0xff8833, noHit: true }); }
+      for (const c of nearZ(h.pos, R)) { const dx = c.pos.x - h.pos.x, dz = c.pos.z - h.pos.z; if ((dx * n.x + dz * n.z) / (Math.hypot(dx, dz) || 1) > .8) hitZ(c, w.dmg, { knock: w.knock, from: h.pos, burn: 2, color: 0xff8833, noHit: true, school: w.school, ground: 1 }); }
       break;
     }
     case 'freeze':
       emit(GLOW, 3, from.x, from.y, from.z, { color: 0xaaddff, spd: 1, size: .06, life: .2, grav: 0 });
-      bullet(from, dir, 22, w.range * CELL, { dmg: w.dmg, knock: w.knock, color: 0x88ccff, w: .16, len: .4, slow: .4, frz: Math.random() < .15 ? 1 : 0 });
+      bullet(from, dir, 22, w.range * CELL, { dmg: w.dmg, knock: w.knock, school: w.school, color: 0x88ccff, w: .16, len: .4, slow: .4, frz: Math.random() < .15 ? 1 : 0 });
       break;
     case 'boomerang': boomerang(h, z); break;
     case 'laser': laser(h, z); break;
+    // 弓：射的是看得见的箭。原来的 kind:'bullet' 用枪那颗 0.04 的方块——30 m 射程 45 m/s，
+    // 屏幕上就是「什么都没飞出去」。弓速慢下来才有拉弓→箭离弦的读感
+    case 'bow': {
+      const n = dir.clone().setY(0).normalize();
+      const p0 = from.clone().addScaledVector(n, .5);
+      flash(p0.x, p0.y, p0.z, .3, 0xd8e8ff, .05);
+      emit(GLOW, 4, p0.x, p0.y, p0.z, { color: 0xcfd8ff, spd: .5, up: .3, vx: n.x * 4, vz: n.z * 4, size: .04, life: .15, grav: 0 });
+      bullet(p0, n, 34, w.range * CELL * (1 + buf(h, 'range')), { dmg: w.dmg, knock: w.knock, pierce: w.pass, slow: buf(h, 'slowShot'), school: w.school, mesh: ARROW_G });
+      break;
+    }
   }
 }
 
 // ── 技能：[低级, 高级]，返回 false 表示没有合适目标、不进冷却 ──
-function summon(h, scale, hp, dmg, life) {
-  const g = makeZombie('brute', h.pos.x + (Math.random() - .5) * 2, h.pos.z + (Math.random() - .5) * 2);
+// 召唤物的外形：影子分身就该是「这个职业自己的黑色分身」。旧实现写死 makeZombie('brute')，
+// 于是影卫号令一次召出 5 只小僵尸。这里克隆召唤者自己的模型（LK），染黑半透明顶「黑影」；
+// 模型没装上（LK 缺该职业）才退回僵尸，至少不崩。
+const SHADOW = new THREE.Color(0x14161c);   // 影子色：偏蓝的近黑，比纯黑在暗底场景里读得出轮廓
+// 影子分身的材质：每个子网格都克隆一份染暗（包括描边发光层——是模块级共享的 glow，
+// 全白顶点色的 MeshBasicMaterial，不染就留一块白外壳，人影读成灰色）。
+// 但只把带 emissive 的标准材质交给 tint()：matFor() 会写 m.emissive，MeshBasicMaterial 没有这个属性。
+function shadowMats(root) {
+  const list = [];
+  root.traverse((o) => { if (!o.isMesh) return;
+    // ponytail: 系数 .96 不是 .82——three 的 lerp 跑在线性空间，.82 在 sRGB 里看着只有一半，
+    // 测出来是中灰 #777879，不像黑影。留 4% 底色是为了保留点轮廓细节。
+    const m = o.material.clone(); m.color.lerp(SHADOW, .96); m.transparent = true; m.opacity = .78; m.depthWrite = true;
+    o.material = m; if (m.emissive) list.push([o, m]); });
+  return list;
+}
+function summon(h, scale, hp, dmg, life, look = h.id2 && LK[h.id2], at = null) {
+  const x = at ? at.x : h.pos.x + (Math.random() - .5) * 2, z = at ? at.z : h.pos.z + (Math.random() - .5) * 2;
+  let g;
+  if (look) {
+    const root = SkeletonUtils.clone(look.g.scene); root.rotation.order = 'YXZ'; root.position.set(x, 0, z); scene.add(root);
+    // 外壳借僵尸的字段（z/ally/life 那套 AI 与回收逻辑全在僵尸身上），只有外观是自己克隆的
+    g = { type: 'brute', t: ZT.brute, root, pos: root.position, mixer: new THREE.AnimationMixer(root), anims: look.anims,
+      acts: {}, cur: null, mats: shadowMats(root), h: look.h, gv: 1, r: .5,
+      vel: new THREE.Vector3(), cd: 1, skCd: 99, lock: 0, state: 'walk', flash: 0, slow: 0, slowT: 0, frz: 0, burn: 0, mark: 0, vuln: 0,
+      shield: 0, sly: false, peck: 0, peckCd: 9, rage: false, rageCd: 9, throwCd: 9, side: 0, dead: false, deadT: 0, spd: 0, leap: null, lane: 0 };
+    zs.push(g); play(g, 'walk'); g.acts.walk.time = Math.random() * 1.2;
+  } else g = makeZombie('brute', x, z);
   zs.splice(zs.indexOf(g), 1); allies.push(g);
   g.ally = true; g.root.scale.setScalar(scale); g.h *= scale; g.r = .5 * scale; g.hp = g.maxHp = hp; g.dmg = dmg; g.life = life;
-  g.tintC = -1;
+  // tint() 对 ally 会把材质往骨白偏（队友的识别色），影子分身要的是黑，所以它自己不吃那层着色
+  if (look) g.noBone = true;
+  g.tintC = -1; g.dispel = 2; g.owner = h;   // 到期不播 death，走渲染层的消散（见 zStep 的 dead 分支）
   ring(g.pos.x, g.pos.z, 1.5 * scale, 0xbb99ff, .6); emit(GLOW, 30, g.pos.x, .3, g.pos.z, { color: 0xbb99ff, spd: 2, up: 4, size: .12, life: .8 });
   return true;
 }
@@ -802,13 +1059,437 @@ const S = {
     (h, z, P) => { setBuf(h, 'chain', P.chain, P.dur); setBuf(h, 'rate', P.rate, P.dur); h.swarm = P.dur; return true; },
   ],
 };
+// 职业技能（src/data/skills.ts）：同一个 kind 跑同一个执行器，伤害 = 武器单发 × mul。返回 false = 没目标、不进冷却
+// ponytail: 每类只有一个通用表现；站定（stand）只拦施放不真站，单个技能的专属特效与站定要等 core 按 key 接
+const kcol = (h, P) => /heal|guard|summon/.test(P.kind) ? C_SUP : h.w.kind === 'melee' ? C_MELEE : C_RANGED;
+const khit = (h, P, from, ground = 1) => ({ school: h.w.school, pen: P.pierce, slow: P.slow, frz: P.frz, knock: 60, ground, from, color: kcol(h, P) });
+const kspot = (h, P, z) => bestSpot(h.pos, Math.max(8, reachOf(h)), P.r) ?? z?.pos;
+const K = {
+  single: (h, z, P) => { if (!z) return false; play(h, GRIPS[h.w.grip][0], .05, true);
+    for (let i = 0; i < P.n; i++) after(() => { if (z.dead || h.dead) return; beam(muzzle(h), z.pos.clone().setY(z.h * .55), kcol(h, P), .15, .1); hitZ(z, h.w.dmg * P.mul, khit(h, P, h.pos, 0)); }, i * 120);
+    return true; },
+  aoe: (h, z, P) => { const p = kspot(h, P, z); if (!p) return false; play(h, 'attack_heavy', .06, true); h.lock = Math.min(.3, P.dur);   // 远程落点也起个手，不然人站着不动
+    explode(p.x, p.z, P.r, kcol(h, P));
+    for (const c of nearZ(p, P.r)) hitZ(c, h.w.dmg * P.mul, khit(h, P, p)); return true; },
+  control: (h, z, P) => { const p = kspot(h, P, z); if (!p) return false; play(h, 'attack_thrust', .06, true); h.lock = Math.min(.3, P.dur);   // 捅刺起手
+    ring(p.x, p.z, P.r, kcol(h, P), .6);
+    for (const c of nearZ(p, P.r)) hitZ(c, h.w.dmg * P.mul, khit(h, P, p)); return true; },
+  dash: (h, z, P) => { if (!z) return false; play(h, 'leap', .06, true);   // 腾空起势；位移路径不变
+    const dir = z.pos.clone().sub(h.pos).setY(0), d = Math.min(8, dir.length()); dir.normalize();
+    h.dash = { dir, spd: 14, t: d / 14, hit: new Set(), dmg: h.w.dmg * P.mul, knock: 100 }; return true; },
+  guard: (h, z, P) => { if (!nearestZ(h.pos, P.r * 2)) return false; ring(h.pos.x, h.pos.z, P.r, kcol(h, P), .6);
+    play(h, 'guard', .08, true); h.lock = Math.min(.35, P.dur);   // 举盾：武器横架 + 侧缩，持续期间不换回 idle
+    // 带 stand 的 guard（据守等「原地站定」类）：AI 层已经用 P.stand 拦了施放，执行器这边必须真的站住，
+    // 否则就是评审说的「依然会挪动，并没有原地站定」——站定与锚点都归 standOn
+    if (P.stand) standOn(h, P, kcol(h, P), P.r);
+    const C = kcol(h, P), R = Math.max(1.1, h.h * 1.15);   // 半身护罩：跟着人走，持续期间看得见「身上有盾」
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), add(C, .22));
+    dome.scale.setScalar(R); scene.add(dome);
+    const base = new THREE.Mesh(RING, add(C, .6)); base.scale.setScalar(R); scene.add(base);
+    transient(dome, P.dur, (o) => { o.position.set(h.pos.x, .05, h.pos.z); o.material.opacity = h.dead ? 0 : .22; });
+    transient(base, P.dur, (o, k) => { o.position.set(h.pos.x, .06, h.pos.z); o.rotation.y = k * 1.1; o.material.opacity = h.dead ? 0 : .6; });
+    for (const u of P.team ? heroes.filter(live) : [h]) setBuf(u, 'dr', P.dr, P.dur);
+    if (P.taunt) for (const c of nearZ(h.pos, P.r)) if (!c.sly) c.taunt = { u: h, t: P.taunt };
+    return true; },
+  heal: (h, z, P) => { const n = neediestAlly(); if (!n) return false;
+    play(h, 'cast', .1, true); h.lock = Math.min(.3, P.dur);   // 吟唱起手：双臂上举
+    for (const u of P.team ? heroes.filter(live) : [n]) { u.hp = Math.min(u.maxHp, u.hp + u.maxHp * (P.heal || .05) * P.dur); if (P.dr) setBuf(u, 'dr', P.dr, P.dur);
+      emit(GLOW, 12, u.pos.x, .8, u.pos.z, { color: C_SUP, spd: 1, up: 2, size: .08, life: .6, grav: -2 });
+      ring(u.pos.x, u.pos.z, .7, C_SUP, .4); }   // 落点圈：看得出治的是谁
+    return true; },
+  summon: (h, z, P) => { play(h, 'summon', .08, true); h.lock = Math.min(.35, P.dur);   // 双手前推
+    for (let i = 0; i < P.n; i++) summon(h, .6, h.maxHp * .25, h.w.dmg * P.mul, P.dur * 2); return true; },
+};
+// ── 技能视觉表：kind 只管机制，表现按技能 key 单独接 ─────────────────────────────
+// 790 个技能挤在 8 个 kind 上，同一个 kind 一个通用表现 → 文案写的「6 道剑幻影绕身转」「向后翻滚射出」
+// 全塌成爆炸和原地。这里给具体技能挂专属表现，没挂的照旧走 K[kind]。
+// ponytail: 手上只有 12 个角色 clip（没有 leap / cast / spin），跳跃与旋身只能靠位移和几何体顶，
+//           等美术补了动作再把这些换成 play()。见 skillnotes.mjs 的缺口清单
+const KV = {};
+// 环刃剑阵（sw.B.0000）：六片刀绕自身高速旋转，碰到就切。文案「绕你高速旋转成一圈剑环，幻影不是单位」
+KV['sw.B.0000'] = (h, z, P) => {
+  if (!nearestZ(h.pos, P.r * 1.6)) return false;
+  const R = P.r * .8, C = kcol(h, P), g = new THREE.Group(), N = 6;
+  for (let i = 0; i < N; i++) { const m = new THREE.Mesh(BOX, add(C, .9)); m.scale.set(1.7, .07, .22); m.position.set(0, .72, R); m.rotation.y = 1.2; g.add(m); }
+  scene.add(g); ring(h.pos.x, h.pos.z, R, C, .45);
+  // 剑风范围：刀环外侧拖 3 层越来越淡的扇面残影（跟着刀一起转，转速一致 → 读成"刀扫过这一圈"）
+  const wind = new THREE.Group(); scene.add(wind);
+  for (let i = 0; i < 3; i++) {
+    const a = new THREE.Mesh(ARC, add(C, .38 - i * .11));
+    a.position.y = .7 - i * .06; a.scale.setScalar(R * (1.15 + i * .08)); wind.add(a);
+  }
+  const spin = 16;                                  // rad/s：转一圈约 0.4 s，眼睛跟得住
+  transient(g, P.dur, (o, k) => { o.position.set(h.pos.x, 0, h.pos.z); o.rotation.y = k * spin * P.dur; });
+  transient(wind, P.dur, (o, k) => { o.position.set(h.pos.x, 0, h.pos.z); o.rotation.y = k * spin * P.dur - .6;
+    o.children.forEach((m, i) => { m.material.opacity = (.38 - i * .11) * (1 - k * .35); }); });
+  // ponytail: 命中按固定节拍结算，不做逐刀扫掠判定——一圈 6 片 × 每 0.25 s 一刀，够看出「转着切」
+  for (let t = .25; t < P.dur; t += .25) after(() => { if (h.dead) return;
+    for (const c of nearZ(h.pos, R + .7)) hitZ(c, h.w.dmg * P.mul * .25, khit(h, P, h.pos, 0)); }, t * 1000);
+  play(h, 'attack_melee1h', .06, true); h.lock = Math.min(.4, P.dur);   // 没有 spin，用挥砍顶着
+  return true;
+};
+// 跃射（ar.A.00）：向后翻滚拉开距离，落地立刻一箭。文案这么写，旧实现却往敌人身上直线冲、全程无动作
+KV['ar.A.00'] = (h, z, P) => {
+  if (!z) return false;
+  const dir = z.pos.clone().sub(h.pos).setY(0).normalize(), back = dir.clone().negate(), d = Math.min(5.5, P.dist || 5.5);
+  const dest = h.pos.clone().addScaledVector(back, d), yaw = Math.atan2(dir.x, dir.z);
+  h.leap = { a: h.pos.clone(), b: dest, t: 0, T: .42, r: 2.4, P: { r: 0, dmg: 0, knock: 0 },
+    end: () => { if (h.dead) return; h.root.rotation.y = yaw;   // 落地转身就是一箭
+      play(h, 'attack_rifle', .05, true); flash(h.pos.x, .9, h.pos.z, .8, kcol(h, P), .2);
+      bullet(muzzle(h), dir, 40, h.w.range * CELL, { dmg: h.w.dmg * P.mul, knock: P.knock, school: h.w.school, color: 0xffffff, w: .14, len: .9, pierce: 1 }); } };
+  play(h, 'attack_throw', .05, true);   // 没有 jump clip，起手用投掷动作
+  emit(GLOW, 16, h.pos.x, .3, h.pos.z, { color: kcol(h, P), spd: 2, up: 2, size: .09, life: .5 });
+  return true;
+};
+// ── 剑士 1-3 转专属表现 ──────────────────────────────────────────────────────
+// sw.A.0 连斩：短时间内攻速提高，平砍变三连击 → 三道连续刀光 + rate buf
+KV['sw.A.0'] = (h, z, P) => {
+  if (!z) return false;
+  play(h, 'attack_melee1h', .05, true); h.lock = Math.min(.35, P.dur);
+  setBuf(h, 'rate', P.mul - 1, P.dur);   // mul=1.85 → +85% 攻速
+  for (let i = 0; i < P.n; i++) after(() => {
+    if (h.dead) return;
+    slash(h, h.w.range * CELL + .4, C_MELEE);
+    emit(GLOW, 6, h.pos.x, .7, h.pos.z, { color: C_MELEE, spd: 2, up: 1.5, size: .06, life: .25 });
+    const zz = nearestZ(h.pos, h.w.range * CELL + .8); if (zz) hitZ(zz, h.w.dmg * P.mul, khit(h, P, h.pos, 0));
+  }, i * 160);
+  flash(h.pos.x, .8, h.pos.z, 1.1, C_MELEE, .2);
+  return true;
+};
+// sw.A.1 举盾挡阵：举盾数秒，正面减伤 + 嘲讽 → guard 起手 + 护罩 + 面前嘲讽线
+KV['sw.A.1'] = (h, z, P) => {
+  if (!nearestZ(h.pos, P.r * 2)) return false;
+  play(h, 'guard', .08, true); h.lock = Math.min(.35, P.dur);
+  const C = C_SUP, R = Math.max(1.1, h.h * 1.1);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), add(C, .2));
+  dome.scale.setScalar(R); scene.add(dome);
+  const base = new THREE.Mesh(RING, add(C, .55)); base.scale.setScalar(R); scene.add(base);
+  transient(dome, P.dur, (o) => { o.position.set(h.pos.x, .05, h.pos.z); o.material.opacity = h.dead ? 0 : .2; });
+  transient(base, P.dur, (o, k) => { o.position.set(h.pos.x, .06, h.pos.z); o.rotation.y = k * 1.0; o.material.opacity = h.dead ? 0 : .55; });
+  setBuf(h, 'dr', P.dr, P.dur);
+  for (const c of nearZ(h.pos, P.r)) if (!c.sly) c.taunt = { u: h, t: P.taunt };
+  // 嘲讽线：从各敌人位置拉一条 beam 指向盾卫
+  for (const c of nearZ(h.pos, P.r).slice(0, 6)) beam(c.pos.clone().setY(c.h * .5), h.pos.clone().setY(h.h * .5), C_SUP, P.taunt * .25, .04);
+  return true;
+};
+// sw.A.00 疾风连斩：每次击杀后 dash 到下一个目标，落地挥刀扫一圈
+KV['sw.A.00'] = (h, z, P) => {
+  if (!z) return false;
+  const gap = Math.sqrt(d2(z.pos, h.pos));
+  if (gap < 2.5) return false;   // 太近就不发动：原地冲刺看不出位移，白浪费一次 CD
+  play(h, 'leap', .05, true); h.lock = Math.min(.3, P.dur);
+  setBuf(h, 'rate', P.mul - 1, P.dur);
+  // 拉链式冲击：最多 4 次跳向最近的敌人，每次 0.7 s
+  let chain = 0;
+  const doChain = () => {
+    if (h.dead || chain >= 4) return;
+    const tgt = nearestZ(h.pos, 12); if (!tgt || Math.sqrt(d2(tgt.pos, h.pos)) < 2.5) return;
+    chain++;
+    const dir = tgt.pos.clone().sub(h.pos).setY(0).normalize(), d = Math.min(6, tgt.pos.distanceTo(h.pos) - .6);
+    emit(GLOW, 10, h.pos.x, .3, h.pos.z, { color: C_MELEE, spd: 2.5, up: 2.5, size: .08, life: .3 });
+    const reach = h.w.range * CELL + .8;
+    h.dash = { dir, spd: 16, t: d / 16, hit: new Set(), dmg: h.w.dmg * P.mul, knock: 80, end: () => {
+      if (h.dead) return;
+      // 冲刺收尾：挥刀扫一圈，范围内的敌人吃一次额外伤害 + 击退（冲刺本身的接触伤害另有其账）
+      play(h, 'attack_melee1h', .05, true); sweep(h, reach, C_MELEE);
+      for (const c of nearZ(h.pos, reach)) hitZ(c, h.w.dmg * P.mul, { knock: 140, from: h.pos, color: C_MELEE, school: h.w.school });
+      flash(h.pos.x, .7, h.pos.z, reach * .8, C_MELEE, .2);
+      after(doChain, 260);   // 挥完再接下一跳，不然刀光被下一段冲刺吃掉
+    } };
+  };
+  doChain();
+  return true;
+};
+// sw.A.01 裂甲重斩：三下重斩，每次命中削减目标抗性
+KV['sw.A.01'] = (h, z, P) => {
+  if (!z) return false;
+  play(h, 'attack_heavy', .05, true); h.lock = Math.min(.5, P.dur);
+  for (let i = 0; i < P.n; i++) after(() => {
+    if (z.dead || h.dead) return;
+    slash(h, h.w.range * CELL + .5, C_MELEE);
+    beam(muzzle(h), z.pos.clone().setY(z.h * .5), C_MELEE, .18, .12);
+    hitZ(z, h.w.dmg * P.mul, khit(h, P, h.pos, 0));
+    // 裂甲标记：用 mark 表示抗性削减叠层（每层+10%伤加成）
+    z.mark = (z.mark ?? 0) + 1.2;
+    emit(GLOW, 5, z.pos.x, z.h * .6, z.pos.z, { color: 0xff8833, spd: 2, up: 1.5, size: .1, life: .3 });
+    // 裂甲裂纹特效：三个放射状尖刺
+    for (let j = 0; j < 3; j++) { const a = j * 2.1 + h.root.rotation.y;
+      transient(new THREE.Mesh(SPIKE, add(0xff8833, .7)), .3, (o, k) => { o.position.set(z.pos.x + Math.sin(a) * .6, z.h * .5, z.pos.z + Math.cos(a) * .6); o.rotation.set(Math.PI / 2, 0, a); o.scale.setScalar(.5 * (1 - k)); o.material.opacity = .7 * (1 - k); }); }
+  }, i * 220);
+  return true;
+};
+// ar.A.0 连珠箭：射速提高 + 每次拉弓连射两支（爆发起手 / 连射 buff 图标 / 加快的双发动作）
+KV['ar.A.0'] = (h, z, P) => {
+  if (!z) return false;
+  setBuf(h, 'rate', P.mul - 1, P.dur);
+  h.burst = { t: P.dur, n: 2, gap: .09 };   // 双发：attack() 里按这个再补一箭
+  // 爆发起手：白芯闪 + 一圈外扩气浪 + 弓身火星，一眼看出「开技能了」
+  const from = muzzle(h);
+  flash(from.x, from.y, from.z, 1.5, 0xffeeaa, .28);
+  flash(h.pos.x, h.h * .6, h.pos.z, 1.1, kcol(h, P), .22);
+  ring(h.pos.x, h.pos.z, 1.6, kcol(h, P), .4);
+  emit(GLOW, 26, from.x, from.y, from.z, { color: kcol(h, P), spd: 5, up: 2, size: .07, life: .4, grav: 3 });
+  // 连射 buff 图标：持续期间头顶常驻，倒数结束自己消失
+  unitBadge(h, '连', kcol(h, P), P.dur, h.h + .55);
+  play(h, 'attack_rifle', .05, true);
+  return true;
+};
+// ar.A.1 火力疾射：短时间朝正前方扇形扫射，把敌人往外推。原「快速装填」换弹没有感知，按评审改成扫射
+KV['ar.A.1'] = (h, z, P) => {
+  if (!z) return false;
+  const SPREAD = .62;   // 半角 ±35°
+  // 施放瞬间定一次朝向，整个持续期都用这个 yaw：锚点 + 固定朝向一起交给 standOn（fixed 屏蔽贴脸解除）。
+  // 之前 read 的是实时 h.root.rotation.y，角色随阵型走、扇形跟着飘，评审「不要移动位置和角度」说的就是这个
+  const yaw0 = h.root.rotation.y = Math.atan2(z.pos.x - h.pos.x, z.pos.z - h.pos.z);
+  setBuf(h, 'rate', P.mul - 1, P.dur);
+  play(h, 'attack_rifle', .05, true);
+  standOn(h, P, C_RANGED, h.w.range * CELL * .9, { yaw: yaw0, fixed: true });
+  const fan = new THREE.Mesh(ARC, add(C_RANGED, .32)); fan.position.set(h.pos.x, .08, h.pos.z);
+  fan.rotation.y = yaw0; fan.scale.setScalar(h.w.range * CELL * .9); scene.add(fan);
+  transient(fan, P.dur, (o) => { o.material.opacity = h.dead ? 0 : .32; });
+  unitBadge(h, '扫', C_RANGED, P.dur, h.h + .55);
+  const shot = () => {
+    if (h.dead) return;
+    const yaw = yaw0 + (Math.random() - .5) * 2 * SPREAD;   // 只在固定扇区内抖，不跟人转
+    const dir = fwdOf(yaw), from = muzzle(h);
+    flash(from.x, from.y, from.z, .35, 0xffdd88, .06);
+    bullet(from, dir, 45, h.w.range * CELL, { dmg: h.w.dmg * P.mul * .18, knock: 120, school: h.w.school, color: 0xffeeaa, w: .12, len: .8, pierce: 2 });
+  };
+  for (let t = 0; t < P.dur; t += .22) after(shot, t * 1000);
+  return true;
+};
+// sw.A.10 援护盾墙：盾套在队友身上，自己站定牵引。队友头顶挂盾形标记，盾面朝向施法者
+KV['sw.A.10'] = (h, z, P) => {
+  const allies_ = heroes.filter((u) => u !== h && !u.dead);
+  if (!allies_.length) return false;
+  const ally = allies_.reduce((a, b) => d2(a.pos, h.pos) < d2(b.pos, h.pos) ? a : b);
+  play(h, 'guard', .08, true); h.lock = Math.min(.35, P.dur);
+  standOn(h, P, C_SUP, 1.2);   // 站定 → stand gap 消除
+  setBuf(h, 'dr', P.dr, P.dur);   // 自身减伤
+  setBuf(ally, 'dr', P.dr * .6, P.dur);   // 分担：队友也得减伤
+  const A = kcol(h, P);
+  // 护盾本体挂在队友身上：半身罩 + 旋转地圈 + 头顶盾标，三件都跟着 ally 走
+  const R = Math.max(1.0, ally.h * 1.05);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), add(A, .18));
+  dome.scale.setScalar(R); scene.add(dome);
+  transient(dome, P.dur, (o) => { o.position.set(ally.pos.x, .05, ally.pos.z); o.material.opacity = ally.dead ? 0 : .18; });
+  const base = new THREE.Mesh(RING, add(A, .55)); base.scale.setScalar(1.15); scene.add(base);
+  transient(base, P.dur, (o, k) => { o.position.set(ally.pos.x, .06, ally.pos.z); o.rotation.y = k * 1.2; o.material.opacity = ally.dead ? 0 : .55; });
+  const bd = unitBadge(ally, '盾', A, P.dur, ally.h + .55);
+  // 链接 beam：持续跟随双方
+  for (let t = 0; t < P.dur; t += .25) after(() => { if (!h.dead && !ally.dead) beam(h.pos.clone().setY(h.h * .5), ally.pos.clone().setY(ally.h * .5), A, .25, .05); }, t * 1000);
+  ring(ally.pos.x, ally.pos.z, 1.2, A, .5);
+  emit(GLOW, 16, ally.pos.x, .5, ally.pos.z, { color: A, spd: 1.5, up: 2, size: .08, life: .5, grav: -1 });
+  return true;
+};
+// sw.A.11 列阵群嘲：举盾 + 正面大范围嘲讽 + 反击伤害
+KV['sw.A.11'] = (h, z, P) => {
+  if (!nearestZ(h.pos, P.r * 2)) return false;
+  play(h, 'guard', .08, true); h.lock = Math.min(.35, P.dur);
+  setBuf(h, 'dr', P.dr, P.dur);
+  const C = C_SUP, R = Math.max(1.2, h.h * 1.1);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), add(C, .18));
+  dome.scale.setScalar(R); scene.add(dome);
+  transient(dome, P.dur, (o) => { o.position.set(h.pos.x, .05, h.pos.z); o.material.opacity = h.dead ? 0 : .18; });
+  // 前方扇形嘲讽 + ARC
+  const fwd = fwdOf(h.root.rotation.y);
+  const arc = new THREE.Mesh(ARC, add(C, .55)); arc.scale.setScalar(P.r); scene.add(arc);
+  transient(arc, P.dur, (o, k) => { o.position.set(h.pos.x + fwd.x * P.r * .5, .07, h.pos.z + fwd.z * P.r * .5); o.rotation.y = h.root.rotation.y; o.material.opacity = (1 - k * k) * .55; });
+  for (const c of nearZ(h.pos, P.r)) { if (!c.sly) c.taunt = { u: h, t: P.taunt }; }
+  // 嘲讽的两半都要看得见：施法者发出音波（连续外扩的圈 + 怒字标记），被点名的敌人头顶挂嘲讽图标
+  for (let i = 0; i < 3; i++) after(() => { if (h.dead) return; ring(h.pos.x, h.pos.z, P.r, C_SUP, .55, .4); }, i * 180);
+  unitBadge(h, '怒', C_SUP, P.dur, h.h + .6);
+  for (const c of nearZ(h.pos, P.r)) if (!c.sly) { unitBadge(c, '怒', C_SUP, P.taunt, c.h + .5);
+    beam(h.pos.clone().setY(h.h * .8), c.pos.clone().setY(c.h * .6), C_SUP, .4, .06); }
+  emit(GLOW, 30, h.pos.x, .8, h.pos.z, { color: C_SUP, spd: P.r * 2, up: 1.2, size: .08, life: .5, grav: .5 });
+  // 反击：每次被命中时已在 hurt() 里，这里每 0.5 s 做一次近身反打
+  for (let t = .5; t < P.dur; t += .5) after(() => {
+    if (h.dead) return;
+    for (const c of nearZ(h.pos, 1.8)) { hitZ(c, h.w.dmg * .6, { knock: 40, from: h.pos, color: C_MELEE }); slash(h, 1.4, C_MELEE); }
+  }, t * 1000);
+  return true;
+};
+// sw.B.000 影分身：summon() 走的是职业自身克隆，这里只加入场特效 + play
+KV['sw.B.000'] = (h, z, P) => {
+  play(h, 'summon', .08, true); h.lock = Math.min(.35, P.dur);
+  flash(h.pos.x, .9, h.pos.z, 1.4, 0x8866ff, .35);
+  emit(GLOW, 24, h.pos.x, .4, h.pos.z, { color: 0x8866ff, spd: 2, up: 3, size: .1, life: .7, grav: -1 });
+  for (let i = 0; i < P.n; i++) after(() => {
+    if (h.dead) return;
+    summon(h, .6, h.maxHp * P.dr, h.w.dmg * P.mul, P.dur * 2);
+    // 分身出现时小爆
+    emit(GLOW, 12, h.pos.x + (Math.random() - .5) * 2, .3, h.pos.z + (Math.random() - .5) * 2, { color: 0x6644cc, spd: 2, up: 2.5, size: .09, life: .5 });
+  }, i * 300);
+  return true;
+};
+// sw.B.001 飞剑：N 把幻影剑绕身旋转，自动飞向最近的敌人再飞回（boomerang 式）
+KV['sw.B.001'] = (h, z, P) => {
+  if (!nearestZ(h.pos, P.r * 1.5)) return false;
+  play(h, 'attack_melee1h', .06, true); h.lock = Math.min(.4, P.dur);
+  // N 把剑依次飞出
+  for (let i = 0; i < P.n; i++) after(() => {
+    if (h.dead) return;
+    const tgt = nearestZ(h.pos, P.r * 1.5); if (!tgt) return;
+    // 创建飞剑（BOX 拉伸为薄片）
+    const sword = new THREE.Mesh(BOX, add(0xdde8ff, .9)); scene.add(sword);
+    sword.scale.set(1.4, .07, .18);
+    const startPos = h.pos.clone().addScaledVector(new THREE.Vector3(Math.sin(i * 2.1), 0, Math.cos(i * 2.1)), .8).setY(.7);
+    const out = tgt.pos.clone().sub(h.pos).setY(0), dist = Math.min(P.r, out.length()); out.normalize();
+    let t2 = 0, T = dist / 9, back = false, hit = false;
+    const step = (dt) => {
+      t2 += dt; const k = t2 / T;
+      const d = k < 1 ? dist * Math.sin(k * Math.PI / 2) : back ? dist * Math.cos((k - 1) * Math.PI / 2) : 0;
+      if (k >= 1 && !back) { back = true; t2 = 1 * T; }
+      sword.position.set(h.pos.x + out.x * d, .7, h.pos.z + out.z * d); sword.rotation.y += dt * 18;
+      if (!hit && !tgt.dead && d2(sword.position, tgt.pos) < 1.2) { hit = true; hitZ(tgt, h.w.dmg * P.mul, khit(h, P, sword.position, 0)); emit(GLOW, 5, tgt.pos.x, tgt.h * .5, tgt.pos.z, { color: 0xdde8ff, spd: 2, size: .08, life: .25 }); }
+      return back ? k < 2 : true;
+    };
+    shots.push({ m: sword, step });
+  }, i * 200 + 80);
+  return true;
+};
+// sw.B.010 巨人化：角色体型放大，血量 buf，击退增强，持续 dur 秒
+KV['sw.B.010'] = (h, z, P) => {
+  if (!nearestZ(h.pos, P.r * 1.5)) return false;
+  play(h, 'guard', .08, true); h.lock = Math.min(.4, P.dur);
+  setBuf(h, 'dr', P.dr, P.dur);
+  setBuf(h, 'knock', 1.8, P.dur);   // 击退大增
+  // 体型放大：root scale 推到 1.5x，持续期间保持
+  const origScale = h.root.scale.x;
+  const GR = 1.55;
+  h.root.scale.setScalar(GR); h.h *= GR; h.r = HERO_R * GR;
+  // 变身粒子
+  flash(h.pos.x, 1.2, h.pos.z, 2, C_MELEE, .4);
+  emit(GLOW, 30, h.pos.x, .3, h.pos.z, { color: C_MELEE, spd: 2.5, up: 4, size: .13, life: .8 });
+  ring(h.pos.x, h.pos.z, 1.8, C_MELEE, .5);
+  // 持续慢速的震地脚步
+  for (let t = .8; t < P.dur; t += .8) after(() => { if (h.dead) return; ring(h.pos.x, h.pos.z, 1.2, C_MELEE, .35, .1); shake = Math.max(shake, .06); }, t * 1000);
+  // 结束时恢复体型
+  after(() => { if (h.dead) return; h.root.scale.setScalar(origScale); h.h /= GR; h.r = HERO_R; emit(GLOW, 20, h.pos.x, .3, h.pos.z, { color: C_MELEE, spd: 2, up: 3, size: .1, life: .5 }); }, P.dur * 1000 + 50);
+  return true;
+};
+// sw.B.011 狂暴：进入狂暴状态，血越低攻速越高，造成的伤害按比例回血
+KV['sw.B.011'] = (h, z, P) => {
+  play(h, 'cast', .08, true); h.lock = Math.min(.3, P.dur);
+  // 攻速 buf：血量越低 mul 越高（最多 +150%）
+  const hpRatio = h.hp / h.maxHp, atkBonus = P.mul * (2 - hpRatio) - 1;
+  setBuf(h, 'rate', Math.max(0, atkBonus), P.dur);
+  // heal buf：用 heal 字段表示吸血比例（hitZ 后在 stepHero 里没有直接 hook，用 after 每秒结算）
+  for (let t = .5; t < P.dur; t += .5) after(() => {
+    if (h.dead) return;
+    const steal = h.w.dmg * P.heal * .5;   // 上半秒输出伤害 × heal 比例
+    h.hp = Math.min(h.maxHp, h.hp + steal);
+    if (steal > 1) emit(GLOW, 3, h.pos.x, .8, h.pos.z, { color: 0xff4433, spd: .8, up: 2, size: .07, life: .4, grav: -1 });
+  }, t * 1000);
+  // 红色光环标识
+  flash(h.pos.x, .8, h.pos.z, 1.2, 0xff3322, .35);
+  emit(GLOW, 20, h.pos.x, .4, h.pos.z, { color: 0xff4433, spd: 1.5, up: 2.5, size: .1, life: .6 });
+  transient(new THREE.Mesh(RING, add(0xff3322, .45)), P.dur, (o, k) => { o.position.set(h.pos.x, .06, h.pos.z); o.scale.setScalar(.9 + Math.sin(k * Math.PI * 4) * .15); o.material.opacity = h.dead ? 0 : .45 * (1 - k * .4); });
+  return true;
+};
+// sw.B.100 虚化：化为灵体，免疫伤害、穿过敌人、伤害提高，但不能 guard/taunt
+KV['sw.B.100'] = (h, z, P) => {
+  if (!nearestZ(h.pos, P.r * 2)) return false;
+  play(h, 'cast', .1, true); h.lock = Math.min(.3, P.dur);
+  setBuf(h, 'dr', P.dr, P.dur);
+  setBuf(h, 'rate', P.mul - 1, P.dur);   // 伤害提高用攻速 buf 表示
+  // 半透明效果：直接遍历材质
+  const origOpacity = []; h.mats.forEach(([o, base]) => { origOpacity.push(o.material.opacity ?? 1); });
+  h.mats.forEach(([o]) => { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = .28; o.material.depthWrite = false; });
+  // 蓝紫光晕
+  flash(h.pos.x, .8, h.pos.z, 1, 0x88aaff, .4);
+  emit(GLOW, 20, h.pos.x, .4, h.pos.z, { color: 0x88aaff, spd: 1, up: 3, size: .09, life: .7, grav: -1 });
+  transient(new THREE.Mesh(RING, add(0x8899ff, .5)), P.dur, (o, k) => { o.position.set(h.pos.x, .06, h.pos.z); o.scale.setScalar(1 + Math.sin(k * Math.PI * 3) * .2); o.material.opacity = (1 - k) * .5; });
+  // 结束时恢复不透明
+  after(() => { if (h.dead) return; h.mats.forEach(([o, base], i) => { o.material = base; }); emit(GLOW, 16, h.pos.x, .4, h.pos.z, { color: 0x88aaff, spd: 2, up: 3, size: .08, life: .5 }); }, P.dur * 1000 + 50);
+  return true;
+};
+// sw.B.101 龙跃：撑枪高跃，砸向目标区域，落地掀散周围敌人（leap 抛物线 + 落点爆）
+KV['sw.B.101'] = (h, z, P) => {
+  const p = kspot(h, P, z); if (!p) return false;
+  play(h, 'leap', .06, true);
+  const dest = new THREE.Vector3(p.x, 0, p.z);
+  // 起跳特效
+  emit(GLOW, 12, h.pos.x, .3, h.pos.z, { color: C_MELEE, spd: 2, up: 4, size: .1, life: .5 });
+  ring(h.pos.x, h.pos.z, .8, C_MELEE, .35);
+  // 落点预警圈
+  ring(dest.x, dest.z, P.r, C_MELEE, .45);
+  transient(new THREE.Mesh(DISC, add(C_MELEE, .18)), .5, (o, k) => { o.position.set(dest.x, .04, dest.z); o.scale.setScalar(P.r * (.5 + k * .5)); o.material.opacity = .18 * (1 - k); });
+  h.leap = { a: h.pos.clone(), b: dest, t: 0, T: .55, arc: 3.8, P: { r: P.r, dmg: h.w.dmg * P.mul, knock: 160 },
+    end: () => {
+      explode(dest.x, dest.z, P.r * 1.1, C_MELEE); shake = .35;
+      for (const c of nearZ(dest, P.r * 1.2)) hitZ(c, h.w.dmg * P.mul, { ...khit(h, P, dest), knock: 180, blast: true });
+    }
+  };
+  return true;
+};
+// sw.B.110 盾阵：召出一排盾兵幻影立在身前。原来只摆了排盒子（自由作战无从谈起，因为它们不是单位）——
+// 现在真的召唤单位，钉死在阵位上（holdAt），只在射程内挥砍，不追出去
+KV['sw.B.110'] = (h, z, P) => {
+  play(h, 'summon', .08, true); h.lock = Math.min(.35, P.dur);
+  const fwd = fwdOf(h.root.rotation.y), right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+  for (let i = 0; i < P.n + 1; i++) {
+    const off = (i - P.n / 2) * 1.0, x = h.pos.x + fwd.x * 1.4 + right.x * off, z2 = h.pos.z + fwd.z * 1.4 + right.z * off;
+    const at = new THREE.Vector3(x, 0, z2);
+    after(() => { if (h.dead) return;
+      summon(h, .62, h.maxHp * .3, h.w.dmg * .5, P.dur, undefined, at);
+      const g = allies[allies.length - 1];
+      // 列阵站立：钉在阵位上、面朝外侧（背对施法者，盾朝敌人），只打够得着的
+      g.holdAt = at; g.faceY = h.root.rotation.y; g.reach = 1.5;
+      ring(x, z2, .9, C_SUP, .5);
+      emit(GLOW, 10, x, .4, z2, { color: C_SUP, spd: 1.5, up: 2.4, size: .08, life: .5, grav: -1 });
+    }, i * 90);
+  }
+  ring(h.pos.x, h.pos.z, 2, C_SUP, .4);
+  return true;
+};
+// sw.B.111 扎根：原地不动成堡垒，护甲大增，持续嘲讽周围敌人（stand gap 因此消除）
+KV['sw.B.111'] = (h, z, P) => {
+  if (!nearestZ(h.pos, P.r * 1.5)) return false;
+  play(h, 'guard', .08, true); h.lock = Math.min(.4, P.dur);
+  standOn(h, P, C_SUP, P.r);   // 站定 → stand gap 消除
+  setBuf(h, 'dr', P.dr, P.dur);
+  // 根系圈：从脚下向外蔓延
+  const rootRing = new THREE.Mesh(RING, add(0x8b5a2b, .8)); scene.add(rootRing);
+  transient(rootRing, P.dur, (o, k) => { o.position.set(h.pos.x, .05, h.pos.z); o.scale.setScalar(.5 + k * (P.r - .5)); o.rotation.y = k * .8; o.material.opacity = h.dead ? 0 : .8 * (1 - k * .5); });
+  const disc = new THREE.Mesh(DISC, add(0x3d2b1f, .35)); scene.add(disc);
+  transient(disc, P.dur, (o, k) => { o.position.set(h.pos.x, .04, h.pos.z); o.scale.setScalar(P.r * .85); o.material.opacity = h.dead ? 0 : .35 * (1 - k * .3); });
+  // guard 护罩（比举盾挡阵更厚）
+  const C2 = C_SUP, R2 = Math.max(1.15, h.h * 1.2);
+  const dome2 = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), add(C2, .25));
+  dome2.scale.setScalar(R2); scene.add(dome2);
+  transient(dome2, P.dur, (o) => { o.position.set(h.pos.x, .05, h.pos.z); o.material.opacity = h.dead ? 0 : .25; });
+  flash(h.pos.x, .6, h.pos.z, 1.8, C_SUP, .4);
+  return true;
+};
+function aura(h, P) {   // C 槽被动：每秒结算一次
+  if (P.heal) for (const u of heroes) if (!u.dead && d2(u.pos, h.pos) < P.r ** 2) { u.hp = Math.min(u.maxHp, u.hp + u.maxHp * P.heal); auraRing(u, P); }
+  if (P.dr) { setBuf(h, 'dr', P.dr, 1.1); auraRing(h, P); }
+  for (const c of P.slow || P.pierce ? nearZ(h.pos, P.r) : []) { if (P.slow) { c.slow = Math.max(c.slow, P.slow); c.slowT = 1.1; } if (P.pierce) c.mark = 1.1; }
+  if (!P.heal && !P.dr && !P.slow && !P.pierce) { setBuf(h, 'rate', (P.mul - .5) * .5, 1.1); auraRing(h, P); }   // ponytail: 纯数值光环折成攻速，等属性系统接上再改
+}
+// 光环可视：范围地圈（每 1.1 s 一拍，低频不糊眼睛）+ 受影响队友脚下的加速环 + 头顶箭头。
+// 之前光环只写 buf 不画东西，玩家既看不到覆盖多大，也看不出谁被罩住了。
+function auraRing(u, P) {
+  const C = P.slow || P.pierce ? C_RANGED : C_SUP;
+  const g = new THREE.Group(); scene.add(g);
+  const c1 = new THREE.Mesh(RING, add(C, .3)); c1.scale.setScalar(P.r); g.add(c1);
+  const c2 = new THREE.Mesh(DISC, add(C, .07)); c2.scale.setScalar(P.r); c2.position.y = -.01; g.add(c2);
+  transient(g, 1.1, (o, k) => { o.position.set(u.pos.x, .05, u.pos.z); o.children[0].material.opacity = .3 * (1 - k * .5); });
+  // 残影模型：半透明人形替掉原来那圈 RING——voxel.py 的 ghost 子命令产 vox_ghost.glb（整身 _glass 材质），
+  // 每拍克隆一具套在被加速的队友身上、跟着走位与动作，1.15 s 淡出
+  makeGhost(u, 1.15, (o) => { o.position.set(u.pos.x, u.pos.y, u.pos.z); o.rotation.y = u.root.rotation.y; });
+  unitBadge(u, '↑', C, 1.15, u.h + .5);
+}
 function cast(h, k, auto) {
-  if (h.dead || h.sk[k] > 0 || h.lock > .2 || h.rush) return false;
-  if (h.def.sk[k].stand && (h.stand || auto && !standOk(h, h.def.sk[k]))) return false;
+  if (h.dead || !h.skp[k] || h.sk[k] > 0 || h.lock > .2 || h.rush || h.fear > 0) return false;
+  if (h.skp[k].stand && (h.stand || auto && !standOk(h, h.skp[k]))) return false;
   const z = nearestZ(h.pos, Math.max(10, h.w.range * CELL));
-  if (!S[h.id][k](h, z, h.def.sk[k])) return false;
-  h.sk[k] = h.def.sk[k].cd;
+  // 先按当前目标摆朝向，再交给执行器：执行器要自己定角度（固定扇形扫射、直线贯穿这类）就覆盖它。
+  // 原来是执行器跑完**之后**才写，执行器刚定好的角度会被这一行盖掉，画的扇形跟人对不上（实测差 3.81 rad）
   if (h.target) h.root.rotation.y = Math.atan2(h.target.pos.x - h.pos.x, h.target.pos.z - h.pos.z);
+  if (!h.skf[k](h, z, h.skp[k])) return false;
+  h.sk[k] = h.skp[k].cd;
   return true;
 }
 
@@ -816,25 +1497,37 @@ function cast(h, k, auto) {
 //    engaged 目标进射程（扎根看嘲讽半径）就放、贴脸也不断。站定期间锚点钉在脚下；离队长超过 12 m 强制解除（tether 是硬约束）
 const reachOf = (h) => h.w.range * CELL * (1 + buf(h, 'range')) + (h.w.kind === 'melee' ? .5 : 0);
 function standOk(h, P) {
-  const ai = { ...AI[h.id], ...CMD_OVER[CMD[order]] }, e = nearestZ(h.pos, 99), d = e ? Math.sqrt(d2(e.pos, h.pos)) : 1e9, r = reachOf(h) * ai.engageDistanceMul;
+  const ai = { ...h.ai, ...CMD_OVER[CMD[order]] }, e = nearestZ(h.pos, 99), d = e ? Math.sqrt(d2(e.pos, h.pos)) : 1e9, r = reachOf(h) * ai.engageDistanceMul;
   if (ai.holdPolicy === 'never') return !SQ.dest && !kdir().some(Boolean) && d < r;   // 队伍停下（没有未走完的点地指令、没按 WASD）才站
   if (ai.holdPolicy === 'safe') return d > r && d < reachOf(h) * (1 + (P.rangeMul ?? 0));   // 安全、但值得站：敌人在加成后的射程里
   return d < Math.max(r, P.tauntR ?? 0);
 }
-function standOn(h, P, color, r) {
-  const st = h.stand = { t: P.dur, pol: AI[h.id].holdPolicy, tauntR: P.tauntR ?? 0, tt: 0 };
-  transient(new THREE.Mesh(RING, add(color, .7)), P.dur, (o) => { o.position.set(h.pos.x, .05, h.pos.z); o.scale.setScalar(r); o.material.opacity = h.stand === st ? .45 : 0; });
-  transient(new THREE.Mesh(DISC, add(color, .25)), P.dur, (o) => { o.position.set(h.pos.x, .04, h.pos.z); o.scale.setScalar(.9); o.material.opacity = h.stand === st ? .3 : 0; });
+function standOn(h, P, color, r, opt) {
+  // 锚点：站定期间脚下这个点不动。击退（push→vel）和单位互推（separate）都是直接改 pos 的，
+  // 光把 move 的意图速度清零扎不住根——评审「角色依然会挪动」就是这个。stepStand 每帧拉回锚点
+  // opt.yaw：连朝向一起钉住（扇区扫射类技能），opt.fixed 还会屏蔽贴脸解除——固定扇区不能被路过的小怪推着转
+  const st = h.stand = { t: P.dur, pol: h.ai.holdPolicy, tauntR: P.tauntR ?? 0, tt: 0, x: h.pos.x, z: h.pos.z, yaw: opt?.yaw, fixed: !!opt?.fixed };
+  transient(new THREE.Mesh(RING, add(color, .7)), P.dur, (o) => { o.position.set(st.x, .05, st.z); o.scale.setScalar(r); o.material.opacity = h.stand === st ? .45 : 0; });
+  transient(new THREE.Mesh(DISC, add(color, .25)), P.dur, (o) => { o.position.set(st.x, .04, st.z); o.scale.setScalar(.9); o.material.opacity = h.stand === st ? .3 : 0; });
 }
 function endStand(h) { for (const k of ['dr', 'range']) if (h.buf[k]) h.buf[k].t = 0; h.stand = null; }
 function stepStand(h, dt) {   // 返回 true = 本帧已处理（站着打）
   const st = h.stand, c = captain(), moving = !!SQ.dest || kdir().some(Boolean);
   if ((st.t -= dt) <= 0 || c && c !== h && Math.hypot(c.pos.x - h.pos.x, c.pos.z - h.pos.z) > 12
-    || st.pol === 'safe' && (moving || nearZ(h.pos, 2).length)) { endStand(h); return false; }
+    || !st.fixed && st.pol === 'safe' && (moving || nearZ(h.pos, 2).length)) { endStand(h); return false; }
   if (st.tauntR && (st.tt -= dt) <= 0) { st.tt = .5; for (const z of nearZ(h.pos, st.tauntR)) if (!z.sly) z.taunt = { u: h, t: 1 }; }
-  h.home.copy(h.pos); move(h, 0, 0, dt);
+  // 钉在锚点上：清掉意图速度与击退冲量，再把被推开的位置拉回来。
+  // 拉力按 12/s 收敛（不是瞬移），被大个子顶着时会慢慢被挤开一点，看着是「站住了但被推」而不是橡皮筋
+  h.vel.set(0, 0, 0); move(h, 0, 0, dt);
+  const dx = st.x - h.pos.x, dz = st.z - h.pos.z, d = Math.hypot(dx, dz);
+  if (d > .02) { const k = Math.min(1, dt * 12); h.pos.x += dx * k; h.pos.z += dz * k; }
+  h.home.copy(h.pos);
   const z = nearestZ(h.pos, reachOf(h) + 1);
-  if (z) { face(h, z.pos, dt); if (h.cd <= 0) attack(h, z); } else play(h, 'idle', .25);
+  // 站定姿态：远程用握持 / 架枪那一帧定格（弓弩是 attack_rifle，手上只有这一个「端起来」的动作）
+  // st.yaw：朝向钉死的技能只摆姿势，不跟着最近的敌人转头（转了就说明「角度固定」没做到）
+  if (st.yaw != null) { h.root.rotation.y = st.yaw; play(h, GRIPS[h.w.grip][1]); return true; }
+  if (z) { face(h, z.pos, dt); if (h.cd <= 0) attack(h, z); else if (h.cur !== GRIPS[h.w.grip][1]) play(h, GRIPS[h.w.grip][1]); }
+  else play(h, 'idle', .25);
   return true;
 }
 function jab(h, u, P) {   // 军医一针：倒地的扶起，活着的回血；都套盾，自己也挂一半
@@ -916,13 +1609,16 @@ const ORDERS = {
 let order = 'tight';
 const CMD = { tight: 'defend', free: 'ring', retreat: 'advance' };
 // 定位来自 src（HEROES_BY_ID[id].role），决定站 rings 的哪一层；那一层的 tether 就是他的活动圈（画出来的圈读同一个字段）
-const ringOfHero = (h, k = order) => RINGS[CMD[k]].find((r) => r.roles.includes(ROLE[h.id])) ?? RINGS[CMD[k]][0];
-const layerOf = (h) => ROLE[h.id] === 'rangedDps' ? 'back' : ROLE[h.id] === 'tank' || ROLE[h.id] === 'meleeDps' ? 'melee' : 'core';
+const ringOfHero = (h, k = order) => RINGS[CMD[k]].find((r) => r.roles.includes(h.role)) ?? RINGS[CMD[k]][0];
+const layerOf = (h) => h.role === 'rangedDps' ? 'back' : h.role === 'tank' || h.role === 'meleeDps' ? 'melee' : 'core';
 const tetherOf = (h) => ringOfHero(h).tether;   // 阵型的 overrides 也是一层，见 stepStand
 // 算「到了」。两条人挤不到 0.5 以内：HERO_R 是 0.3，两人的圆心最少隔 0.6（见 separate），
 // 所以锚点一旦被队友占了，阈值 0.5 就永远达不到——h.go 一真到底，人就一直跑着动画原地磨。
 // 按两倍半径定阈值，再加一点余量，站位够近就算到位
 const ARRIVE = HERO_R * 2 + .12;
+// 归位的「停步」半径：两条人挤不到 0.6 以内（见 separate），所以走到这里就算到位。
+// 起步仍用 0.2 的窄阈值，两者之间的差就是迟滞带——僵尸贴身轻推不会反复触发起跑
+const HOLD = HERO_R * 2;
 const SLOT_EPS = .3;   // 锚点挪动超过这些才叫「换站位」，不然 quiet 的人会被叫起来再跑一遍（0.05 时朝向一晃就重排）
 const captain = () => heroes.find(live) ?? heroes[0] ?? null;   // 队长阵亡就顺位交给下一个活人
 // S：goal = 最近一次指令的落点（站位指示画在这里），dest = 还没走到的落点，manual = 朝向被玩家钉住（拖拽 / 撤退）
@@ -1052,10 +1748,10 @@ function stepOrders(dt) {
 // 挤开以后谁在前谁在后就看运气——所以给每层推出去一点，方向就是层自己的 bearing。
 const LAYER_PUSH = .55;
 // 索敌半径 / 脱战半径：src 按【格】给，原型按 m，CELL = 0.5（gamedata.js）
-const aggroOf = (h) => AI[h.id].aggroRange * CELL;
-const leashOf = (h) => AI[h.id].leashRange * CELL;
+const aggroOf = (h) => h.ai.aggroRange * CELL;
+const leashOf = (h) => h.ai.leashRange * CELL;
 // 后撤阈值（AIProfile.retreatHpPct）：血掉到线以下就往队长身边退，0 = 永不后撤
-const retreating = (h) => { const p = AI[h.id].retreatHpPct; return p > 0 && h.hp / h.maxHp < p; };
+const retreating = (h) => { const p = h.ai.retreatHpPct; return p > 0 && h.hp / h.maxHp < p; };
 function stepHero(h, dt) {
   if (h.dead) {
     if (h.stand) endStand(h); h.rush = null;
@@ -1065,26 +1761,40 @@ function stepHero(h, dt) {
     return move(h, 0, 0, dt);
   }
   for (const k in h.buf) h.buf[k].t -= dt;
-  h.sk[0] -= dt; h.sk[1] -= dt; h.cd -= dt; h.lock -= dt;
+  if (h.burst) h.burst.t -= dt;
+  h.sk.forEach((v, k) => (h.sk[k] = v - dt)); h.cd -= dt; h.lock -= dt;
+  if (h.aura.length && (h.auT = (h.auT ?? 0) - dt) <= 0) { h.auT = 1; for (const P of h.aura) aura(h, P); }
   if (h.swarm > 0) { h.swarm -= dt; emit(GLOW, 2, h.pos.x, 1.2, h.pos.z, { color: 0x44ffdd, spd: 3, up: .5, size: .05, life: .6, grav: 0 }); }
   if (h.pend && (h.pend.at -= dt) <= 0) { const z = h.pend.z; h.pend = null; if (!z.dead || h.w.kind === 'melee') fire(h, z); }
   if (h.dash) {   // 铁壁冲锋
     const d = h.dash; d.t -= dt; move(h, d.dir.x * d.spd, d.dir.z * d.spd, dt); h.spd = 0;
     emit(GLOW, 2, h.pos.x, .3, h.pos.z, { color: 0xffd35a, spd: .5, up: .5, size: .12, life: .3 });
     for (const c of nearZ(h.pos, 1.2)) if (!d.hit.has(c)) { d.hit.add(c); hitZ(c, d.dmg, { knock: d.knock, from: h.pos.clone().addScaledVector(d.dir, -1) }); }
-    if (d.t <= 0) h.dash = null; return;
+    if (d.t <= 0) { h.dash = null; d.end?.(); } return;
   }
-  if (h.leap) {   // 崩山：抛物线跳，落地砸
+  if (h.leap) {   // 抛物线跳：崩山往敌人身上砸（P.r > 0），跃射往后翻（end 自己收尾）
     const l = h.leap; l.t += dt; const k = Math.min(1, l.t / l.T);
-    h.pos.lerpVectors(l.a, l.b, k); h.pos.y = Math.sin(k * Math.PI) * 2.5; h.spd = 0;
-    if (k >= 1) { h.pos.y = 0; h.leap = null; explode(h.pos.x, h.pos.z, l.P.r, 0xd08a4a); shake = .35;
-      for (const c of nearZ(h.pos, l.P.r)) hitZ(c, l.P.dmg, { knock: l.P.knock, from: h.pos }); }
+    h.pos.lerpVectors(l.a, l.b, k); h.pos.y = Math.sin(k * Math.PI) * (l.arc ?? 2.5); h.spd = 0;
+    if (k >= 1) { h.pos.y = 0; h.leap = null;
+      if (l.end) l.end();
+      else { explode(h.pos.x, h.pos.z, l.P.r, 0xd08a4a); shake = .35;
+        for (const c of nearZ(h.pos, l.P.r)) hitZ(c, l.P.dmg, { knock: l.P.knock, from: h.pos }); } }
     return;
   }
+  const mate = !LAB || h === heroes[0] || mateAI.checked;
+  // 「队友自动战斗」关掉 = 队友只站位。这一条必须排在 h.lock 早返回**之前**：近战出手后 lock 是正的，
+  // 排在后面就会被那次早返回跳过，陈旧目标清不掉，人还在追着上次锁的僵尸打
+  if (!mate) { h.target = null; if (h.lock <= 0) return goHome(h, dt, G.heroSpd * (1 + buf(h, 'move'))); }
   if (h.rush) return stepRush(h, dt);
-  if (auto.checked && h.lock <= 0) cast(h, 1, 1) || cast(h, 0, 1);
+  if (mate && auto.checked && h.lock <= 0) for (let k = h.sk.length - 1; k >= 0 && !cast(h, k, 1); k--);   // 高级的先放
+  // 站定必须排在 lock 早返回之前：起手动作的 lock（guard 是 min(.35, dur)）会盖住整个起手，
+  // 排在后面等于前 0.35 s 锚点不生效——击退冲量靠摩擦衰减，人就被推开 1 m 多（探针实测 1.32）
+  if (h.stand) { if (stepStand(h, dt)) return; }
   if (h.lock > 0) return move(h, 0, 0, dt);
-  if (h.stand && stepStand(h, dt)) return;
+  if (h.fear > 0) {   // 尖啸：恐惧 / 混乱，乱跑、不打不放
+    h.fear -= dt; if (h.fearA == null || Math.random() < dt) h.fearA = Math.random() * 6.283;
+    const v = G.heroSpd * .6; move(h, Math.sin(h.fearA) * v, Math.cos(h.fearA) * v, dt); h.target = null;
+    const run = GRIPS[h.w.grip][1]; play(h, run); syncGait(h, run, STRIDE.hero); return; }
   // 键盘走位（只剩技能台单人用；小队的 WASD 挪的是队伍中心，见 stepOrders）
   const [kx, kz] = kdir();
   if (heroes.length < 2 && (kx || kz)) {
@@ -1103,7 +1813,7 @@ function stepHero(h, dt) {
     h.target = null; return goHome(h, dt, G.heroSpd * (1 + buf(h, 'move'))); }
   const R = Math.max(tetherOf(h) + reach, aggroOf(h));
   if (focus && d2(focus.pos, h.home) < R * R) h.target = focus;   // 集火：够得着的全员改打它，够不着的照常按优先级打
-  else if (!h.target || h.target.dead || d2(h.target.pos, h.pos) > leashOf(h) ** 2 || Math.random() < dt * 2) h.target = pickZ(h.home, R, AI[h.id].targetPriority);
+  else if (!h.target || h.target.dead || h.target.hide || d2(h.target.pos, h.pos) > leashOf(h) ** 2 || Math.random() < dt * 2) h.target = pickZ(h.home, R, h.ai.targetPriority);
   const z = h.target, spd = G.heroSpd * (1 + buf(h, 'move'));
   if (z) {
     const d = Math.sqrt(d2(z.pos, h.pos));
@@ -1124,7 +1834,7 @@ function stepHero(h, dt) {
 function marchFire(h, dt, spd) {
   const reach = reachOf(h), R = reach + 1;
   if (focus && d2(focus.pos, h.pos) < R * R) h.target = focus;
-  else if (!h.target || h.target.dead || d2(h.target.pos, h.pos) > R * R) h.target = pickZ(h.pos, reach + .5, AI[h.id].targetPriority);
+  else if (!h.target || h.target.dead || h.target.hide || d2(h.target.pos, h.pos) > R * R) h.target = pickZ(h.pos, reach + .5, h.ai.targetPriority);
   goHome(h, dt, spd);
   const z = h.target; if (!z || d2(z.pos, h.pos) > (reach + z.r) ** 2) return;
   if (h.cd > 0) return;
@@ -1136,30 +1846,142 @@ function marchFire(h, dt, spd) {
 function goHome(h, dt, spd) {
   const dx = h.home.x - h.pos.x, dz = h.home.z - h.pos.z, d = Math.hypot(dx, dz);
   let ux = dx / d, uz = dz / d;
+  // 归位判据带迟滞：停步半径 HOLD，起步半径 ARRIVE（0.72）。一条 0.2 的硬线会被 separate() 每帧的推挤
+  // 来回穿越——僵尸贴身把英雄顶出去 → 转 run → 走回来 → 又低于 0.2 → 转 idle，play() 每次都 reset，
+  // 表现就是原地快速抽动（探针实测：有接触 150 帧翻 12 次、其中 3 次邻帧连翻；僵尸挪到 40 m 外后 0 次）。
+  // h.arrived 是「已到位」的锁存位：走到 HOLD 以内就置真，只有被推到 ARRIVE 以外才重新起步。
+  // 不能用 h.spd 判——它是被 move() 平滑过的量，行走时正好在阈值附近，自身就跨线，等于没有迟滞
+  if (d <= HOLD || (h.arrived && d < ARRIVE)) { h.arrived = true; move(h, 0, 0, dt); play(h, 'idle', .25); return; }
+  h.arrived = false;
   if (M && d > .2) {   // §5.6 第二层：直线走 0.4 s 没靠近 = 卡住 → 对锚点算一次流场沿着绕；锚点挪远 3 m 就作废重算
     h.stuckT = d > (h.gd ?? 1e9) - spd * dt * .3 ? (h.stuckT ?? 0) + dt : 0; h.gd = d;
     if (h.ff && (d < 1 || Math.hypot(h.ff.x - h.home.x, h.ff.z - h.home.z) > 3)) h.ff = null;
     if (h.stuckT > .4 && !h.ff) h.ff = { ...flowField(M, [[h.home.x, h.home.z]]), x: h.home.x, z: h.home.z };
     if (h.ff) { const f = flowDir(M, h.ff, h.pos.x, h.pos.z); if (f) [ux, uz] = f; }
   }
-  if (d > .2) { const s = Math.min(spd, d * 3); move(h, ux * s, uz * s, dt); play(h, GRIPS[h.w.grip][1]); syncGait(h, GRIPS[h.w.grip][1], STRIDE.hero); }
-  else { move(h, 0, 0, dt); play(h, 'idle', .25); }
+  const s = Math.min(spd, d * 3); move(h, ux * s, uz * s, dt); play(h, GRIPS[h.w.grip][1]); syncGait(h, GRIPS[h.w.grip][1], STRIDE.hero);
 }
 
 // ── 僵尸 AI（召唤的骸骨傀儡复用同一套，只是敌我反过来）──
 function zTarget(z) {
   if (z.ally) return nearestZ(z.pos, 30);
+  if (z.under) { const b = heroes.filter((u) => !u.dead && layerOf(u) === 'back'); if (b.length) return b[(Math.random() * b.length) | 0]; }   // 掘地：钻去后排
   if (z.taunt && z.taunt.t > 0 && !z.taunt.u.dead) return z.taunt.u;
-  let b = null, bd = 1e9; for (const u of team()) { const d = d2(u.pos, z.pos); if (d < bd) { bd = d; b = u; } } return b;
+  const pool = team(); if (!pool.length) return null;
+  if (z.t.beh === 'pack') return pool[(Math.random() * pool.length) | 0];   // 犬群各咬各的，不叠在一个人身上
+  if (z.rage && z.frame > 0) return pool.reduce((a, u) => (u.dmg ?? 0) > (a.dmg ?? 0) ? u : a, pool[0]);   // 狂暴的熊盯着输出最高的
+  let b = null, bd = 1e9; for (const u of pool) { const d = d2(u.pos, z.pos); if (d < bd) { bd = d; b = u; } } return b;
 }
 function zImpact(z, tg) {
   if (!tg || tg.dead) return;
   if (z.ally) { hitZ(tg, z.dmg, { knock: 70, from: z.pos }); emit(SOLID, 5, tg.pos.x, .4, tg.pos.z, { color: 0x6a6a60, spd: 2, size: .08 }); return; }
-  if (d2(tg.pos, z.pos) < (z.r + tg.r + .7) ** 2) hurt(tg, z.t.atk * G.zatk * G.meleeMul, { from: z.pos, knock: z.t.kn });
+  if (d2(tg.pos, z.pos) < (z.r + tg.r + .7) ** 2) hurt(tg, z.t.atk * G.zatk * G.meleeMul * (z.bs ? ZB.stalker.back : 1), { from: z.pos, knock: z.t.kn });
+  z.bs = false;
+}
+// 第三轮 8 种僵尸（参数 ZB[type]；回血 / 抗性 / 电磁场在 ZT）。hide = 选不中也打不到
+function zBeh(z, dt) {
+  const B = z.t.beh, P = ZP(z.t);   // 行为参数：精英没有自己的那份，跟基础种
+  if (z.aura > 0) z.aura -= dt;
+  if (z.antiT > 0) z.antiT -= dt;
+  if (z.t.rg) z.hp = Math.min(z.maxHp, z.hp + z.t.rg * dt * (z.antiT > 0 ? ZB.regenerator.anti : 1));
+  if (z.ally || !P) return;
+  if (B === 'herald') for (const o of nearZ(z.pos, P.r)) o.aura = .3;   // 传令僵尸的常亮光环；双头狼是按时嚎一阵，见 mzStep
+  else if (B === 'stealth') { if (team().some((u) => d2(u.pos, z.pos) < P.reveal ** 2)) z.showT = P.show; z.showT = (z.showT ?? 0) - dt; z.hide = z.showT <= 0; z.root.visible = !z.hide; }
+  else if (B === 'burrow') { z.hide = z.under; z.pos.y = z.under ? -z.h * .85 : 0; if (z.under && Math.random() < dt * 10) emit(SOLID, 1, z.pos.x, .05, z.pos.z, { color: 0x5a4a38, spd: 1, up: 1.5, size: .08, life: .5 }); }
+  else if (B === 'flying' || B === 'dive') z.pos.y += ((z.air ? (B === 'dive' ? z.h * .9 : 1.2) : 0) - z.pos.y) * Math.min(1, dt * 6);   // 秃鹫：盘旋高度按体型
+  else if (B === 'summon' && z.skCd <= 0 && z.lock <= 0) {   // 复活半径内最近一具尸体（分裂 / 自爆 / BOSS 留不下尸体）
+    let c = null, cd = P.r * P.r;
+    for (const o of zs) if (o.dead && !o.ally && !o.gone && o.splitAt == null && o.hideAt == null && !o.boss && o.deadT < 2) { const d = d2(o.pos, z.pos); if (d < cd) { cd = d; c = o; } }
+    z.skCd = c ? P.cd : 1; if (!c) return;
+    Object.assign(c, { dead: false, deadT: 0, hp: c.maxHp * P.hp, lock: .6, lie: false, down: -1, pend: null }); c.pos.y = 0; c.root.rotation.x = 0; play(c, 'idle', .1, true);
+    z.lock = P.pause; play(z, 'summon', .1, true); beam(z.pos.clone().setY(z.h * .8), c.pos.clone().setY(.3), 0xaa66ff, .5, .1); ring(c.pos.x, c.pos.z, .8, 0xaa66ff, .5);
+  }
+  else if (B === 'scream' && z.cast > 0 && (z.cast -= dt) <= 0) {
+    ring(z.pos.x, z.pos.z, P.r, 0xaa66ff, .6);
+    for (const u of heroes) if (!u.dead && d2(u.pos, z.pos) < P.r ** 2 && Math.random() < P.p) u.fear = P.dur;
+  }
+}
+// ── 变异生物（狼 / 熊 / 秃鹫 / 猿）的专属表现：一种一个新行为的「新」就新在这儿 ──
+// 返回 true = 这一步由它接管，不再往下走常规的逼近 / 出手
+function mzStep(z, dt, tg, gap) {
+  const B = z.t.beh, P = ZP(z.t); if (!P) return false;
+  if (B === 'herald') {   // 狼：每 cd 秒嚎一次，半径内全部加速（与传令僵尸同一个 aura）
+    if ((z.rageCd -= dt) <= 0 && nearZ(z.pos, P.r).length > 1) {
+      z.rageCd = P.cd ?? 10; z.lock = .8; play(z, 'roar', .1, true);
+      for (const o of nearZ(z.pos, P.r)) o.aura = P.dur ?? 4;
+      ring(z.pos.x, z.pos.z, P.r, 0xaa66ff, .5);
+    }
+    return false;
+  }
+  if (B === 'charge') {   // 熊：半血狂暴（移速 ×spd、出手 ×ai）；1.5 s 内改冲输出最高的队员。撞倒靠它自己的击退力，不用另写
+    if (!z.rage && z.hp < z.maxHp * (P.rage ?? .5)) {
+      z.rage = true; z.spdMul = P.spd; z.aiMul = P.ai; z.frame = 1.5;
+      play(z, 'roar', .1, true); z.lock = .6; ring(z.pos.x, z.pos.z, 2.2, 0xaa66ff, .6);
+      emit(GLOW, 20, z.pos.x, z.h * .6, z.pos.z, { color: 0xff8844, spd: 3, up: 3, size: .12 });
+    }
+    if (z.frame > 0) z.frame -= dt;
+    if (gap > 1.2) play(z, 'run', .2);   // 兽类有奔跑动作（僵尸没有，play 静默跳过）
+    return false;
+  }
+  if (B === 'throw') {   // 猿：远了抛瓦砾，近了抡臂拍地（半径内攻击 ×mul 并击倒）
+    // 猿走的是人形管线：voxel.py 的 attack='smash' 只换了姿势数据，模型里既没有 smash 也没有 throw，抡臂那一套就在 attack 这条里
+    const swing = (f) => { const a = play(z, 'smash', f, true) ?? play(z, 'attack', f, true); if (a) { a.setLoop(THREE.LoopOnce); a.clampWhenFinished = true; } return a; };
+    if (gap > P.far && (z.throwCd -= dt) <= 0) {
+      z.throwCd = P.cd; const from = z.pos.clone().setY(z.h * .9), to = tg.pos.clone().setY(.05);
+      const a = swing(.1); z.cd = z.lock = Math.max(z.lock, (a ? a.getClip().duration : .6) * .9);
+      z.pend = { at: .45, fn: () => lob(from, to, .7, BALL, 0x8a7a5c, .2, (p) => {
+        flash(p.x, .25, p.z, P.rr, 0x8a7a5c, .3); explode(p.x, p.z, P.rr, 0xaa8844);
+        for (const u of team()) if (d2(u.pos, p) < P.rr ** 2) hurt(u, z.t.atk * G.zatk * G.meleeMul * P.mul, { from: p, knock: 60, blast: true }); }) };
+      return true;
+    }
+    if (gap > .6) { play(z, 'run', .2); return false; }
+    move(z, 0, 0, dt); face(z, tg.pos, dt);
+    if (z.cd > 0) { play(z, 'idle', .25); return true; }
+    const a = swing(.08), dur = a ? a.getClip().duration : .6; z.cd = z.t.ai; z.lock = dur * .9;
+    z.pend = { at: dur * .45, fn: () => {
+      for (const u of team()) if (d2(u.pos, z.pos) < P.r ** 2) hurt(u, z.t.atk * G.zatk * P.mul, { from: z.pos, knock: P.knock, blast: true });
+      ring(z.pos.x, z.pos.z, P.r, 0xaa66ff, .4); } };
+    return true;
+  }
+  if (B === 'dive') {   // 秃鹫：啄完（或没目标）就落到最近的尸体上吃，吃东西时贴地、能被近战打到
+    if (z.peck <= 0 && (z.peckCd -= dt) <= 0) {
+      let c = null, cd = 49;
+      for (const o of zs) if (o.dead && !o.ally && !o.gone && d2(o.pos, z.pos) < cd) { cd = d2(o.pos, z.pos); c = o; }
+      if (c && cd > 4) { z.peck = P.dur; z.peckCd = 10; z.pos.x = c.pos.x; z.pos.z = c.pos.z; z.air = false; play(z, 'eat', .2, true); }
+    }
+    if (z.peck > 0) {
+      z.peck -= dt; z.air = false; z.hp = Math.min(z.maxHp, z.hp + P.heal * dt);
+      play(z, 'eat'); if (Math.random() < dt * 8) emit(GLOW, 1, z.pos.x, .2, z.pos.z, { color: 0x99ff88, spd: .5, up: 1, size: .06, life: .4 });
+      return true;
+    }
+  }
+  return false;
+}
+// BOSS 专属技能（参数 T.BB[模型]）
+function bossSkill(z) {
+  const P = T.BB[z.boss.file]; z.skCd = P.cd ?? 1e9; if (!P.cd) return;
+  if (z.boss.file === 'vesse') {   // 召毒液僵尸 + 往队员脚下落毒池
+    play(z, 'summon', .1, true); z.lock = 1;
+    for (let i = 0; i < P.n; i++) { const a = i * 6.283 / P.n; makeZombie('toxic', z.pos.x + Math.cos(a) * 1.5, z.pos.z + Math.sin(a) * 1.5, a); }
+    const us = team(); for (let i = 0; i < P.pools && us.length; i++) { const u = us[(Math.random() * us.length) | 0];
+      zone(u.pos.x, u.pos.z, P.r, 0x66dd33, P.dur, (zo, dt) => { for (const h of team()) if (d2(h.pos, zo) < zo.r ** 2) hurt(h, P.dps * dt, {}); }); }
+    return;
+  }
+  play(z, 'smash', .1, true); z.lock = 1.2;   // 卡俄斯：重砸 + 身边混刷
+  z.pend = { at: .6, fn: () => { explode(z.pos.x, z.pos.z, P.r, 0xaa66ff);
+    for (const u of team()) if (d2(u.pos, z.pos) < P.r ** 2) hurt(u, z.t.atk * G.zatk * P.mul, { from: z.pos, knock: P.knock, blast: true });
+    const ks = ZIDS.filter((k) => k !== 'spawnling'); for (let i = 0; i < P.n; i++) { const a = Math.random() * 6.283; makeZombie(ks[(Math.random() * ks.length) | 0], z.pos.x + Math.cos(a) * 2.5, z.pos.z + Math.sin(a) * 2.5, a); } } };
 }
 function stepZombie(z, dt) {
   if (z.dead) {
     z.deadT += dt;
+    if (z.dispel) {   // 消散：不下沉不倒地，原地上升淡出，到点直接回收
+      z.root.position.y += dt * 1.1;
+      const k = Math.min(1, z.deadT / z.dispel);
+      z.root.traverse((o) => { if (o.isMesh) { o.material.transparent = true; o.material.opacity = .78 * (1 - k); } });
+      if (k >= 1) z.gone = true;
+      return;
+    }
     if (z.splitAt != null && z.deadT >= z.splitAt) {   // 分裂：炸出 3 只小的
       z.splitAt = null; z.hideAt = 0; emit(SOLID, 14, z.pos.x, .5, z.pos.z, { color: 0x557744, spd: 3, up: 4, size: .1 });
       if (!z.ally) for (let i = 0, n = ZB.splitter.n; i < n; i++) { const a = i * 6.283 / n, s = makeZombie('spawnling', z.pos.x + Math.cos(a) * .4, z.pos.z + Math.sin(a) * .4, a); push(s, Math.cos(a), Math.sin(a), 60); }
@@ -1174,10 +1996,27 @@ function stepZombie(z, dt) {
   if (z.slowT <= 0) z.slow = 0;
   if (z.taunt) z.taunt.t -= dt;
   if (z.burn > 0) { z.hp -= G.burnDps * dt; if (z.hp <= 0) undead(z); if (Math.random() < dt * 12) emit(GLOW, 1, z.pos.x, z.h * .6, z.pos.z, { color: 0xff7722, spd: .3, up: 1.5, size: .1, life: .4, grav: -2 }); if (z.hp <= 0) return killZ(z); }
-  if (z.ally && (z.life -= dt) <= 0) { z.hp = 0; z.dead = true; z.deadT = 0; play(z, 'death', .1, true); return; }
+  if (z.ally && (z.life -= dt) <= 0) {
+    // 影子到期：不播 death（它是召唤物不是尸体），改在原地上浮 + 碎成光点消散
+    z.hp = 0; z.dead = true; z.deadT = 0; z.dispel = .8;
+    emit(GLOW, 26, z.pos.x, .5, z.pos.z, { color: 0x9a7bff, spd: 1.6, up: 3.2, size: .09, life: .8, grav: -1.4 });
+    ring(z.pos.x, z.pos.z, 1.1, 0x9a7bff, .55);
+    return;
+  }
   if (z.frz > 0) { z.mixer.timeScale = 0; return move(z, 0, 0, dt); }
+  // 列阵单位（盾阵的盾兵）：钉在阵位上，只打够得着的，不追不散
+  if (z.holdAt) {
+    z.pos.x = z.holdAt.x; z.pos.z = z.holdAt.z; z.root.rotation.y = z.faceY ?? z.root.rotation.y;
+    const c = nearestZ(z.pos, z.reach ?? 1.5);
+    if (c && z.cd <= 0) { z.cd = 1.2; const a = play(z, 'attack', .08, true); z.lock = a ? a.getClip().duration * .9 : .4; }
+    else if (!c) play(z, 'idle', .25);
+    for (const e of nearZ(z.pos, 1.6)) if (!e.sly && e.taunt == null) e.taunt = { u: z.owner, t: .6 };
+    return;
+  }
   z.mixer.timeScale = 1;
   z.cd -= dt; z.skCd -= dt; z.lock -= dt;
+  zBeh(z, dt);
+  if (!LAB && z.boss && (z.bt += dt) > BOSS_TIMEOUT && !bossFail) { bossFail = true; paused = true; }   // BOSS 限时，超时判负。技能台不算成绩，别让它把评审台冻住
   if (z.down > -1) {   // 击倒：0.2 s 仰倒、躺平、最后 0.35 s 起身
     z.down -= dt; const up = z.down;
     z.root.rotation.x = up <= 0 ? 0 : -1.45 * Math.min(1, (z.downT - up) / .2, up / .35);
@@ -1194,6 +2033,7 @@ function stepZombie(z, dt) {
   if (z.pend && (z.pend.at -= dt) <= 0) { const p = z.pend; z.pend = null; p.fn(); }
   if (z.lock > 0) return move(z, 0, 0, dt);
   if (z.state === 'swell') return;
+  if (z.boss && z.skCd <= 0) return bossSkill(z);
   if (LAB && wander.checked && !z.ally && !(z.taunt && z.taunt.t > 0 && !z.taunt.u.dead)) {   // 技能台：在中心 3–13 m 的环里随机游走
     if (!z.wp || d2(z.wp, z.pos) < .25) { const a = Math.random() * 6.28, r = 3 + Math.random() * 10; const c = heroes[0] ? heroes[0].pos : z.pos; z.wp = new THREE.Vector3(c.x + Math.cos(a) * r, 0, c.z + Math.sin(a) * r); }
     const dx = z.wp.x - z.pos.x, dz = z.wp.z - z.pos.z, d = Math.hypot(dx, dz) || 1, v = z.t.spd * CELL * G.zspd * .7 * (1 - z.slow);
@@ -1203,8 +2043,17 @@ function stepZombie(z, dt) {
   const tg = z.tg;
   if (!tg) { move(z, 0, 0, dt); play(z, 'idle', .3); z.state = 'idle'; return; }
   const dx = tg.pos.x - z.pos.x, dz = tg.pos.z - z.pos.z, d = Math.hypot(dx, dz) || 1, gap = d - z.r - tg.r;
-  const T = z.type;
-  if (T === 'bomber' && gap < .6 && !z.ally) {   // 自爆：膨胀后炸
+  const T = z.type, B = !z.ally && z.t.beh;
+  if (z.under && gap < ZB.burrower.r) {   // 掘地：冒出来，掀开身边队员
+    z.under = z.hide = false; z.pos.y = 0; ring(z.pos.x, z.pos.z, ZB.burrower.r * 1.5, 0xaa66ff, .4); emit(SOLID, 16, z.pos.x, .1, z.pos.z, { color: 0x5a4a38, spd: 3, up: 4, size: .1 });
+    for (const u of team()) if (d2(u.pos, z.pos) < (ZB.burrower.r + u.r) ** 2) hurt(u, z.t.atk * G.zatk * .5, { from: z.pos, knock: ZB.burrower.knock, blast: true });
+    z.lock = .6; play(z, 'hit', .06, true); return;
+  }
+  if (B === 'flying') z.air = !(gap < 1 && z.cd < ZB.flyer.dive);   // 出手前 dive 秒俯冲落地，这段能被近战 / 地面范围打到
+  if (B === 'dive') z.air = gap > 1.4;   // 秃鹫：盘旋（打不到）→ 俯冲落地啄一口 → 再升空
+  if (B === 'herald' && ZP(z.t).hold && gap < ZP(z.t).r) { move(z, 0, 0, dt); face(z, tg.pos, dt); play(z, 'idle', .3); z.state = 'idle'; return; }   // 传令：站在怪群后面不上前（双头狼同为 herald 但不 hold，它要贴身）
+  if (B === 'scream' && z.skCd <= 0 && gap < ZB.screamer.r) { z.cast = z.lock = ZB.screamer.cast; z.skCd = ZB.screamer.cd; play(z, 'roar', .1, true); return; }
+  if ((T === 'bomber' || z.t.base === 'bomber') && gap < .6 && !z.ally) {   // 自爆：膨胀后炸（精英爆尸同样会炸）
     z.state = 'swell'; const a = play(z, 'swell', .1, true); z.lock = 99;
     z.pend = { at: a.getClip().duration, fn: () => { if (!z.dead) { z.hp = 0; killZ(z); } } };
     return;
@@ -1214,9 +2063,10 @@ function stepZombie(z, dt) {
     z.leap = { a: z.pos.clone(), b: tg.pos.clone().addScaledVector(new THREE.Vector3(dx, 0, dz).normalize(), -(z.r + tg.r)), t: 0, T: a.getClip().duration };
     z.root.rotation.y = Math.atan2(dx, dz); return;
   }
+  if (!z.ally && mzStep(z, dt, tg, gap)) return;   // 变异生物：专属表现自己接管（熊的 run、狼的嚎叫是透明的，会继续往下走）
   const range = T === 'spitter' && !z.ally ? ZB.spitter.range : .35;
   if (gap > range) {
-    const v = (z.ally ? 3.2 : z.t.spd * CELL * G.zspd) * (1 - z.slow);
+    const v = (z.ally ? 3.2 : z.t.spd * CELL * G.zspd * (1 + (z.aura > 0 ? ZB.herald.spd : 0)) * (z.spdMul ?? 1)) * (1 - z.slow);   // spdMul：熊狂暴
     let ux = dx / d, uz = dz / d;
     if (M && !z.ally && d > 2.5) {   // 关卡：远了沿流场绕开障碍，近了直扑；方向做一点平滑，免得在格子拐角抖
       const f = flowDir(M, z.lane && d > 6 && FL[z.lane - 1] || FF, z.pos.x, z.pos.z);   // 六成僵尸走左右包抄路线，到小队 6 m 内再直扑
@@ -1229,8 +2079,10 @@ function stepZombie(z, dt) {
   move(z, 0, 0, dt); face(z, tg.pos, dt);
   if (z.cd > 0) { if (z.cur !== 'idle' && z.cur !== 'block') play(z, 'idle', .25); return; }
   const atkName = T === 'spitter' && !z.ally ? 'spit' : 'attack', a = play(z, atkName, .08, true);
+  if (!a) return;   // 模型里没这个动作就跳过这一刀，别把整只怪卡死
   if (atkName === 'attack') { a.setLoop(THREE.LoopOnce); a.clampWhenFinished = true; }
-  const dur = a.getClip().duration; z.cd = z.ally ? 1.2 : z.t.ai; z.lock = dur * .9;
+  const dur = a.getClip().duration; z.cd = z.ally ? 1.2 : z.t.ai * (z.aiMul ?? 1); z.lock = dur * .9;   // aiMul：熊狂暴
+  if (B === 'stealth') { z.bs = z.hide; z.showT = ZB.stalker.show; }   // 潜影：隐身中出手 = 背刺
   if (atkName === 'spit') z.pend = { at: dur * .5, fn: () => {
     const f = z.pos.clone().setY(z.h * .8), to = tg.pos.clone().setY(.05);
     lob(f, to, .8, BALL, 0x99dd44, .14, (p) => { flash(p.x, .2, p.z, .6, 0x99dd44, .3); emit(GLOW, 10, p.x, .1, p.z, { color: 0x99dd44, spd: 2, up: 2, size: .08 });
@@ -1240,10 +2092,13 @@ function stepZombie(z, dt) {
 }
 
 // ── 刷怪：四个路口 + 路口之间的街面随机入场 ──
-const mix = { ...MIX0 }, mixOn = Object.fromEntries(ZIDS.map((k) => [k, true]));
+// 技能台只刷基础六种（normal/runner/brute/toxic/bomber/splitter = ORDER_Z 前六），精英 / 变异体 / 后段基础种
+// 连勾选框都不给——它们要么模型数不完，要么机制特殊，扫技能表现时只会添乱。BOSS 走单独按钮。
+const MIX_KEYS = LAB ? ZIDS.slice(0, 6) : ZIDS;
+const mix = { ...MIX0 }, mixOn = Object.fromEntries(ZIDS.map((k) => [k, MIX_KEYS.includes(k)]));
 const weight = (k) => (mixOn[k] ? +mix[k] || 0 : 0);
 function pickType() {
-  const sm = LV && stageAt(LV, flowT)?.st.mix, w = (k) => (sm ? sm[k] ?? 0 : weight(k));
+  const sm = LV && stageAt(LV, Math.min(flowT, flowLen(LV) - .01))?.st.mix, w = (k) => (sm ? sm[k] ?? 0 : weight(k));
   const tot = ZIDS.reduce((s, k) => s + w(k), 0); if (tot <= 0) return null;
   let r = Math.random() * tot; for (const k of ZIDS) if ((r -= w(k)) < 0) return k; return null;
 }
@@ -1252,27 +2107,51 @@ function spawnOne(type = pickType()) {
   if (LV) {   // 关卡：随机一个刷怪点，圆内随机落点，推出障碍
     const at = stageAt(LV, flowT)?.st.at, sps = at ? at.map((i) => LV.spawns[i]) : LV.spawns;   // 阶段可限定刷怪点
     const sp = sps[(Math.random() * sps.length) | 0], a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * sp.r, p = { x: sp.x + Math.cos(a) * r, z: sp.z + Math.sin(a) * r };
-    pushOut(M, p, .5); return makeZombie(type, p.x, p.z, Math.atan2(LV.start[0] - p.x, LV.start[1] - p.z));
+    pushOut(M, p, .5); return spawnPack(type, p.x, p.z, Math.atan2(LV.start[0] - p.x, LV.start[1] - p.z));
   }
   const side = (Math.random() * 4) | 0, along = (Math.random() - .5) * (Math.random() < .6 ? 8 : 30);
   const la = Math.random() * 6.28, lr = 4 + Math.random() * 9;
   const lc = heroes[0] ? heroes[0].pos : { x: 0, z: 0 };
   const [x, z] = LAB ? [lc.x + Math.cos(la) * lr, lc.z + Math.sin(la) * lr] : [[along, -SPAWN_R], [SPAWN_R, along], [along, SPAWN_R], [-SPAWN_R, along]][side];
-  makeZombie(type, x, z, Math.atan2(-x, -z));
+  return spawnPack(type, x, z, Math.atan2(-x, -z));
+}
+// 变异犬：一次刷一群。其余各带固定侧偏排在两侧（side 同时也是逼近时的侧向铺开，见 stepZombie）
+function spawnPack(type, x, z, ry) {
+  const n = ZP(ZT[type])?.pack ?? 1;
+  const side = (a) => [Math.cos(ry) * a, -Math.sin(ry) * a];   // 与朝向垂直
+  for (let i = 1; i < n; i++) {
+    const s = i % 2 ? 1 : -1, d = .7 + Math.floor(i / 2) * .7, [ox, oz] = side(d * s);
+    const b = makeZombie(type, x + ox, z + oz, ry); b.side = s * (.3 + Math.floor(i / 2) * .3);
+  }
+  return makeZombie(type, x, z, ry);
 }
 const alive = () => zs.reduce((n, z) => n + !z.dead, 0);
 function spawnN(n) { for (let i = 0; i < n; i++) spawnOne(); }
 function clearZ() { for (const z of zs) removeUnit(z); zs.length = 0; }
 // 关卡出怪时间线：每秒只数 = 阶段威胁速率（r0→r1 线性）× 威胁倍率 ÷ 该阶段平均威胁值；进阶段瞬间按 burst 额外刷一批
-let flowT = 0, flowI = -1, flowEnd = false;
+// BOSS：LV.bosses[{ b: BOSSES 下标, at: 登场秒 }]；在场期间小怪出怪 × BOSS_PHASE_SPAWN_MUL，出怪时间线走完后也按最后的速率继续补
+let flowT = 0, flowI = -1, flowEnd = false, boss = null, bossFail = false;
+function spawnBoss(bi) {
+  const b = BOSSES[bi], o = LV ? LV.spawns[(Math.random() * LV.spawns.length) | 0] : { x: heroes[0]?.pos.x ?? 0, z: (heroes[0]?.pos.z ?? 0) - 11 };   // 技能台没有刷怪点，摆在队长正前方 11 m
+  const p = { x: o.x, z: o.z }; if (M) pushOut(M, p, 1);
+  const face = LV ? LV.start : [heroes[0]?.pos.x ?? 0, heroes[0]?.pos.z ?? 0];
+  const u = makeZombie('brute', p.x, p.z, Math.atan2(face[0] - p.x, face[1] - p.z), bgl[bi]);
+  u.t = { ...ZT.brute, name: b.name, hp: b.hp, spd: b.spd, armor: b.armor, atk: b.atk, r: b.r, th: 9, cun: 0, sa: 1, dr: 0, mr: 0, ef: 0, rg: 0, beh: 'boss' };
+  Object.assign(u, { boss: b, bi, h: BH[bi], gv: BGV[bi], r: b.r * .7, hp: b.hp * G.zhp, maxHp: b.hp * G.zhp, bt: 0, skCd: 3, sly: false });
+  ring(p.x, p.z, 3, 0xaa66ff, .8); shake = .4; return (boss = u);
+}
 function stepFlow(dt) {
   flowT += dt; const st = stageAt(LV, flowT);
-  if (!st) { flowEnd = true; return; }
-  if (st.i !== flowI) { flowI = st.i; for (const k in st.st.burst ?? {}) for (let n = 0; n < st.st.burst[k]; n++) spawnOne(k); }
-  spawnAcc += dt * rateAt(LV, flowT);
+  for (const b of LV.bosses ?? []) if (!b.on && flowT >= b.at) { b.on = 1; spawnBoss(b.b); }
+  const bm = boss && !boss.dead ? BOSS_PHASE_SPAWN_MUL[boss.bi] : 1;
+  if (!st) { flowEnd = true; if (bm < 1) spawnAcc += dt * rateAt(LV, flowLen(LV) - .01) * bm; }
+  else {
+    if (st.i !== flowI) { flowI = st.i; for (const k in st.st.burst ?? {}) for (let n = 0; n < st.st.burst[k]; n++) spawnOne(k); }
+    spawnAcc += dt * rateAt(LV, flowT) * bm;
+  }
   while (spawnAcc >= 1) { spawnAcc--; if (alive() < (LV.cap ?? 120)) spawnOne(); }
 }
-function restartLevel() { clearZ(); flowT = spawnAcc = kills = 0; flowI = -1; flowEnd = false; setSquadNow(); }
+function restartLevel() { clearZ(); flowT = spawnAcc = kills = 0; flowI = -1; flowEnd = bossFail = false; boss = null; for (const b of LV.bosses ?? []) b.on = 0; setSquadNow(); }
 const mmss = (t) => `${(t / 60) | 0}:${String((t % 60) | 0).padStart(2, '0')}`;
 
 // ── 小队：换人时整队重建 ──
@@ -1291,16 +2170,20 @@ function curFromSquad(squad) {
   }) };
 }
 function setSquad(classes) {
-  cur = { tier: cur.tier, classes }; setSquadNow();
+  cur = { tier: cur.tier, classes }; return setSquadNow();
 }
-function setSquadNow() {
+async function setSquadNow() {
+  try { await loadLooks(cur.classes.map((c) => c.id)); } catch (e) { console.warn('职业形象读取失败，借样板模型', e); }
   for (const h of heroes) removeUnit(h); heroes.length = 0;
-  cur.classes.forEach((c, i) => heroes.push(makeHero(c.hero, i)));   // 位置与 cur.classes 一一对应，不再看 pick
+  // 技能台要三个：1 号位是正在评审的角色，另两个是队友（治疗 / 号令 / 光环类技能得有对象）。
+  // cur.classes 仍只放一个职业——评审面板读的就是它，重复三份会把技能列表画三遍
+  const list = LAB ? [cur.classes[0], cur.classes[0], cur.classes[0]] : cur.classes;
+  list.forEach((c, i) => heroes.push(makeHero(c.hero, i)));   // 位置与 cur.classes 一一对应，不再看 pick
 
   // ponytail: 伤害乘区取全队平均（hitZ 不知道是谁打的）；成长率只差 0.06–0.08，按人分要给每个伤害来源带上出手者
   squadMul = cur.classes.reduce((s, c) => s + (1 + c.growth) ** (TIERS[cur.tier].rank - 1), 0) / (cur.classes.length || 1);
   tier = cur.tier; pick = cur.classes.map((c) => c.hero);
-  buildTeamUI(); buildSquadUI();
+  buildTeamUI(); if (!LAB) buildSquadUI();   // 技能台没有那 5 格选人界面，不用画
   const c0 = LV?.start ?? [0, 0]; Object.assign(SQ, { x: c0[0], z: c0[1], dest: null, goal: null, manual: false }); focus = null;
 }
 const teamEl = document.getElementById('team');
@@ -1308,8 +2191,8 @@ function buildTeamUI() {
   teamEl.innerHTML = '';
   for (const h of heroes) {
     const c = document.createElement('div'); c.className = 'card';
-    c.innerHTML = `<div class="row" style="justify-content:space-between"><b>${h.name}</b><span class="dim">${W[h.def.weapon].name}</span></div><div class="bar"><i></i></div>
-      <div class="sk"><button title="${h.def.sk[0].desc}">${h.def.sk[0].name}<i></i></button><button title="${h.def.sk[1].desc}">${h.def.sk[1].name}<i></i></button></div>`;
+    c.innerHTML = `<div class="row" style="justify-content:space-between"><b>${h.name}</b><span class="dim">${h.w.name}</span></div><div class="bar"><i></i></div>
+      <div class="sk">${h.skp.map((P) => `<button title="${P.desc}">${P.name}<i></i></button>`).join('')}</div>`;
     c.querySelectorAll('.sk button').forEach((b, k) => (b.onclick = () => cast(h, k)));
     h.ui = { card: c, hp: c.querySelector('.bar i'), cd: [...c.querySelectorAll('.sk i')] };
     teamEl.append(c);
@@ -1319,7 +2202,7 @@ function updTeamUI() {
   for (const h of heroes) {
     h.ui.card.classList.toggle('dead', h.dead);
     h.ui.hp.style.width = (h.hp / h.maxHp * 100).toFixed(1) + '%';
-    h.ui.cd.forEach((el, k) => (el.style.width = Math.max(0, h.sk[k] / h.def.sk[k].cd * 100).toFixed(1) + '%'));
+    h.ui.cd.forEach((el, k) => (el.style.width = Math.max(0, h.sk[k] / h.skp[k].cd * 100).toFixed(1) + '%'));
   }
 }
 
@@ -1328,12 +2211,12 @@ function tint(u, dt) {
   if (u.flash > 0) u.flash -= dt;
   const c = u.flash > 0 ? 0x999999 : u.dead ? 0 : u.frz > 0 ? 0x2266aa : u.mark > 0 ? 0x661111 : u.vuln > 0 ? 0x442266 : u.burn > 0 ? 0x552200 : u.slow > 0 ? 0x113355 : 0;
   if (u.tintC === c) return; u.tintC = c;
-  for (const [o, base] of u.mats) o.material = matFor(base, c, u.ally);
+  for (const [o, base] of u.mats) o.material = matFor(base, c, u.ally && !u.noBone);
 }
 
 // ── 主循环 ──
 const gl = renderer.getContext(), tq = gl.getExtension('EXT_disjoint_timer_query_webgl2'), pending = [];
-let repAcc = 0, labLast = null, labPrev = null;
+let labLast = null, labPrev = null;
 let ffT = 0, win = [], paused = !LAB, spawnAcc = 0, hudT = 0, last = performance.now(), gpuMs = null;   // 开局先停住，等「开始游戏」
 const clock = new THREE.Clock(), camBase = new THREE.Vector3();
 function step(dt) {
@@ -1344,7 +2227,6 @@ function step(dt) {
     for (let k = 0; k < 2; k++) FL[k] = flowField(M, [snap(SQ.x + (k ? -px : px), SQ.z + (k ? -pz : pz))], FL[k] ?? undefined); } }
   if (M && LV.tiles) for (const h of team()) if (tileAt(LV, M, h.pos.x, h.pos.z) === 2) hurt(h, G.poolDps * dt, {});   // 毒池地块
   for (const k in tbuf) tbuf[k].t -= dt;
-  if (LAB && rep.checked && labLast && (repAcc += dt) >= (+repT.value || 4)) { repAcc = 0; labCast(); }
   for (let i = later.length - 1; i >= 0; i--) if ((later[i].t -= dt) <= 0) later.splice(i, 1)[0].fn();
   stepOrders(dt);   // 团队命令：先重排站位锚点，再让各队员按锚点行动
   for (const h of heroes) stepHero(h, dt);
@@ -1354,10 +2236,10 @@ function step(dt) {
   for (const h of heroes) if (!h.leap) h.pos.y = 0;
   for (const w of walls) for (const z of zs) if (!z.dead && !z.leap) pushWall(w, z);   // ponytail: 墙 × 僵尸全扫，墙只有个位数段
   if (M) for (const list of [heroes, zs, allies]) for (const u of list) if (!u.dead && !u.leap) pushOut(M, u.pos, u.r);   // 障碍：推出去（跳跃中的可以越过）
-  for (let i = shots.length - 1; i >= 0; i--) if (!shots[i].step(dt)) { scene.remove(shots[i].m); shots[i].m.material?.dispose(); shots.splice(i, 1); }
+  for (let i = shots.length - 1; i >= 0; i--) if (!shots[i].step(dt)) { scene.remove(shots[i].m); if (shots[i].m.isGroup) shots[i].m.traverse((c) => c.material?.dispose()); else shots[i].m.material?.dispose(); shots.splice(i, 1); }
   for (let i = zones.length - 1; i >= 0; i--) { const zo = zones[i]; zo.t += dt; zo.tick(zo, dt); zo.m.material.opacity = .3 * Math.min(1, (zo.dur - zo.t) * 2);
     if (zo.t >= zo.dur) { scene.remove(zo.m); zo.m.material.dispose(); zones.splice(i, 1); } }
-  for (let i = tmp.length - 1; i >= 0; i--) { const f = tmp[i]; f.t += dt; f.upd(f.o, Math.min(1, f.t / f.life)); if (f.t >= f.life) { scene.remove(f.o); f.o.material.dispose(); tmp.splice(i, 1); } }
+  for (let i = tmp.length - 1; i >= 0; i--) { const f = tmp[i]; f.t += dt; f.upd(f.o, Math.min(1, f.t / f.life)); if (f.t >= f.life) { scene.remove(f.o); f.o.material?.dispose(); f.o.traverse?.((c) => (c.material && c.material !== f.o.material) && c.material.dispose()); tmp.splice(i, 1); } }
   stepPool(GLOW, dt); stepPool(SOLID, dt);
   for (const list of [zs, allies]) for (let i = list.length - 1; i >= 0; i--) if (list[i].gone) { removeUnit(list[i]); list.splice(i, 1); }
 }
@@ -1395,7 +2277,8 @@ renderer.setAnimationLoop(() => {
   if (now - hudT > 250) {
     hudT = now; const avg = (k) => win.reduce((s, f) => s + f[k], 0) / win.length, s = stats();
     const lvl = !LV ? (lvErr ? `⚠ ${lvErr}，改用默认街区\n` : '') : (() => { const st = stageAt(LV, flowT), dead = G.respawn <= 0 && heroes.every((h) => h.dead);
-      return `${LV.name} · ${dead ? '全灭' : flowEnd ? (alive() ? '最后一波，清场！' : '通关') : `阶段 ${st.i + 1}/${LV.stages.length} ${st.st.name}`} · ${mmss(flowT)} / ${mmss(flowLen(LV))} · 出怪 ${rateAt(LV, flowT).toFixed(2)} 只/秒\n`; })();
+      const bs = boss && !boss.dead ? `BOSS ${boss.t.name} ${Math.ceil(boss.hp)} / ${Math.round(boss.maxHp)} · 剩 ${Math.max(0, BOSS_TIMEOUT - boss.bt).toFixed(0)} s\n` : '';
+      return bs + `${LV.name} · ${dead ? '全灭' : bossFail ? 'BOSS 超时，挑战失败' : flowEnd ? (alive() ? '最后一波，清场！' : '通关') : `阶段 ${st.i + 1}/${LV.stages.length} ${st.st.name}`} · ${mmss(flowT)} / ${mmss(flowLen(LV))} · 出怪 ${rateAt(LV, flowT).toFixed(2)} 只/秒\n`; })();
     stat.textContent = lvl + `僵尸 ${s.alive} / 尸体 ${zs.length - s.alive} · 召唤 ${allies.length} · 击杀 ${kills} · 特效 ${GLOW.ps.length + SOLID.ps.length} · ${(1000 / avg('dt')).toFixed(0)} FPS\n` +
       `CPU 逻辑 ${avg('logic').toFixed(2)} + 动画 ${avg('anim').toFixed(2)} + 提交 ${avg('sub').toFixed(2)} ms · GPU ${gpuMs == null ? '—' : gpuMs.toFixed(2) + ' ms'} · draw ${renderer.info.render.calls}`;
     updTeamUI();
@@ -1408,53 +2291,85 @@ const stats = () => ({ alive: alive(), total: zs.length, allies: allies.length, 
 const $ = (id) => document.getElementById(id);
 const squadEl = $('squad');
 const CLASSES_OF = new Map(TIERS.map((t, k) => [k, TIER_CLASSES(k)]));   // 8 个等级的职业名册，加载时算一次
-const classOf = (heroId) => (CLASSES_OF.get(0).find((c) => c.tree === (TREE_OF_HERO[heroId] ?? 'swordsman')) ?? CLASSES_OF.get(0)[0]);   // 样板英雄 id → 它那棵树的基础职业
-const clsIdx = (s) => s;   // 槽位号 == cur.classes 的下标（pick 现在存的是样板英雄 id，两套下标不同源）
+// 每个位置各自一条 path，互不影响：等级决定能点几层，层数由 classes.ts 的 axisAt 展开，选到哪一层就是哪个职业
+let paths = [], tpaths = [];
+// 选择路径的权威副本在 DOM 的下拉里（每层一个 select），paths 只是渲染这一帧的快照
+const pathEls = () => [...squadEl.querySelectorAll('select.tree')];
+const baseClass = (tree) => CLASSES_OF.get(tier).find((c) => c.tree === tree) ?? TIER_CLASSES(tier)[0];
+// tier 显式传参，不读模块里的 tier：超绝（第 7 级名册）与基础六转共用同一条 path，
+// 等级只从 path.length 推就只能落在基础形态上——五星从页面上永远选不到，评审也就跳不过去
+const clsFromPath = (tree, path, tier = path.length) => {
+  const pool = CLASSES_OF.get(tier).filter((c) => c.tree === tree);
+  let b = pool[0] ?? TIER_CLASSES(tier)[0], bk = -1, bn = -1;
+  for (const c of pool) {
+    const n = c.path.findIndex((x, i) => x !== path[i]);   // -1 = 完全吻合
+    const k = n < 0 ? c.path.length + 1 : n;               // 答对的层数，全部答完最大
+    // 平手时取路径最短的那个：lab 里只答到第 1 层时整个子树都平手，
+    // 不这么办会落到名册里第一条（恰好是六转的长 path），看着像「选了低转却换到六转」
+    if (k > bk || (k === bk && c.path.length < bn)) { bk = k; bn = c.path.length; b = c; }
+    if (n < 0) break;
+  }
+  return b;
+};
+// 这一级最深点到第几层 = 名册里最长的那条 path（基础级 0 层，一转 1 层，六转与五星都是 6 层）
+const STEPS = (k) => Math.max(0, ...CLASSES_OF.get(k).map((c) => c.path.length));
 function buildSquadUI() {
   squadEl.innerHTML = '';
+  // 只有一个位置是异类（其余四个还停在低层的职业）就把这一格标出来：大多数时候点歪了看不出差别
+  const lv = cur.classes.map((c) => (c?.path ?? []).length), top = lv.length ? Math.max(...lv) : 0;
+  const steps = STEPS(tier);
   for (let s = 0; s < 5; s++) {
-    const l = document.createElement('label'); l.innerHTML = `<span>${s + 1}</span>`;
-    const sel = document.createElement('select'); sel.id = 'hero' + s;
-    // 1 号位先定树，其余四人跟着自己的树 —— 「一套职业配所有等级」是错的，等级选的是那一级的职业
-    const tree = cur.classes[clsIdx(0)]?.tree;
-    const list = CLASSES_OF.get(tier).filter((c) => s === 0 || c.tree === tree);
-    const mine = cur.classes[clsIdx(s)];
-    for (const c of list) sel.add(new Option(s ? c.name : `${c.stars} ${c.name} · ${c.treeName}`, c.id, false, mine?.id === c.id));
-    sel.onchange = () => suggest();
-    l.append(sel); squadEl.append(l);
+    const path = (paths[s] = (tpaths[s] ?? cur.classes[s]?.path ?? []).slice(0, steps));   // 已答到第几层
+    const n = Math.min(steps, path.length + 1);   // 已答的每层给一下拉，末尾再给一个「下一层」
+    const box = document.createElement('div'); box.className = 'slot';
+    const title = document.createElement('div'); title.className = 'row';
+    title.innerHTML = `<b>${s + 1}</b><select class="tree"></select>`;
+    const tsel = title.querySelector('select');
+    for (const t of Object.values(CLASS_TREES)) tsel.add(new Option(t.name, t.id, false, t.id === (cur.classes[s]?.tree ?? 'swordsman')));
+    tsel.onchange = () => { paths[s] = []; tpaths[s] = null; setSquad(squadFromPaths()); };
+    const row = document.createElement('div'); row.className = 'axes';
+    const tree = CLASS_TREES[cur.classes[s]?.tree ?? tsel.value];
+    for (let k = 0; k < n; k++) {
+      const side = path[k];
+      const ax = axisAt(tree, path.slice(0, k), k);
+      const sel = document.createElement('select'); sel.title = ax.name;
+      sel.add(new Option(ax.name, '', !side, !side));
+      // 层的名字用轴自己的（第 3 / 4 层是算出来的分线名，第 5 / 6 层是「光环：…」「号令：…」），比另起一套叫得准
+      ax.sides.forEach((sd, i) => sel.add(new Option(`${ax.name}｜${sd.name}`, i, false, side === i)));
+      sel.onchange = () => { const p = (tpaths[s] = path.slice(0, k).concat(+sel.value)); paths[s] = p; setSquad(squadFromPaths()); };
+      row.append(sel);
+    }
+    const cl = cur.classes[s];
+    const info = document.createElement('p'); info.className = lv[s] === top ? 'dim' : 'dim lag';
+    if (cl) info.textContent = `${cl.stars} ${cl.full} · ${cl.treeName} · 成长 ${(cl.growth * 100).toFixed(0)}% · 借 ${T.HERO[cl.hero].name} 的模型与技能`;
+    // 下一层叫什么：轴自己的名字就是。第 2 / 3 层（线 / 流派）的名字要按已答出的分线算，而这里差的正是下一层的答案，就不提了
+    if (n < steps && n !== 2 && n !== 3) info.textContent += `（还能往下点 ${axisAt(tree, path, n).name}）`;
+    box.append(title, row, info); squadEl.append(box);
   }
 }
-// 同级同树里挑一名还没被占的，占满了就复用 —— 选人只是原型里的站位试验，不追求唯一
-function suggest() {
-  const tree = CLASSES_OF.get(tier).find((c) => c.id === $('hero0').value)?.tree;
-  const pool = CLASSES_OF.get(tier).filter((c) => c.tree === tree), used = new Set();
-  const next = [];
-  for (let s = 0; s < 5; s++) {
-    const id = $('hero' + s).value;
-    let c = pool.find((x) => x.id === id);
-    if (s && (!c || c.tree !== tree || used.has(c.id))) c = pool.find((x) => !used.has(x.id));
-    used.add(c.id); next.push(c);
-  }
-  setSquad(next);   // 只改人，等级由等级下拉负责
-}
+// 每个位置各自解析成职业：path 取到哪一层就查哪一层的名册（同名 id 只在该层唯一）
+function squadFromPaths() { return paths.map((p, s) => clsFromPath(pathEls()[s].value, p ?? [], tier)); }
 { // 等级 = 转数：选的是「那一级解锁的职业」，不是同一批人换数值
   TIERS.forEach((t, k) => $('tier').add(new Option(`${t.name} · ${t.title} · ${CLASSES_OF.get(k).length} 个职业可选`, k)));
   $('tier').value = tier;
   $('tier').onchange = () => {
     tier = +$('tier').value;
-    const tree = cur.classes[clsIdx(0)]?.tree ?? 'swordsman', pool = CLASSES_OF.get(tier), taken = [];
-    cur = { tier, classes: Array.from({ length: 5 }, () => { const c = pool.find((x) => x.tree === tree && !taken.includes(x.id)) ?? pool[taken.length]; taken.push(c.id); return c; }) };
+    // 换级时把每条 path 截到这一级能到的层数，再看它落在哪个职业上（同级同名 id 只有一条，不必逐级换算）
+    const cap = STEPS(tier);
+    tpaths = tpaths.map((p) => p && p.slice(0, cap));
+    cur = { tier, classes: Array.from({ length: 5 }, (_, s) => clsFromPath(classTrees()[s], (tpaths[s] ?? []).slice(0, cap), tier)) };
     setSquadNow(); updPrep();
   };
 }
 // ── 开局设置：小队等级 + 职业 + 僵尸强度只在这里改；点「开始游戏」后锁住，战斗里只剩暂停 ──
 let playing = LAB;   // 技能台没有开局这一步，直接进
+const classTrees = () => [...squadEl.querySelectorAll('select.tree')].map((el, s) => el.value ?? cur.classes[s]?.tree ?? 'swordsman');
 function statLine() {
   const pool = CLASSES_OF.get(tier), trees = new Set(pool.map((c) => c.tree));
   return `${TIERS[tier].title} · 同级职业 ${pool.length} 个（${trees.size} 棵树各 ${pool.length / trees.size} 个）`;
 }
 function updPrep() {
-  $('tierHint').textContent = `${statLine()}。1 号位选哪棵树，其余 4 人就从同一棵树里出。`;
+  $('tierHint').textContent = `${statLine()}。每个位置自己选：先挑职业（树），再按 方向 → 线 → 流派 → 精通 → 英雄 往下点，一层一个下拉；不点就是当前这一层的职业。`;
   $('squadInfo').textContent = `小队等级 ${TIERS[tier].name} · ${cur.classes.map((c) => c.name).join(' / ')}（战斗中不可改）`;
 }
 function updInfo() {
@@ -1464,13 +2379,28 @@ function updInfo() {
 $('start').onclick = () => {
   playing = true; document.body.classList.add('playing');
   paused = false; $('pause').textContent = '暂停';
+  // 「重新开局」把小队也一并收掉了，所以这里无论有没有关卡都要重建一次
   if (LV) restartLevel();   // 关卡：计时与出怪从这一刻开始
+  else setSquadNow();       // 自由测试：靶子由「重新开局」摆好，这儿只把人放回来
+};
+// 重新开局：清场、停表、面板上的数值与刚才点的职业原样留着，改完再点「开始游戏」
+$('reopen').onclick = () => {
+  playing = false; document.body.classList.remove('playing');
+  paused = true; $('pause').textContent = '暂停';
+  for (const u of [...zs, ...allies, ...heroes]) removeUnit(u);   // 队员一起收掉，「开始游戏」时按面板重建
+  zs.length = allies.length = heroes.length = 0; buildTeamUI();
+  for (const s of shots) { scene.remove(s.m); s.m.material?.dispose(); } shots.length = 0;
+  for (const zo of zones) { scene.remove(zo.m); zo.m.material.dispose(); } zones.length = 0;
+  for (const f of tmp) { scene.remove(f.o); f.o.traverse?.((c) => c.material?.dispose()); } tmp.length = 0;   // 一次性网格：冲击环 / 闪光 / 刀光
+  GLOW.ps.length = SOLID.ps.length = 0; GLOW.m.count = SOLID.m.count = 0;   // 停着的那几帧粒子不会再走，得手动收
+  if (LV) { flowT = spawnAcc = kills = 0; flowI = -1; flowEnd = bossFail = false; boss = null; for (const b of LV.bosses ?? []) b.on = 0; }
+  else spawnN(40);   // 自由测试：先摆一批靶子，不然重开是个空场
 };
 
 const mixEl = $('mix');
-for (const k of ZIDS) {
+for (const k of MIX_KEYS) {
   const l = document.createElement('label');
-  l.innerHTML = `<input id="on_${k}" type="checkbox" checked><span>${ZT[k].name}</span><input id="mix_${k}" type="number" min="0" max="200" step="1" value="${mix[k]}">`;
+  l.innerHTML = `<input id="on_${k}" type="checkbox"${mixOn[k] ? ' checked' : ''}><span>${ZT[k].name}</span><input id="mix_${k}" type="number" min="0" max="200" step="1" value="${mix[k]}">`;
   const [on, num] = l.querySelectorAll('input');
   on.onchange = () => (mixOn[k] = on.checked); num.oninput = () => (mix[k] = Math.max(0, +num.value || 0)); mixEl.append(l);
 }
@@ -1494,44 +2424,477 @@ for (const [id, k, f] of [['zb', 'z', 'bri'], ['zc', 'z', 'con'], ['zsat', 'z', 
 }
 regrade();
 
-// ── 技能特效台 ──
-function labHero(id) {   // 换人：新队员站在当前位置
-  if (heroes.length !== 1 || heroes[0].id !== id) { const at = heroes[0] ? heroes[0].pos.clone() : new THREE.Vector3(); const h0 = heroes[0]; setSquad([classOf(id)]); heroes[0].home.copy(at); heroes[0].pos.copy(at); }
-  document.querySelectorAll('#skl .nm').forEach((b) => b.classList.toggle('on', b.dataset.id === id));
+// ── 技能特效台：场上一个主角色 + 两个队友，树与职业都在评审面板里实时换，技能一次全列出来 ──
+// labPath 长度 = 转数，但**不是**名册等级：超绝（五星）与六转基础形态共用同一条 path，靠 labUlt 区分，
+// 等级取 7。否则 320 个 `+` 职业从页面上根本选不到，「下一个待评」也就永远跳不过去。
+let labTree = 'swordsman', labPath = [], labUlt = false;
+const LAB_MATES = 2;   // 队友数：治疗 / 号令 / 光环类技能单人场上没对象，放两个才看得出效果
+async function labApply() {
+  tier = cur.tier = labUlt ? 7 : labPath.length;
+  const main = clsFromPath(labTree, labPath, cur.tier);
+  await setSquad([main, ...Array.from({ length: LAB_MATES }, () => main)]);
+  buildLabInfo();
+  revRender();   // 技能卡与进度都在 revRender 里，cur 换完才画，否则名字与计数还停在上一轮
 }
-function labStop() {
-  if (!labLast) return; labPrev = labLast; labLast = null;
-  document.querySelectorAll('#skl button').forEach((b) => b.dataset.k && b.classList.remove('on'));
-  $('labmsg').textContent = '已停止自动重放';
+// 侧栏最上方那条：当前评审目标的完整成长链 + 编号 + 它的每个技能槽
+function revTargetHTML() {
+  const c = cur.classes[0]; if (!c) return '';
+  const t = CLASS_TREES[c.tree], cls = CLASS_BY_ID[c.id];
+  const seg = [];
+  for (let k = 0; k < Math.min(6, c.path.length); k++) {
+    const ax = axisAt(t, c.path.slice(0, k), k), side = ax.sides[c.path[k]];
+    seg.push(`${ax.name}·${side ? side.name : '?'}`);
+  }
+  const ult = c.id.endsWith('+');
+  const sk = revSlots(c.id).map((x, i) => `${i + 1} ${SKILLS[x.skill].name} <code>${x.skill}</code>`).join('；') || '（无，基础级不配技能）';
+  return `<b>当前评审</b> ${CLASS_TREES[c.tree].name} › ${cls.name} › ${seg.join(' › ')}\n`
+    + `（编号 <code>${c.id}</code>${ult ? ' · 五星超绝' : ''} · ${c.path.length} 转 · 编号等级 ${tier}）\n`
+    + `所属 ${revSlots(c.id).length} 个技能：${sk}`;
+}
+// 角标 + 修改历史面板：让设计师在页面里对照「这条技能改过几轮、改成什么样」。
+// 轮次取职业技能面上的最大值；历史按轮次倒序，最新一轮在最上面。
+function revRenderHist() {
+  const c = cur.classes[0], box = $('revRev'), hm = $('revHist');
+  if (!c || !box || !hm) return;
+  const cls = CLASS_BY_ID[c.id], rds = revClassRounds(c.id);
+  box.innerHTML = rds
+    ? `<span class="badge">已完成第 ${rds} 次修改</span> <span class="dim">· 点下面历史的「看」直接放这一条</span>`
+    : `<span class="badge none">尚未修改</span> <span class="none">· 这一职业还没有进过修改轮</span>`;
+  const hist = revClassHist(c.id);
+  hm.innerHTML = hist.length ? '' : '<p class="dim" style="font-size:12px;margin:0">（这个职业还没有修改历史）</p>';
+  for (const e of hist) {
+    const row = document.createElement('div'); row.className = 'hrow';
+    const xi = (cls.slots ?? []).findIndex((y) => y.skill === e.key);
+    const k = xi < 0 ? -1 : labK(cls.slots[xi]);   // -1 = 光环/被动，放不了
+    const hd = document.createElement('div'); hd.className = 'hh';
+    hd.innerHTML = `<span class="rn">第 ${e.n} 轮</span><span class="tm">${e.t}</span>`;
+    const see = document.createElement('button'); see.className = 'see';
+    see.textContent = k < 0 ? '被动' : '看';
+    if (k < 0) see.disabled = true; else { see.title = '放一次这一条（当前版本）'; see.onclick = () => { labLast = k; labCast(); }; }
+    hd.append(see); row.append(hd);
+    const sl = document.createElement('div'); sl.className = 'slot';
+    sl.textContent = `${e.slot}｜${e.sname}  ${e.key}`; row.append(sl);
+    if (e.c) { const cc = document.createElement('div'); cc.className = 'cc'; cc.textContent = '设计师意见：' + e.c; row.append(cc); }
+    const fb = document.createElement('div'); fb.className = 'fb'; fb.textContent = e.fb; row.append(fb);
+    hm.append(row);
+  }
+}
+function buildLabInfo() {
+  const c = cur.classes[0], th = CLASS_BY_ID[c.id];
+  $('labInfo').textContent = `${c.stars} ${c.full} · ${c.treeName} · 成长 ${(c.growth * 100).toFixed(0)}% · ${th.slots.length} 个技能`
+    + ` · 血量与军衔借样板英雄 ${T.HERO[c.hero].name}（职业表里没有血量）`;
+}
+// 槽位 → skp 下标（makeHero 里 skp 只装非 aura 的槽，k 要对得上）。返回 -1 = 被动/光环，放不了
+function labK(x) {
+  const c = CLASS_BY_ID[cur.classes[0].id];
+  return c.slots.filter((y) => SKILLS[y.skill].kind !== 'aura').indexOf(x);
 }
 function labCast() {
-  const [id, k] = labLast; labHero(id);
-  const h = heroes[0]; h.dead = false; h.hp = h.maxHp * .5; h.sk = [0, 0];   // 半血：治疗类技能也能触发（队员无敌，不会掉血）
+  const h = heroes[0]; if (!h || labLast == null) return;
+  labPrev = labLast;
+  h.dead = false; h.hp = h.maxHp * .5; h.sk = h.skp.map(() => 0);   // 半血：治疗类技能也能触发（角色无敌，不会掉血）
   h.lock = 0; h.pend = null; h.dash = h.leap = h.rush = null; if (h.stand) endStand(h);
-  const ok = cast(h, k);
-  $('labmsg').textContent = `${h.def.name} · ${h.def.sk[k].name}（${k ? '高级' : '低级'}）` + (ok ? '' : ' —— 没放出来：附近没有合适的目标，多刷几只或关掉游走');
-  document.querySelectorAll('#skl button').forEach((b) => b.classList.toggle('on', b.dataset.k === id + k));
+  const ok = cast(h, labLast);
+  $('labmsg').textContent = `${h.name} · ${h.skp[labLast].name}` + (ok ? '' : ' —— 没放出来：附近没有合适的目标，多刷几只或关掉游走');
+  document.querySelectorAll('#revList .rev > .hd button.see').forEach((b) => b.classList.toggle('on', +b.dataset.k === labLast));
+}
+// ── 技能评审 ─────────────────────────────────────────────────────────────────
+// 计量单位是「技能 key」，不是职业：key = 树.槽位.路径（sw.B.0000），全局唯一、跨职业共享。
+//   槽位 key 取 path 的哪几位：A→[0,1]（全树共用） B→[0,1,2,3] C→[0,1,2,3,4] D→[0,1,2,3,5]
+//   所以四转只有 A/B 两槽（每职业 2 条），五转起 C，六转才补齐 D —— 四转职业根本没有完整技能面。
+//   全局 key 实测 790 条（A 30 / B 120 / C 160 / D 480），这才是要评审的总量。
+// 职业树每转一分为二（5→10→20→40→80→160→320，另有 320 个 `+` 超绝形态），「4 人一组」不存在。
+//   同一个 path 有基础 / 超绝两套职业（id 带 `+`），名字与 D 槽不同（影幕·艾伦 / 万刃·艾伦），
+//   所以每组的六转层是 16 个分支 × 2 = 32 个职业，共 47 个。名字一律取 CLASS_BY_ID[c.id].name——
+//   CLASSES_OF 里存的 name 是基础形态名，`+` 会显示成重名。
+// 组 = 5 棵树 × 4 个二转方向 = 20 组，组内能切到该分支下全部后代职业。
+// 意见只进 localStorage（gs.skillreview），导出 markdown 贴回对话；我改完表现写进 skillnotes.mjs，刷新就能看到回复。
+const RKEY = 'gs.skillreview';
+let revDB = {}; try { revDB = JSON.parse(localStorage.getItem(RKEY) || '{}') || {}; } catch (e) { revDB = {}; }
+const revSave = () => {
+  try { localStorage.setItem(RKEY, JSON.stringify(revDB)); } catch (e) {}
+  // 顺手 POST 给 dev server 落成 tools/review/live/gs.skillreview.json，我直接读文件，不用等你复制粘贴。
+  // 防抖 500ms（输入框每个字符都调 revSave）；没有 dev server 时静默失败，localStorage 仍照旧。
+  clearTimeout(revSave._t);
+  revSave._t = setTimeout(() => {
+    fetch('/__rev/' + RKEY, { method: 'POST', body: JSON.stringify(revDB), keepalive: true }).catch(() => {});
+  }, 500);
+};
+// ── 意见按「技能 key」存，不按职业：同一条 key 在多个职业里共用，改一次全体受益，进度也只该算一次 ──
+const revOk = (key) => !!revDB._k?.[key]?.ok;
+const revNote = (key) => revDB._k?.[key]?.note ?? '';
+function revSet(key, patch) { ((revDB._k ??= {})[key] ??= { ok: false, note: '' }); Object.assign(revDB._k[key], patch); revSave(); }
+// 意见的轮次归属：写下这条意见时，对应技能已经改到第几轮（r 字段）。
+// r < SNOTES 的最新轮次 = 这条意见我已经答过 → 过期，面板与导出都不再带它（原文见「第 N 轮」回复）。
+// 没有 r 的老意见按第 0 轮算：那是它写下时的轮数（当时 SNOTES 里还没有这条 key），一并清掉。
+const revStale = (key) => { const e = revDB._k?.[key]; return !!e?.note && (e.r ?? 0) < revRounds(key); };
+const revLive = (key) => !!revDB._k?.[key]?.note && !revStale(key);   // 还挂着的意见（过期的已经答完，不算「待改」）
+const revNotes = (key) => (SNOTES[key] ?? []).filter((e) => !e.k || e.k === key);
+// 这个 key 改过几轮（SNOTES 里 n 的最大值）。0 = 从没动过。
+const revRounds = (key) => revNotes(key).reduce((a, e) => Math.max(a, e.n), 0);
+// 这个职业改过几轮：取它所有槽位里最高的那一轮——「已完成第 x 次修改」的 x。
+// 用 max 不用 sum：同一条 key 挂在多个职业上，按其技能面统一记轮次，不按条重复计数。
+const revClassRounds = (id) => (CLASS_BY_ID[id]?.slots ?? []).reduce((a, x) => Math.max(a, revRounds(x.skill)), 0);
+// 这个职业的技能面上，有史可查的全部记录（按轮次倒序）。历史面板用它。
+const revClassHist = (id) => {
+  const out = [];
+  for (const x of CLASS_BY_ID[id]?.slots ?? []) for (const e of revNotes(x.skill))
+    out.push({ ...e, key: x.skill, slot: x.slot, sname: SKILLS[x.skill]?.name ?? '' });
+  return out.sort((a, b) => b.n - a.n);
+};
+// 全局：全游戏出现过哪些技能 key（评审总量 790），以及每棵树各自的 key
+const REV_KEYS = (() => { const s = new Set(); for (const c of [...CLASSES_OF.values()].flat()) for (const x of CLASS_BY_ID[c.id]?.slots ?? []) s.add(x.skill); return [...s]; })();
+const REV_TREE_KEYS = (() => { const m = {}; for (const c of [...CLASSES_OF.values()].flat()) {
+  const kk = (m[c.tree] ??= new Set()); for (const x of CLASS_BY_ID[c.id]?.slots ?? []) kk.add(x.skill); }
+  return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, [...v]])); })();
+// 评审对象 = 「角色（实时切换）」里选中的那个职业。两处共用同一份 cur / labPath，不再有第二套组索引，
+// 所以「选树 → 选职业 → 场上换人 → 下面列出它的技能 → 逐条写意见」是一条链，不会两个选择器对不上。
+const REV_CLASSES = [...CLASSES_OF.values()].flat()
+  .filter((c) => (CLASS_BY_ID[c.id]?.slots.length ?? 0) > 0)
+  .sort((a, b) => a.path.length - b.path.length || (a.tree < b.tree ? -1 : a.tree > b.tree ? 1 : a.id < b.id ? -1 : 1));
+const revSlots = (id) => CLASS_BY_ID[id]?.slots ?? [];
+// 每条 key 被哪些职业用（实测 790 条里 420 条被 2 个以上职业共用，最高 ar.A.00 × 47）。
+// 意见本来就按 key 存，所以这里只是拿来「告诉设计师不用重复填」——不参与任何存储逻辑。
+const REV_KEY_USES = (() => { const m = {}; for (const c of REV_CLASSES) for (const x of revSlots(c.id)) (m[x.skill] ??= []).push(c.id); return m; })();
+// 卡片上那行提示：写清这条技能还挂在哪些职业上。实测同一条 key 的槽位字母恒定（790 条全部 slotDiffers 0），
+// 所以直接报职业名，不用标「他在 A 槽、你在 B 槽」。
+function revShared(key) {
+  const ids = (REV_KEY_USES[key] ?? []).filter((id) => id !== cur.classes[0]?.id);
+  if (!ids.length) return '';
+  const names = ids.map((id) => CLASS_BY_ID[id].name);
+  return `同一条技能 · ${ids.length + 1} 个职业共用 · 意见与历史修改全体共享，填一次即可\n　`
+    + names.slice(0, 8).join('、') + (names.length > 8 ? ` 等 ${names.length} 个` : '');
+}
+// 一个职业评完 = 它自己的槽每一条都填过意见。勾「表现对」不算——那只是看过了，没意见就等于没问题。
+const revClassDone = (id) => { const ks = revSlots(id).map((x) => x.skill); return ks.length > 0 && ks.every(revNote); };
+// ── 缺口审计：每条技能「缺动作 / 缺特效 / 表现不足」写进评审表 ──────────────────────
+// 判据只用可验证的事实，不猜文案修辞：
+//   ① KV 里有没有专属表现（没有 = 走通用执行器）
+//   ② 该 kind 的通用执行器播不播角色动作（读 battle.html 的 K 表，见下面 KIND_ACT）
+//   ③ 手上真实存在的 clip 全集（12 个 + 2 个程序合成），文案要求不存在的动作就是硬缺口
+// 结果是「代码现状」的函数，不是手填清单——改了 K / KV / clip 它就跟着变。
+// K 表每个 kind 实际播的 clip（与 K 的 play() 一一对应）。其中 act 为 null = 这个执行器本来就不播动作，
+// 是设计如此（aura 是被动；aoe / control 靠落点特效交代，不要求角色起身）。改 K 表时同步改这里。
+const KIND = {
+  single:  { act: 'grip 攻击', fx: null },
+  aura:    { act: null, fx: null },
+  guard:   { act: 'guard 举盾', fx: null },   // 已补：半身护罩跟随角色
+  heal:    { act: 'cast 吟唱', fx: null },
+  summon:  { act: 'summon 前推', fx: null },
+  aoe:     { act: 'attack_heavy', fx: '落点一发爆，没有与技能文案对应的特效形状' },
+  control: { act: 'attack_thrust', fx: '落点一个圈，没有与技能文案对应的特效形状' },
+  dash:    { act: 'leap 腾空', fx: null },
+};
+// 文案要求、但仓库 clip 里没有的动作。正则故意窄，只匹配明确的动作词。
+const GAP_NEEDS = [
+  [/跳|跃|翻滚|腾空|跃起|起跳|后空/, 'leap', '位移/腾空'],
+  [/旋转|旋身|绕身|环绕|回旋|转圈/, 'spin', '旋身'],
+  [/召唤|召出|唤出|分身|影子|图腾|布置|放置|摆下/, 'summon', '召唤起手'],
+  [/吟唱|念咒|咏唱|施法|引导|念诵|祈祷|祝祷|冥想/, 'cast', '吟唱/引导'],
+  [/举盾|盾墙|格挡|架盾|列阵|结阵/, 'guard', '举盾/格挡'],
+  [/闪避|规避|躲开|后撤|拉开距离|退开/, 'roll', '翻滚/闪避'],
+  [/蓄力|聚力|蓄势|瞄准|端枪|架上/, 'aim', '蓄力/瞄准'],
+];
+// 仓库实有的 clip（vox_sw.glb 20 个 + 运行时合成的 2 个）。poses.py 加动作后要同步这里，
+// 否则文案点名的动作会被误判成缺口。
+const CLIP_SET = ['attack_heavy', 'attack_melee1h', 'attack_pistol', 'attack_rifle', 'attack_throw',
+  'attack_thrust', 'death', 'hit', 'hold_melee1h', 'idle', 'run', 'walk', 'run_rifle', 'run_melee1h',
+  'leap', 'spin', 'summon', 'cast', 'guard', 'aim', 'aim_pistol', 'roll'];
+// 返回这条技能当前的表现缺口（空数组 = 没查出问题）。文案从槽位取，不在技能库上。
+const REV_KEY_TEXT = (() => { const m = {}; for (const c of [...CLASSES_OF.values()].flat()) for (const x of revSlots(c.id)) (m[x.skill] ??= x.text ?? ''); return m; })();
+function revGaps(key) {
+  const P = SKILLS[key], text = REV_KEY_TEXT[key] ?? '';
+  const out = [];
+  // 记账改口径：不再「非 aura 一律判 noact」，而是看这个 kind 的执行器实际播不播动作，
+  // 且把原先 noact + fx 对同一条技能记两次账合成一条（导致「126 条」看起来比实际严重一倍）。
+  if (KV[key]) out.push({ t: 'kv', d: '已有专属表现，但起手动作是借来的（见 KV 注释）' });
+  else {
+    const K2 = KIND[P.kind] ?? {};
+    if (K2.act === null) {   // aura 是唯一的例外：被动光环不需要角色动作
+      if (P.kind !== 'aura') out.push({ t: 'noact', d: `kind=${P.kind} 的通用执行器不播角色动作，角色身上看不出在放技能` });
+    } else if (K2.fx) out.push({ t: 'fx', d: K2.fx });
+  }
+  // 文案点名了仓库里没有的 clip
+  for (const [re, need, why] of GAP_NEEDS) if (re.test(text) && !CLIP_SET.some((c2) => c2 === need))
+    out.push({ t: 'clip', d: `文案写了「${why}」→ 需要 ${need} 动作，角色 clip 里没有（只有 ${CLIP_SET.length} 个）` });
+  // 站定类：stand 只拦施放，不真的摆出站定姿态
+  if (P.stand) out.push({ t: 'stand', d: '站定只在 AI 层拦施放，角色仍站着打，没有扎根 / 架枪的姿态' });
+  return out;
+}
+const REV_GAPS = {};   // key -> 缺口数组（懒算，第一次渲染时填）
+const revGapOf = (key) => (REV_GAPS[key] ??= revGaps(key));
+const revGapKeys = () => REV_KEYS.filter((k) => revGapOf(k).length);
+const revPct = (a, b) => (b ? ((a / b) * 100).toFixed(1) : '0.0') + '%';
+// 板块 2 的六个数字。计量单位是技能 key：同一 key 被多个职业共用，所以「总/已/待」按 key 数，
+// 不按职业数——不然环刃剑阵那一条会在 11 个职业里各算一次。
+function revProg() {
+  const c = cur.classes[0]; if (!c) return '';
+  const mine = revSlots(c.id).map((x) => x.skill);
+  const tk = REV_TREE_KEYS[c.tree] ?? [], stale = REV_KEYS.filter(revStale).length;
+  const dn = (ks) => ks.filter(revLive).length, ok = (ks) => ks.filter(revOk).length;
+  return `<b>本职业</b> 总 ${mine.length} · 已评 ${dn(mine)} · 待评 ${mine.length - dn(mine)} · 完成率 ${revPct(dn(mine), mine.length)}<br>`
+    + `<b>本树 ${CLASS_TREES[c.tree].name}</b> 总 ${tk.length} · 已评 ${dn(tk)} · 待评 ${tk.length - dn(tk)} · 完成率 ${revPct(dn(tk), tk.length)}<br>`
+    + `<b>全局</b> 总 ${REV_KEYS.length} · 已评 ${dn(REV_KEYS)} · 待评 ${REV_KEYS.length - dn(REV_KEYS)}`
+    + ` · 总完成率 ${revPct(dn(REV_KEYS), REV_KEYS.length)}` + (ok(REV_KEYS) ? `（表现确认 ${ok(REV_KEYS)} 条）` : '')
+    + `<br><b>自动审计</b> 有缺口的技能 ${revGapKeys().length} / ${REV_KEYS.length} 条`
+    + `（本树 ${(REV_TREE_KEYS[c.tree] ?? []).filter((k) => revGapOf(k).length).length} 条）`
+    + (stale ? `<br><span class="dim">已按「改完即清」清掉 ${stale} 条过期意见（原文见各自「第 N 轮」回复）</span>` : '');
+}
+// 换评审对象 = 换场上角色，走的是同一条 labApply（换人 + 重画技能列表 + 重画评审）。
+// 带 `+` 的 id = 五星超绝，落在第 7 级名册上，labUlt 得跟着走，不然 path 一样会退回六转基础形态
+const revOpen = (c) => { labTree = c.tree; labPath = c.path.slice(); labUlt = c.id.endsWith('+'); return labApply(); };
+// 「下一个」：先在本树里按转数往后找，本树走完串到下一棵树，全评完就提示
+function revNext() {
+  const c = cur.classes[0]; if (!c) return;
+  const mine = REV_CLASSES.filter((x) => x.tree === c.tree), at = mine.findIndex((x) => x.id === c.id);
+  const t = mine.slice(at + 1).find((x) => !revClassDone(x.id)) ?? mine.find((x) => !revClassDone(x.id));
+  if (t) return revOpen(t);
+  const trees = Object.keys(CLASS_TREES), ti = trees.indexOf(c.tree);
+  for (let k = 1; k < trees.length; k++) {
+    const hit = REV_CLASSES.find((x) => x.tree === trees[(ti + k) % trees.length] && !revClassDone(x.id));
+    if (hit) return revOpen(hit);
+  }
+  $('revMsg').textContent = `全部 ${REV_CLASSES.length} 个有技能的职业都评完了`;
+}
+// 板块 7：职业总表。评审台一次只看一个职业，这张表把全部有技能的职业摊开，点行就切过去。
+// 五个数字全部现算：技能 = 槽数；自动审计 = 有缺口的技能条数；人工评审 = 意见条数 + 最高轮次；
+// 已修改 = SNOTES 里的最高轮次。不新存任何东西，revDB / SNOTES 一变它就跟着变。
+const revStat = (id) => {
+  const ks = revSlots(id).map((x) => x.skill);
+  return { n: ks.length,
+    gap: ks.filter((k) => revGapOf(k).length).length,   // 有缺口的技能条数（不是缺口总数）
+    pend: ks.filter((k) => revLive(k)).length,          // 还挂着意见 = 待我改（过期的不算）
+    rnd: ks.reduce((a, k) => Math.max(a, revRounds(k)), 0) };
+};
+// 行序与 REV_CLASSES 一致：先按树聚簇，再按转数，再按 id
+const REV_TBL_ORDER = [...REV_CLASSES].sort((a, b) => (a.tree < b.tree ? -1 : a.tree > b.tree ? 1 : 0)
+  || a.path.length - b.path.length || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+function revTblBuild() {
+  const box = $('revTable');
+  const tbl = document.createElement('table');
+  tbl.innerHTML = '<colgroup><col style="width:36%"><col style="width:8%"><col style="width:20%"><col style="width:23%"><col style="width:13%"></colgroup>'
+    + '<thead><tr><th>职业</th><th class="num">技能</th><th>自动审计</th><th>人工评审</th><th class="num">已修改</th></tr></thead>';
+  const tb = document.createElement('tbody'), cid = cur.classes[0]?.id;
+  let tree = '';
+  for (const c of REV_TBL_ORDER) {
+    if (c.tree !== tree) {   // 每棵树一条分组行，顺带报这棵树自己的汇总
+      tree = c.tree;
+      const pool = REV_TBL_ORDER.filter((x) => x.tree === tree);
+      const t = pool.map((x) => revStat(x.id)).reduce((a, x) => ({ n: a.n + x.n, gap: a.gap + x.gap, pend: a.pend + x.pend, rnd: Math.max(a.rnd, x.rnd) }), { n: 0, gap: 0, pend: 0, rnd: 0 });
+      const g = document.createElement('tr'); g.className = 'grp';
+      g.innerHTML = `<td colspan="5">${c.treeName} · ${pool.length} 个职业 · ${t.n} 条技能`
+        + (t.gap ? ` · 自动审计 ${t.gap} 条有缺口` : ' · 自动审计 0 缺口')
+        + (t.pend ? ` · ${t.pend} 条待改` : '') + (t.rnd ? ` · 已改到第 ${t.rnd} 轮` : '') + '</td>';
+      tb.append(g);
+    }
+    const s = revStat(c.id), r = document.createElement('tr');
+    r.className = 'row' + (c.id === cid ? ' cur' : '');
+    const done = s.pend ? s.rnd + 1 : s.rnd;   // 挂着意见 = 又开了一轮，等我这轮改完
+    const rev = done ? `<span${s.pend ? ' class="pend"' : ''}>第 ${done} 轮${s.pend ? ' · 评审中' : ''}</span>` : '<span class="none">待评审</span>';
+    const aud = s.gap ? `<span class="pend">${s.gap}/${s.n} 缺口</span>` : '<span class="none">无缺口</span>';
+    r.innerHTML = `<td>${c.treeName} › ${c.name} <span class="id">${c.id}</span></td>`
+      + `<td class="num sk">${s.n}</td><td>${aud}</td><td>${rev}</td>`
+      + `<td class="num">${s.rnd ? `第 ${s.rnd} 轮` : '<span class="none">—</span>'}</td>`;
+    r.onclick = () => { revTabShow(false); revOpen(c); };
+    tb.append(r);
+  }
+  tbl.append(tb);
+  box.innerHTML = ''; box.append(tbl);
+  $('ptabsMsg').textContent = `${REV_TBL_ORDER.length} 个职业`;
+}
+let revTblOn = false;
+// 切页只切 #pbody 的 tbl 类；表格每次打开重画一次（意见是在评审台上改的），回评审台不重建
+function revTabShow(on) {
+  revTblOn = on;
+  $('pbody').classList.toggle('tbl', on);
+  $('ptab1').classList.toggle('on', !on);
+  $('ptab2').classList.toggle('on', on);
+  if (on) revTblBuild();
+}
+function revRender() {
+  const box = $('revTop'), c = cur.classes[0]; box.innerHTML = ''; $('labPick').innerHTML = ''; $('revList').innerHTML = '';
+  if (revTblOn) revTblBuild();   // 只在表格页开着时重画：意见回填在评审台那页，切过去时再算
+  if (!c) return;
+  // 板块 1：树 + 等级（= 转到第几层）+ 下一个。等级用下拉显式选，比只靠逐级点更好退
+  const bar = document.createElement('div'); bar.className = 'row';
+  const sel = document.createElement('select'); sel.title = '职业树';
+  Object.keys(CLASS_TREES).forEach((id) => sel.add(new Option(CLASS_TREES[id].name, id, false, id === c.tree)));
+  sel.onchange = () => { labTree = sel.value; labPath = []; labUlt = false; labApply(); };
+  // 等级 = 转数；六转那一档额外给一个「五星」：超绝与六转基础形态共用同一条 path，
+  // 不显式选就永远只能看到基础形态（320 个五星从页面上选不到）
+  const tv = document.createElement('select'); tv.title = '等级 = 转到第几层；六转之下还有五星超绝，与六转共用同一条 path';
+  const deep = Math.max(...REV_CLASSES.filter((x) => x.tree === c.tree).map((x) => x.path.length));
+  for (let k = 0; k <= deep; k++) {
+    tv.add(new Option(`${k} 转`, k, false, k === c.path.length && !labUlt));
+    if (k === 6) tv.add(new Option('6 转 · 五星超绝', 7, false, labUlt));
+  }
+  // 选长一档 = 往下走一层：取该层的第一个分线（axisAt 从已答前缀算，和逐级下拉给的第一项一致）。
+  // 不这么补就只能截短——slice 在目标比现长时是空操作，「5 转 → 6 转」点不动
+  tv.onchange = () => { const v = +tv.value; labUlt = v === 7; const k = Math.min(v, 6);
+    if (k < labPath.length) labPath = labPath.slice(0, k);
+    else while (labPath.length < k) labPath = labPath.concat(0);
+    labApply(); };
+  const nx = document.createElement('button'); nx.textContent = '下一个待评 ›';
+  nx.title = '按转数顺序跳到本树下第一个还没评完的职业；本树评完自动串到下一棵树';
+  nx.onclick = revNext;
+  bar.append(sel, tv, nx); box.append(bar);
+  revMarkCur();   // 当前职业名 / 每层下拉的「已评/总数」都归它管，首次渲染也得跑一遍
+  $('revProg').innerHTML = revProg();
+
+  // 板块 3：逐级选职业（每层一个下拉，选完第 k 层才出第 k+1 层）。
+  // 层数上限取该树最深的那条 path，不能拿 c.path.length 算——那是「已答到第几层」，选完第一层就只剩一层
+  const tree = CLASS_TREES[c.tree], steps = Math.max(...REV_CLASSES.filter((x) => x.tree === c.tree).map((x) => x.path.length));
+  const pick = $('labPick');
+  for (let k = 0; k < Math.min(steps, c.path.length + 1); k++) {
+    const ax = axisAt(tree, c.path.slice(0, k), k);
+    const ps = document.createElement('select'); ps.title = `${k + 1} 级分支｜${ax.name}`;
+    ps.add(new Option(ax.name, '', c.path[k] == null, c.path[k] == null));
+    ax.sides.forEach((sd, i) => ps.add(new Option(`${ax.name}｜${sd.name}`, i, false, c.path[k] === i)));
+    ps.onchange = () => { labPath = ps.value === '' ? c.path.slice(0, k) : c.path.slice(0, k).concat(+ps.value); labApply(); };
+    pick.append(ps);
+  }
+  // 板块 5：技能卡。技能卡就是评审卡——同一个职业的同一批槽，不再分成两份列表
+  const list = $('revList'), skills = revSlots(c.id);
+  if (!skills.length) { const p = document.createElement('p'); p.className = 'dim'; p.textContent = '这个职业还没有技能槽（基础级 0 转）。'; list.append(p); return; }
+  for (const x of skills) {
+    const P = SKILLS[x.skill], key = x.skill, ok = revOk(key), note = revNote(key), k = labK(x);
+    const d = document.createElement('div'); d.className = 'rev' + (ok ? ' ok' : '');
+    const hd = document.createElement('div'); hd.className = 'hd';
+    const lab = document.createElement('label'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = ok;
+    lab.append(cb, document.createTextNode('表现对'));
+    const b = document.createElement('b'); b.textContent = `${x.slot}｜${P.name}`;
+    const see = document.createElement('button'); see.className = 'see'; see.dataset.k = k; see.textContent = k < 0 ? '被动' : '看';
+    if (k < 0) see.disabled = true; else { see.title = '立刻放一次看效果'; see.onclick = () => { labLast = k; labCast(); }; }
+    const kd = document.createElement('span'); kd.className = 'k';
+    kd.textContent = P.kind + (KV[key] ? ' · 专属表现' : ' · 通用表现');
+    hd.append(lab, b, see, kd); d.append(hd);
+    const kk = document.createElement('p'); kk.className = 'dim'; kk.style.margin = '0'; kk.textContent = key; d.append(kk);
+    const sh = revShared(key);
+    if (sh) { const e = document.createElement('p'); e.className = 'dim share'; e.style.margin = '0'; e.textContent = sh; d.append(e); }
+    const p = document.createElement('p'); p.textContent = x.text; d.append(p);
+    // 缺口块：自动审计结果。设计师点「填入意见」把它抄进意见框，再按自己的判断改写
+    const gaps = revGapOf(key);
+    if (gaps.length) {
+      d.classList.add('gap');
+      const g = document.createElement('div'); g.className = 'gaps';
+      g.innerHTML = `<b>自动审计 · ${gaps.length} 处缺口</b>`
+        + gaps.map((x2) => `<span class="${x2.t}">${x2.d}</span>`).join('');
+      d.append(g);
+    }
+    const hist = revNotes(key);
+    if (hist.length) { const m = document.createElement('div'); m.className = 'mine';
+      m.innerHTML = hist.map((e) => `<i><span class="rv">第 ${e.n} 轮</span> · ${e.t}</i>${e.fb.replace(/\n/g, '<br>')}`).join('<br>'); d.append(m); }
+    // 过期意见不填回意见框：它已经改完了（下面「第 N 轮」就是回复），再填回等于让人重看一遍旧话。
+    // 新输入一条时把 r 记成当前轮数，它才不会被 revStale 判成已答。
+    const stale = revStale(key), curRnd = revRounds(key);
+    const flag = document.createElement('div'); flag.className = 'new';
+    flag.textContent = stale ? `上轮意见（第 ${curRnd} 轮）已改完，原文见下方回复` : '已填报，等下一轮修改';
+    flag.style.display = note ? '' : 'none'; d.append(flag);
+    const ta = document.createElement('textarea');
+    ta.placeholder = stale ? '这条已经改完；有新问题直接写在这里' : '这条技能的表现哪里不对？（留空 = 没问题）';
+    ta.value = stale ? '' : note;
+    ta.oninput = () => { const v = ta.value.trim();
+      revSet(key, { note: v, r: curRnd });   // 写下的意见归当前轮，它才不会被判成已答
+      flag.style.display = v ? '' : 'none'; if (v) flag.textContent = '已填报，等下一轮修改'; revProgress(); };
+    cb.onchange = () => { revSet(key, { ok: cb.checked, ...(cb.checked ? { note: '' } : {}) });   // 勾「表现对」= 这条结掉，旧意见一并清
+      ta.value = ''; flag.style.display = 'none'; d.classList.toggle('ok', cb.checked); revProgress(); };
+    d.append(ta);
+    if (gaps.length) {   // 一键把审计结果抄进意见框，设计师再删改
+      const fill = document.createElement('button'); fill.className = 'fill'; fill.textContent = '填入意见';
+      fill.title = '把自动审计的缺口抄进意见框，你可以再改';
+      fill.onclick = () => { ta.value = [ta.value.trim(), ...gaps.map((x2) => '· ' + x2.d)].filter(Boolean).join('\n');
+        ta.oninput(); ta.focus(); };
+      d.append(fill);
+    }
+    list.append(d);
+  }
+}
+function revProgress() { $('revProg').innerHTML = revProg(); revMarkCur(); if (revTblOn) revTblBuild(); }
+// 填完一条意见后：当前职业名变绿（= 它的槽全填过意见了），本层每个下拉的「已评/总数」跟上
+function revMarkCur() {
+  const c = cur.classes[0], nm = $('revCur'); if (!c || !nm) return;
+  const tg = $('revTarget'); if (tg) tg.innerHTML = revTargetHTML();   // 侧栏最上方那条：完整成长链 + 编号 + 技能槽
+  revRenderHist();   // 角标「已完成第 x 次修改」+ 可展开的历史
+  nm.textContent = `${CLASS_BY_ID[c.id].name}（${c.id}） · ${revSlots(c.id).length} 条技能 · ` + (revClassDone(c.id) ? '已评审' : '未评审');
+  nm.style.color = revClassDone(c.id) ? '#9fbf6a' : '';
+  const t = CLASS_TREES[c.tree];
+  [...document.querySelectorAll('#labPick select')].forEach((ps, k) => {
+    const ax = axisAt(t, c.path.slice(0, k), k);
+    const stat = (side) => {
+      const p2 = c.path.slice(0, k).concat(side);
+      const pool = REV_CLASSES.filter((x) => x.tree === c.tree && p2.every((v, i) => x.path[i] === v));
+      return pool.length ? `（${pool.filter((x) => revClassDone(x.id)).length}/${pool.length}）` : '';
+    };
+    ps.options[0].text = ax.name + stat();
+    ax.sides.forEach((sd, i) => { if (ps.options[i + 1]) ps.options[i + 1].text = `${ax.name}｜${sd.name}` + stat(i); });
+  });
+}
+function revExport() {
+  const c = cur.classes[0], cls = CLASS_BY_ID[c.id], ks = revSlots(c.id);
+  const out = [`## 技能评审 · ${cls.name}（${c.id}）· ${c.treeName}｜${c.full}`,
+    `转数 ${c.path.length} · ${ks.length} 条技能 · 本树 ${REV_TREE_KEYS[c.tree].filter(revOk).length}/${REV_TREE_KEYS[c.tree].length} 条`
+    + ` · 全局 ${REV_KEYS.filter(revOk).length}/${REV_KEYS.length} 条`, ''];
+  for (const x of ks) {
+    const P = SKILLS[x.skill];
+    out.push(`- [${revOk(x.skill) ? 'x' : ' '}] **${x.slot}｜${P.name}** \`${x.skill}\`（${P.kind}${KV[x.skill] ? ' · 专属表现' : ' · 通用表现'}）`, `  - 文案：${x.text}`);
+    for (const g of revGapOf(x.skill)) out.push(`  - 自动审计：${g.d}`);
+    if (revLive(x.skill)) out.push(`  - 意见：${revNote(x.skill)}`);
+    for (const e of revNotes(x.skill)) out.push(`  - 上轮回复：${e.fb.replace(/\n/g, '\n    ')}`);
+  }
+  return out.join('\n');
+}
+function revCopy() {
+  const t = revExport();
+  const done = () => ($('revMsg').textContent = '已复制 ' + t.split('\n').length + ' 行，贴回对话即可');
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(t).then(done, () => fallback());
+  else fallback();
+  function fallback() {   // file:// 或没给剪贴板权限时：塞进输入框让用户自己 Ctrl+C
+    $('revMsg').textContent = '复制失败，已把内容填进下面的框，Ctrl+A 再 Ctrl+C';
+    const ta = $('revOut'); ta.value = t; ta.style.display = 'block'; ta.focus(); ta.select();
+  }
 }
 if (LAB) {
   document.body.classList.add('lab'); document.title = 'M0 技能特效台'; $('ptitle').textContent = '技能特效台';
-  auto.checked = false; god.checked = true; rate.value = 6;
-  const skl = $('skl');
-  for (const id of HIDS) {
-    const def = T.HERO[id], wn = W[def.weapon].name;
-    const nm = document.createElement('button'); nm.className = 'nm'; nm.textContent = def.name; nm.title = `换成${def.name}（${wn}）`; nm.dataset.id = id;
-    nm.onclick = () => { labStop(); labHero(id); }; skl.append(nm);
-    for (const k of [0, 1]) {
-      const btn = document.createElement('button'); btn.textContent = def.sk[k].name; btn.title = `${def.name} · ${wn} · ${k ? '高级' : '低级'}：${def.sk[k].desc}`; btn.dataset.k = id + k;
-      btn.onclick = () => { if (labLast && labLast[0] + labLast[1] === btn.dataset.k && rep.checked) return labStop(); labLast = [id, k]; repAcc = 0; labCast(); }; skl.append(btn);
-    }
-  }
-  $('recast').onclick = () => (labLast ||= labPrev) && labCast();
-  rep.onchange = () => (repAcc = 0);
-  const setN = () => (nz.value = Math.max(0, +labN.value | 0)); labN.oninput = setN; setN();
-  $('reset').onclick = () => { clearZ(); spawnN(+nz.value); };
-  labHero('ron'); spawnN(+nz.value);
+  god.checked = true; rate.value = 6;
+  // 自动释放直接复用战斗里的那条通道（stepHero 里 auto.checked → cast(h, k, 1)），不另起一套计时器
+  auto.checked = rep.checked; rep.onchange = () => (auto.checked = rep.checked);
+  $('recast').onclick = () => { if (labLast ?? labPrev) { labLast ??= labPrev; labCast(); } };
+  const LAB_N = 60;   // 技能台的靶子数量固定：不追人所以不用多，60 只够把近战/远程都围上
+  nz.value = LAB_N;
+  const syncPause = () => ($('labPause').textContent = $('pause').textContent);
+  $('labPause').onclick = () => { $('pause').onclick(); syncPause(); };
+  syncPause();
+  $('revCopy').onclick = revCopy;
+  let bossI = 0;   // 技能台的 BOSS：一次只留一只，连点按 corrupted → vesse → chaos 轮换
+  $('bossBtn').onclick = () => {
+    if (boss && !boss.dead) killZ(boss);
+    const u = spawnBoss(bossI);
+    $('bossMsg').textContent = `${BOSSES[bossI].name}（第 ${bossI + 1}/${BOSSES.length} 只，再点换下一只）`;
+    bossI = (bossI + 1) % BOSSES.length;
+  };
+  $('ptab1').onclick = () => revTabShow(false);
+  $('ptab2').onclick = () => revTabShow(true);
+  // 批量把审计缺口抄进意见框。只写还空着的 key——已有意见（人工写的或上轮回复的）一律保留。
+  const revFillGaps = (keys) => { let n = 0;
+    for (const k of keys) { const g = revGapOf(k); if (!g.length || revLive(k)) continue;
+      revSet(k, { note: g.map((x) => '· ' + x.d).join('\n') }); n++; }
+    revRender(); $('revMsg2').textContent = `已填 ${n} 条（有意见的跳过，共 ${keys.length} 条里）`; };
+  $('revFill').onclick = () => revFillGaps(REV_TREE_KEYS[cur.classes[0].tree] ?? []);
+  $('revFillAll').onclick = () => { if (confirm(`把 ${revGapKeys().length} 条有缺口的技能都填上（不动已有意见）？`)) revFillGaps(REV_KEYS); };
+  $('revClear').onclick = () => {   // 只清当前职业这几条的意见，勾选与其它组不动
+    const ks = revSlots(cur.classes[0].id).map((x) => x.skill);
+    if (!confirm(`清空当前 ${ks.length} 条技能的意见？勾选保留。`)) return;
+    for (const k of ks) if (revDB._k?.[k]) revDB._k[k].note = '';
+    revSave(); revRender();
+  };
+  const c0 = REV_CLASSES.find((x) => x.tree === labTree && x.path.length === 6);   // 开在六转：A/B/C/D 四槽都在才看得出效果
+  labPath = c0.path.slice();
+  await labApply(); spawnN(LAB_N);
+  revRender();
+  // 打开页面就把浏览器里已存的意见发一次，不用等下一次输入
+  if (revDB._k && Object.keys(revDB._k).length) revSave();
 } else {
-  cur = curFromSquad(LV?.squad?.length ? LV.squad : PICK0); setSquadNow(); if (!LV) spawnN(40);
+  cur = curFromSquad(LV?.squad?.length ? LV.squad : PICK0); await setSquadNow(); if (!LV) spawnN(40);
   // 僵尸默认是「走路速度 0.6 倍」的试玩手感，开局设置里的滑杆从它起步
   updPrep();
   // 团队命令按钮
@@ -1548,6 +2911,6 @@ function setOrder(k) {
   for (const b of $('orders').children) b.classList.toggle('on', b.dataset.o === k);
   $('orderHint').textContent = ORDERS[k].hint;
 }
-window.__battle = { cur: () => cur, GRIPRUN: (h) => GRIPS[h.w.grip][1], tier: () => tier, setTier: (k) => { $('tier').value = k; $('tier').onchange(); }, start: () => $('start').onclick(), playing: () => playing, TIER_CLASSES, CLASSES_OF, LV, M, T, walls, threatBearing, neediestAlly, priorityElite, restartLevel, flow: () => ({ t: flowT, i: flowI, end: flowEnd, rate: LV ? rateAt(LV, flowT) : 0 }), setFlowT: (t) => (flowT = t), renderer, shots, zones, tmp, later, GLOW, SOLID, setSquad, spawnN, clearZ, cast, stats, ZGV, keys, labPick: (id, k) => { labLast = [id, k]; labCast(); }, mix, mixOn, GRADE, regrade, setFX: (v) => (FX = v), STRIDE, heroes, zs, allies, scene, THREE, explode: () => $('boom').click(), setOrder, order: () => order, SQ, focus: () => focus, camera,
+window.__battle = { makeZombie, boss: () => boss, BOSSES, spawnBoss, K, KV, CLASS_BY_ID, SKILLS, SNOTES, CLASS_TREES, REV_CLASSES, REV_KEYS, REV_TREE_KEYS, revNext, revClassDone: (id) => revClassDone(id), revGapOf, revGapKeys, revStat, revTblBuild, revTabShow, revTblOn: () => revTblOn, REV_TBL_ORDER, KIND, GAP_NEEDS, CLIP_SET, rev: () => ({ i: 0, db: revDB, export: revExport() }), cur: () => cur, GRIPRUN: (h) => GRIPS[h.w.grip][1], tier: () => tier, setTier: (k) => { $('tier').value = k; $('tier').onchange(); }, start: () => $('start').onclick(), playing: () => playing, TIER_CLASSES, CLASSES_OF, LV, M, T, walls, threatBearing, neediestAlly, priorityElite, restartLevel, flow: () => ({ t: flowT, i: flowI, end: flowEnd, rate: LV ? rateAt(LV, flowT) : 0 }), setFlowT: (t) => (flowT = t), renderer, shots, zones, tmp, later, GLOW, SOLID, setSquad, spawnN, clearZ, cast, stats, ZGV, keys, labPick: (k) => { labLast = k; labCast(); }, labSet: (t, path, tree) => { if (tree) labTree = tree; labPath = (path ?? []).slice(0, t ?? 6); return labApply(); }, lab: () => ({ tier: labUlt ? 7 : labPath.length, ult: labUlt, tree: labTree, path: labPath, id: cur.classes[0]?.id, name: cur.classes[0]?.full, skp: heroes[0]?.skp.map((P) => P.name), aura: heroes[0]?.aura.map((P) => P.name) }), mix, mixOn, GRADE, regrade, setFX: (v) => (FX = v), STRIDE, heroes, zs, allies, scene, THREE, hero: () => heroes[0], makeGhost, GHOSTG, explode: () => $('boom').click(), setOrder, order: () => order, SQ, focus: () => focus, camera,
   perf: () => { const n = win.length, avg = (k) => win.reduce((s, f) => s + f[k], 0) / n; return { logic: avg('logic'), anim: avg('anim'), sub: avg('sub'), gpu: gpuMs, fps: 1000 / avg('dt') }; } };
 </script>

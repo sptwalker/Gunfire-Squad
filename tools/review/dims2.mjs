@@ -362,7 +362,8 @@ button{font:inherit;font-weight:700;padding:7px 16px;border-radius:4px;border:1p
 .order{margin:0;padding-left:1.4em;font-size:.9rem;display:flex;flex-direction:column;gap:4px}
 `;
 
-console.log(`<title>对抗维度 v2</title>
+console.log(`<meta charset="utf-8">
+<title>对抗维度 v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700;900&family=JetBrains+Mono:wght@500&display=swap">
 <style>${css}</style>
@@ -427,7 +428,12 @@ console.log(`<title>对抗维度 v2</title>
 const KEY = 'dims-v2-review';
 let s = {}; try { s = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch {}
 const tas = [...document.querySelectorAll('textarea[data-k]')];
-for (const t of tas) { t.value = s[t.dataset.k] || ''; t.addEventListener('input', () => { s[t.dataset.k] = t.value; try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} }); }
+// 填的内容顺手 POST 给 dev server（vite.config.js 的 /__rev 存成 tools/review/live/<KEY>.json）。防抖 500ms。
+let sinkT;
+const sink = () => { clearTimeout(sinkT); sinkT = setTimeout(() => fetch('/__rev/' + KEY, { method: 'POST', body: JSON.stringify(s), keepalive: true }).catch(() => {}), 500); };
+for (const t of tas) { t.value = s[t.dataset.k] || ''; t.addEventListener('input', () => { s[t.dataset.k] = t.value; try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} sink(); }); }
+// 打开页面就把浏览器里已存的意见发一次，不用等下一次输入
+if (Object.keys(s).length) sink();
 document.getElementById('copy').addEventListener('click', async () => {
   const txt = '【对抗维度 v3 审核意见】\\n' + tas.filter((t) => t.value.trim()).map((t) => {
     const card = t.closest('.dim, li'); const h = card?.querySelector('h4, b')?.textContent || t.dataset.k;

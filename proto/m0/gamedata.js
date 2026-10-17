@@ -10,38 +10,73 @@
 // 第二步要用时在下面的映射表里补一行即可。
 // 流场、地形掩码、关卡生成仍然住在这里，它们与数据源无关。
 import { ZOMBIES as SRC_Z } from '../../src/data/zombies.ts';
+import { ELITES, MUTANTS } from '../../src/data/enemies.ts';
 import { WEAPONS as SRC_W } from '../../src/data/weapons.ts';
-import { STAGES as SRC_STAGES } from '../../src/data/run.ts';
+import { STAGES as SRC_STAGES, BOSSES as SRC_BOSSES, BOSS_TIMEOUT, BOSS_PHASE_SPAWN_MUL } from '../../src/data/run.ts';
+import { SUB_LEVELS, SCENE_BY_ID, OBSTACLES } from '../../src/data/scenes.ts';
+import { SCHOOL_OF_CLASS } from '../../src/data/weapons.ts';
+import { ANTI_HEAL_MUL } from '../../src/data/zombies.ts';
+import { SKILLS } from '../../src/data/skills.ts';
 import { HEROES_BY_ID, SQUAD_COMMANDS } from '../../src/data/characters.ts';
-import { CLASS_TREES, TEMPLATE, CLASSES, className } from '../../src/data/classes.ts';
+import { CLASS_TREES, TEMPLATE, CLASSES, CLASS_BY_ID, className, axisAt, archetypeOf } from '../../src/data/classes.ts';
 import { ADVANCE_RANKS, RANKS, heroRankMul } from '../../src/data/progression.ts';
 
 // 下标即身份：ZIDS[i] 对应 assets/vox_z_*.glb 载入顺序、battle.html 的 ZGV[i]。
 // src 的 key 顺序与原型不同，也随时可能被重排，所以顺序只由这里这两行说了算。第二步补新僵尸／武器时改这里。
-export const ORDER_Z = ['normal', 'runner', 'brute', 'toxic', 'bomber', 'splitter', 'leaper', 'ward', 'spitter', 'spawnling'];
-export const ORDER_W = ['greatsword', 'sword', 'spear', 'pistol', 'smg', 'sniper', 'grenade', 'flamer', 'freezer', 'boomerang', 'laser'];
+export const ORDER_Z = ['normal', 'runner', 'brute', 'toxic', 'bomber', 'splitter', 'leaper', 'ward', 'spitter', 'spawnling',
+  'herald', 'summoner', 'tesla', 'regenerator', 'stalker', 'burrower', 'flyer', 'screamer'];
+// 精英（e_<基础种>）与变异生物（m_<id>）：id 就是 src 的 key，原型各处（关卡存档、出怪面板、调参台）都按 id 认，
+// 模型文件名 = 'vox_' + id（tools/voxel.py 的 build 名同此），所以不需要另开一张 id → 文件的表
+const SRC_ALL = { ...SRC_Z, ...ELITES, ...Object.fromEntries(Object.entries(MUTANTS).map(([k, v]) => ['m_' + k, v])) };
+export const ORDER_E = Object.keys(ELITES), ORDER_M = Object.keys(MUTANTS).map((k) => 'm_' + k);   // e_<基础种> / m_<id>，顺序即 src 声明顺序
+export const ZENEMY = [...ORDER_Z, ...ORDER_E, ...ORDER_M];   // 战斗里全部敌对种类（出怪池、调参台下拉、HUD）
+
+// 变异生物的专属行为参数（原型独有）。src 的 behavior 只是分类标签，具体怎么动在这里现写：
+// pack 包抄（成群刷 + 侧向铺开）、charge 冲锋（半血狂暴，靠基础攻击的击退力把队员撞倒）、
+// dive 空中俯冲 + 落到尸体上啄食回血、throw 近战拍地 + 远处抛石、herald 双咬 + 嚎叫加速。
+// 键 = 类型 id，与僵尸那张表（T.ZB）是同一张：取参数永远只有 ZB[t.base ?? t.id] 一个口。
+export const MUTANT_BEHAVIOR = {
+  m_dog:     { desc: '一次刷出 pack 只，围成半圆从侧翼同时扑上来（每只自带固定侧偏，见 battle 的 side）', pack: 4, flank: 3 },
+  m_wolf:    { desc: '两个头各咬一个目标；半径 r 内的怪持续获得移速加成（与传令僵尸同一个光环）', range: 6, n: 2, r: 6, spd: .35 },
+  m_vulture: { desc: '空中盘旋，出手前 dive 秒俯冲落地；落在尸体上啄食，每秒回 heal 点、持续 dur 秒（这时能被近战打到）', dive: .7, heal: 40, dur: 3 },
+  m_bear:    { desc: '血量低于 rage 进入狂暴：移速 ×spd、出手间隔 ×ai；拍击的击退力足以把队员撞倒', spd: 1.5, ai: .7, rage: .5, mul: 1.4 },
+  m_ape:     { desc: '距离超过 far m 就抛瓦砾（落点半径 rr）；贴近了抡臂拍地，半径 r 内攻击 ×mul 并击倒', far: 6, cd: 4, rr: 1.5, r: 2, mul: 1.2, knock: 120 },
+};
+export const ORDER_W = ['greatsword', 'sword', 'spear', 'pistol', 'smg', 'sniper', 'grenade', 'flamer', 'freezer', 'boomerang', 'laser', 'bow', 'rifle', 'rocket'];
+export { SUB_LEVELS, CLASS_BY_ID, SKILLS, BOSS_TIMEOUT, BOSS_PHASE_SPAWN_MUL, CLASS_TREES, TEMPLATE, axisAt, archetypeOf, className };
 
 const pick = (o, m) => Object.fromEntries(Object.entries(m).map(([k, s]) => [k, typeof s === 'function' ? s(o) : o[s]]));
 
 // 名号一律用原型自己的叫法：src 的僵尸名是正式全称（普通僵尸/铁甲僵尸/毒液僵尸…）、武器名也不同字
 // （巨剑/大刀、长剑/剑、冰冻枪/冷冻器、激光/激光枪）。名号出现在出怪面板、调参台、HUD 上，换名是可见的
 // UI 变化。等单独一步再统一，那时改这两张表即可。
-const Z_NAME = { normal: '普通', runner: '奔跑', brute: '高防胖', toxic: '毒液', bomber: '自爆', splitter: '分裂', leaper: '跳跃', ward: '护盾', spitter: '喷吐', spawnling: '小分裂' };
-const W_NAME = { greatsword: '巨剑', sword: '长剑', spear: '长枪', pistol: '手枪', smg: '冲锋枪', sniper: '狙击枪', grenade: '手雷', flamer: '喷火器', freezer: '冰冻枪', boomerang: '回旋镖', laser: '激光' };
+const Z_NAME = { normal: '普通', runner: '奔跑', brute: '高防胖', toxic: '毒液', bomber: '自爆', splitter: '分裂', leaper: '跳跃', ward: '护盾', spitter: '喷吐', spawnling: '小分裂',
+  herald: '传令', summoner: '召唤', tesla: '磁暴', regenerator: '增生', stalker: '潜影', burrower: '掘地', flyer: '蝠翼', screamer: '尖啸' };
+const W_NAME = { greatsword: '巨剑', sword: '长剑', spear: '长枪', pistol: '手枪', smg: '冲锋枪', sniper: '狙击枪', grenade: '手雷', flamer: '喷火器', freezer: '冰冻枪', boomerang: '回旋镖', laser: '激光', bow: '弓箭', rifle: '步枪', rocket: '火箭筒' };
 
 // src 僵尸字段 → 原型短名。src 加了字段而这里没补，新字段就到不了原型。
-const ZT = Object.fromEntries(ORDER_Z.map((id) => [id, { name: Z_NAME[id], ...pick(SRC_Z[id], {
+const ZT = Object.fromEntries(ZENEMY.map((id) => [id, { name: Z_NAME[id] ?? SRC_ALL[id].name, ...pick(SRC_ALL[id], {
   hp: 'hp', spd: 'speed', armor: 'armor', atk: 'atk', ai: 'atkInterval', r: 'radius', stab: 'stab',
   fr: 'freezeRes', cun: 'cunning', kn: 'knock', th: 'threat',
   sa: (z) => (z.superArmor ? 1 : 0),   // src 是布尔，原型与调参页按 0/1 用
-  dr: (z) => z.resist.physRes,         // 原型只有一个减伤值，取物理那一系
+  base: 'base',                        // 精英才有：它放大的是哪一个基础种（行为分支按基础种走）
+  dr: (z) => z.resist.physRes,         // 物理抗性
+  mr: (z) => z.resist.magicRes,        // 法术抗性
+  ef: (z) => z.resist.energyField,     // 电磁场：1 = 电磁伤害全吸收
+  rg: 'regen', beh: 'behavior',
 }) }]));
+// 变异生物（蛇 / 熊 / 狼 / 秃鹫 / 巨猿）与精英放大一遍的体型：src 的 radius 是配平用的碰撞半径，模型是照 dims 捏的，
+// 原型的手感体型按种给（同 Z_SPREAD 的思路：只改表现，不动 src 的配平数）
+const Z_SIZE = { bear: 1.55, ape: 1.7, wolf: 1.5, dog: 1.3, vulture: 1.35 };
+for (const [id, k] of Object.entries(Z_SIZE)) if (ZT['m_' + id]) ZT['m_' + id].r *= k;
+// t.id = 类型 id：僵尸 / 精英的 src id 与键同名，变异生物的 src id 没有 m_ 前缀，而行为参数表按类型 id 存
+for (const id of ZENEMY) ZT[id].id = id;
 // 原型手感层：把种类之间的差距拉开（src 的数是配平基准、模拟器在用，不在这里改它）。倍率乘在 src 值上，调参页看到的是乘完的数
 const Z_SPREAD = { runner: { spd: 1.7, hp: .8 }, spawnling: { spd: 1.3 }, leaper: { spd: 1.2 }, brute: { armor: 2, hp: 1.6, spd: .75, atk: 1.4 }, ward: { armor: 1.6, hp: 1.3 } };
 for (const [id, m] of Object.entries(Z_SPREAD)) for (const k in m) ZT[id][k] = Math.round(ZT[id][k] * m[k] * 100) / 100;
 
 // src 武器字段 → 原型短名
-const pickW = (w) => { const r = {}; for (const [k, s] of Object.entries({ dmg: 'base', rate: 'rate', range: 'range', knock: 'knockback', aoe: 'aoe' })) if (w[s]) r[k] = w[s]; return r; };
+const pickW = (w) => { const r = { school: SCHOOL_OF_CLASS[w.class] ?? 'physical' }; for (const [k, s] of Object.entries({ dmg: 'base', rate: 'rate', range: 'range', knock: 'knockback', aoe: 'aoe' })) if (w[s]) r[k] = w[s]; return r; };
 // 表现参数：原型独有。kind 决定怎么开火、grip 决定握持动画、cleave 是近战横扫目标数、pass 是子弹可穿透几个敌人
 // （src 的 `pierce` 是【削弱目标护甲】0-100，与穿透计数同名不同义，第二步接破甲时才用得上）
 const W_SHOW = {
@@ -56,7 +91,20 @@ const W_SHOW = {
   freezer:    { kind: 'freeze', grip: 'rifle' },
   boomerang:  { kind: 'boomerang', grip: 'throw' },
   laser:      { kind: 'laser', grip: 'rifle', chain: 2 },
+  bow:        { kind: 'bow', grip: 'bow', pass: 1 },
+  rifle:      { kind: 'bullet', grip: 'rifle' },
+  rocket:     { kind: 'grenade', grip: 'rifle' },
 };
+// 没有同名模型的武器借一把外形相近的（assets/vox_<文件>.glb）
+export const WMODEL = { rifle: 'amr', rocket: 'glauncher' };
+// 职业 → 武器：取 weaponClasses 的最后一类（转职新加的那类最能代表这一转），原型只有这 14 把，按类挑一把代表
+const W_OF_CLASS = { blade: 'sword', shield: 'sword', hammer: 'greatsword', polearm: 'spear', thrown: 'boomerang', lasso: 'boomerang', bow: 'bow', pistol: 'pistol',
+  smg: 'smg', rifle: 'rifle', heavy: 'rocket', sniper: 'sniper', railgun: 'laser', beam: 'laser', magic: 'pistol', potion: 'grenade', sprayer: 'flamer' };
+export const weaponFor = (c) => { const k = c.weaponClasses.at(-1); return k === 'blade' && c.weaponClasses.includes('hammer') ? 'greatsword' : W_OF_CLASS[k] ?? 'sword'; };
+// 伤害系别跟职业的武器类走（法师借手枪模型但打法术）
+export const schoolFor = (c) => SCHOOL_OF_CLASS[c.weaponClasses.at(-1)] ?? 'physical';
+// 职业形象模型：五星的 + 写成 _star（tools/voxel.py）
+export const lookFile = (id) => `assets/vox_${id.replace('+', '_star')}.glb`;
 const W = Object.fromEntries(ORDER_W.map((id) => [id, { name: W_NAME[id], ...pickW(SRC_W[id]), ...W_SHOW[id] }]));
 
 // 阶段：名号、威胁速率、出怪构成全取自 src（src 的 spawnTable 与原型 mix 是同一份东西，只是写法不同）。
@@ -67,8 +115,14 @@ export const STAGES = SRC_STAGES.map((s, i) => ({
   mix: Object.fromEntries(s.spawnTable.map((g) => [g.zombie, g.weight])),
   burst: BURST[i] ?? null,
 }));
+// BOSS：数值全取 src/data/run.ts；file = 模型（assets/vox_b_*.glb），专属技能参数在 T.BB[file]
+const B_FILE = ['corrupted', 'vesse', 'chaos'];
+export const BOSSES = SRC_BOSSES.map((b, i) => ({ name: b.name, at: b.at, hp: b.hp, armor: b.armor, spd: b.speed, atk: b.atk, r: b.radius, ttk: b.targetKillTime, file: B_FILE[i], note: b.note }));
 
 export const T = {
+  // 精英 / 变异生物的行为参数（表现层，src 无对应物）。写在这里而不写进下面的 ZB，是因为 ZB 是「僵尸特殊行为」
+  // 那张表，精英与变异生物的行为名字都在它之外；二者运行时共用同一个取参数的口（见 battle.html 的 ZP）
+  ZY: MUTANT_BEHAVIOR,
   // 全局规则
   G: {
     heroSpd: 2.8,    // 队员移速 m/s
@@ -91,12 +145,27 @@ export const T = {
   ZT,
   // 僵尸特殊行为参数（距离 m）——表现层，src 无对应物
   ZB: {
+    ...MUTANT_BEHAVIOR,   // 变异生物：一种一套参数，与僵尸共用这张表（见文件顶部注释），所以「取参数」只有一个口
     bomber:   { desc: '贴近 0.6 m 开始膨胀，动画放完自爆；半径内队员按距离衰减吃攻击力伤害并必定被推开，顺带炸伤身边僵尸', r: 2.2, knock: 140, splash: 150, splashR: 1.6 },
     leaper:   { desc: '距离 2–6 m 时扑向目标，落地范围伤害 = 攻击 × 倍率', cd: 5, min: 2, max: 6, mul: .4, r: 1.3, knock: 60 },
     spitter:  { desc: '站在射程外吐酸液弹，落点 1 m 内伤害 = 攻击 × 倍率', range: 6, mul: .3 },
     splitter: { desc: '死亡时裂成 n 只小分裂', n: 3 },
     toxic:    { desc: '死亡留下毒池，队员站在里面每秒掉血', r: 1.25, dps: 30, dur: 8 },
     ward:     { desc: '正面 ±60° 伤害先扣护盾；盾破后易伤若干秒', shield: 500, vuln: 3 },
+    // 第三轮新增 8 种（机制见 src zombies.ts special；回血 / 抗性 / 电磁场的数在 ZT 里），距离 m
+    herald:   { desc: '光环：半径内僵尸移速 +spd、物理 / 法术抗性 +res；自己躲在怪群后方（hold = 站桩不上前）', r: 4, spd: .25, res: .15, hold: true },
+    summoner: { desc: '每 cd 秒把半径内最近一具尸体按 hp 比例复活，自己停 pause 秒', cd: 4, hp: .4, pause: 1.5, r: 6 },
+    regenerator: { desc: '每秒回血 = 回血值；被破甲（shred）命中后 dur 秒内回血 × anti', anti: ANTI_HEAL_MUL, dur: 3 },
+    stalker:  { desc: '隐形不可选中；出手或离队员 reveal m 内现形 show 秒；背刺伤害 × back', reveal: .75, back: 2, show: 2 },
+    burrower: { desc: '地下移动免疫一切伤害；钻到队伍后排冒出，r m 内队员被掀开', r: 1, knock: 120 },
+    flyer:    { desc: '空中：近战与地面范围打不到；出手前 dive 秒俯冲落地，这段可以被打', dive: .8 },
+    screamer: { desc: '吟唱 cast 秒（受击被打断），半径 r m 内队员有 p 概率恐惧 / 混乱 dur 秒', cast: 2, r: 3.5, p: .6, dur: 3, cd: 8 },
+  },
+  // BOSS 专属技能（src run.ts note 的机制落成参数；距离 m）
+  BB: {
+    corrupted: { desc: '纯数值检查：重拳近战，不放技能' },
+    vesse:     { desc: '每 cd 秒召唤 n 只毒液僵尸，并在队员脚下落 pools 个毒池', cd: 8, n: 4, pools: 3, r: 1.5, dps: 60, dur: 8 },
+    chaos:     { desc: '每 cd 秒原地重砸（半径 r、攻击 × mul、击退），并在身边混刷 n 只任意种类', cd: 6, r: 2.5, mul: 1.5, knock: 160, n: 6 },
   },
   // 武器（伤害/攻速/射程/击退/表现类型/横扫数/穿透/爆炸半径/链跳）见文件顶部，数值映自 src/data
   W,
@@ -167,15 +236,15 @@ export const rankMul = (id, rank) => heroRankMul(rank, GROWTH[id]);
 const shortName = (t, path, tier) => (tier ? className(t, path).replace(t.name, '') : t.name) || className(t, path);
 export const TIER_CLASSES = (tier) => Object.values(CLASS_TREES).flatMap((t) =>
   CLASSES.filter((c) => c.tier === tier && c.tree === t.id).map((c) => ({
-    id: c.id, name: shortName(t, c.path, tier), full: c.name, tree: t.id, treeName: t.name, stars: '★'.repeat(Math.min(5, tier + 1)), growth: c.growth,
+    id: c.id, name: shortName(t, c.path, tier), full: c.name, tree: t.id, treeName: t.name, stars: '★'.repeat(Math.min(5, tier + 1)), growth: c.growth, path: c.path,
     hero: TEMPLATE[t.id][(c.path[0] ?? 0) * 2 + (c.path[1] ?? 0)] })));   // 等级 0 借该树的第一条轴样板（职业 id 是树名，样板英雄 id 不是），二转起 path 前两位就够
 // 样板英雄 id → 它当样板的那棵树。旧关卡文件里写的是样板英雄 id（'ron'/'vera'…），
 // 等级 0 的职业 id 是树名（'sw'/'ar'…），所以存档要经这一层翻译才能落到职业名册上。
 // ponytail: 取第一棵树（TEMPLATE 的声明顺序：剑/弓/法/辅/技）。jet/vera 在两棵树里都当样板，
 // 剑士那三位只出现一次、射手的两位在 archer 里也先出现，所以「先声明者胜」正好是对的；真按树区分要等存档带 tree 字段。
 export const TREE_OF_HERO = (() => { const m = {}; for (const [tree, ids] of Object.entries(TEMPLATE)) for (const id of ids) if (!m[id]) m[id] = tree; return m; })();
-export const ZIDS = ORDER_Z, HIDS = Object.keys(T.HERO), WIDS = ORDER_W;
-export const MIX0 = { normal: 50, runner: 20, brute: 5, toxic: 10, bomber: 10, splitter: 10, leaper: 10, ward: 5, spitter: 10, spawnling: 0 };
+export const ZIDS = ZENEMY, HIDS = Object.keys(T.HERO), WIDS = ORDER_W;   // ZIDS = 全部敌对种类（僵尸 + 精英 + 变异生物）
+export const MIX0 = Object.fromEntries(ZENEMY.map((id) => [id, ORDER_M.includes(id) ? 10 : ORDER_E.includes(id) ? 3 : { normal: 50, runner: 20, brute: 5, toxic: 10, bomber: 10, splitter: 10, leaper: 10, ward: 5, spitter: 10 }[id] ?? 0]));
 
 // ── 调参覆盖层 ──
 const KEY = 'gs.tuning';
@@ -193,14 +262,14 @@ if (typeof addEventListener === 'function') addEventListener('storage', (e) => e
 
 // ── 场景物件：名 / 碰撞宽 / 碰撞深（m，模型局部 x / z）/ 障碍类 ──
 // 障碍类语义摘自 src/data/scenes.ts OBSTACLES：mv 挡人、shot 挡子弹、hp 耐久（0 = 不可破坏）
-// ponytail: 耐久只做展示，原型里还不能打掉障碍；M2 core/terrain.ts 接上破坏
+// ponytail: 耐久只做展示，原型里还不能打掉障碍；M2 core/terrain.ts 接上破坏。耐久取自 OBSTACLES，矮掩体按沙袋算
 export const OB = {
-  building: { name: '建筑', mv: 1, shot: 1, hp: 0, color: '#6d6a63' },
-  woodwall: { name: '木墙', mv: 1, shot: 1, hp: 900, color: '#8a6a44' },
-  cover:    { name: '矮掩体', mv: 1, shot: 0, hp: 320, color: '#8e8c6a' },
-  wire:     { name: '铁丝网', mv: 1, shot: 0, hp: 180, color: '#9aa0a8' },
-  barrel:   { name: '油桶', mv: 1, shot: 0, hp: 60, color: '#c0563a' },
-  crate:    { name: '补给箱', mv: 1, shot: 0, hp: 120, color: '#b89a52' },
+  building: { name: '建筑', mv: 1, shot: 1, hp: OBSTACLES.building.hp, color: '#6d6a63' },
+  woodwall: { name: '木墙', mv: 1, shot: 1, hp: OBSTACLES.woodwall.hp, color: '#8a6a44' },
+  cover:    { name: '矮掩体', mv: 1, shot: 0, hp: OBSTACLES.sandbag.hp, color: '#8e8c6a' },
+  wire:     { name: '铁丝网', mv: 1, shot: 0, hp: OBSTACLES.wire.hp, color: '#9aa0a8' },
+  barrel:   { name: '油桶', mv: 1, shot: 0, hp: OBSTACLES.barrel.hp, color: '#c0563a' },
+  crate:    { name: '补给箱', mv: 1, shot: 0, hp: OBSTACLES.crate.hp, color: '#b89a52' },
   tree:     { name: '树干', mv: 1, shot: 0, hp: 0, color: '#4f7a3c' },
   none:     { name: '装饰', mv: 0, shot: 0, hp: 0, color: '#5b7a50' },
 };
@@ -217,15 +286,18 @@ export const PROPS = {
 // 地块：0 地面 / 1 道路 / 2 毒池（队员掉血）/ 3 泥地（敌我减速）
 export const TILES = [['地面', null], ['道路', '#2c2e2e'], ['毒池', '#4f8a2a'], ['泥地', '#4a3a28']];
 
-// ── 场景主题：地面色 + 生成器用的物件池（摘自 src/data/scenes.ts 的地形签名）──
+// ── 场景主题：地面色 + 生成器用的物件池（原型独有）；名字、毒池、泥地由 src/data/scenes.ts 的 TerrainMods 派生 ──
+// 毒池斑数 = hazardPools ? 2 + 5×(1−moveMul) : 0；泥地斑数 = moveMul < .8 ? 10×(1−moveMul) : 0
 export const SCENES = {
-  city:     { name: '城市废墟', ground: '#3b3e3c', build: ['ruin', 'shop', 'partition'], cover: ['car', 'sandbag', 'fence', 'rubble'], deco: ['barrel', 'rubble', 'crate'] },
-  jungle:   { name: '原始丛林', ground: '#2f4527', build: ['tree', 'palm', 'tree'], cover: ['hay', 'rock_moss', 'grass'], deco: ['grass', 'grass', 'crate'], pools: 3 },
-  swamp:    { name: '沼泽疫地', ground: '#353d2f', build: ['deadtree', 'stump'], cover: ['rock_moss', 'stump'], deco: ['rock_moss', 'crate'], pools: 4, mud: 4 },
-  desert:   { name: '荒漠废土', ground: '#8f7752', build: ['mesa'], cover: ['cactus', 'cactus_ball', 'hay'], deco: ['barrel', 'cactus_ball'] },
-  snow:     { name: '雪原冻土', ground: '#a9b4ba', build: ['pine', 'rock_ice'], cover: ['snowpile', 'rock_ice'], deco: ['crate', 'snowpile'], mud: 2 },
-  military: { name: '军事禁区', ground: '#4d5140', build: ['bunker', 'woodwall'], cover: ['sandbag', 'wire', 'sandbag'], deco: ['crate', 'ammo', 'barrel'] },
+  city:     { ground: '#3b3e3c', build: ['ruin', 'shop', 'partition'], cover: ['car', 'sandbag', 'fence', 'rubble'], deco: ['barrel', 'rubble', 'crate'] },
+  jungle:   { ground: '#2f4527', build: ['tree', 'palm', 'tree'], cover: ['hay', 'rock_moss', 'grass'], deco: ['grass', 'grass', 'crate'] },
+  swamp:    { ground: '#353d2f', build: ['deadtree', 'stump'], cover: ['rock_moss', 'stump'], deco: ['rock_moss', 'crate'] },
+  desert:   { ground: '#8f7752', build: ['mesa'], cover: ['cactus', 'cactus_ball', 'hay'], deco: ['barrel', 'cactus_ball'] },
+  snow:     { ground: '#a9b4ba', build: ['pine', 'rock_ice'], cover: ['snowpile', 'rock_ice'], deco: ['crate', 'snowpile'] },
+  military: { ground: '#4d5140', build: ['bunker', 'woodwall'], cover: ['sandbag', 'wire', 'sandbag'], deco: ['crate', 'ammo', 'barrel'] },
 };
+for (const [id, s] of Object.entries(SCENES)) { const sc = SCENE_BY_ID[id], m = sc.mods;
+  Object.assign(s, { name: sc.name, pools: m.hazardPools ? Math.round(2 + 5 * (1 - m.moveMul)) : 0, mud: m.moveMul < .8 ? Math.round(10 * (1 - m.moveMul)) : 0 }); }
 
 // ── 阶段出怪：见文件顶部 STAGES（威胁值/秒 从 r0 涨到 r1）──
 // 加权平均威胁值：威胁速率 ÷ 它 = 每秒只数
@@ -239,8 +311,18 @@ const LKEY = 'gs.levels';
 export const listLevels = () => { try { return JSON.parse(localStorage.getItem(LKEY)) || {}; } catch { return {}; } };
 export function saveLevel(lv) { const all = listLevels(); all[lv.name] = lv; localStorage.setItem(LKEY, JSON.stringify(all)); }
 export function deleteLevel(name) { const all = listLevels(); delete all[name]; localStorage.setItem(LKEY, JSON.stringify(all)); }
-// ?level=名字（本地库）或 ?levelUrl=路径（JSON 文件）
+// 子关卡（src SUB_LEVELS，如 'city-01'）→ 关卡：场景 + 序号当种子；三个阶段的节奏照旧，出怪构成全换成子关卡的 spawnTable，
+// 威胁速率 × threatBudget / 3（3 = src BASE_THREAT，城市 01 的预算），关底一只 bossStage 指定的 BOSS
+export function subLevel(id) {
+  const s = SUB_LEVELS.find((l) => l.id === id); if (!s) return null;
+  const lv = generate({ scene: s.scene, seed: s.index, name: s.name });
+  const mix = Object.fromEntries(s.spawnTable.map((g) => [g.zombie, g.weight]));
+  for (const st of lv.stages) { st.mix = { ...mix }; st.burst = null; }
+  return Object.assign(lv, { sub: s.id, threatMul: s.threatBudget / 3 * s.threatMul, bosses: [{ b: s.bossStage, at: flowLen(lv) }] });
+}
+// ?sub=city-01（src 子关卡）、?level=名字（本地库）或 ?levelUrl=路径（JSON 文件）
 export async function levelFromURL(q = new URLSearchParams(location.search)) {
+  if (q.get('sub')) return subLevel(q.get('sub'));
   if (q.get('level')) return listLevels()[q.get('level')] ?? null;
   if (q.get('levelUrl')) return (await fetch(q.get('levelUrl'))).json();
   return null;
@@ -375,7 +457,8 @@ export function generate({ scene = 'city', seed = 1, size = 64, density = 1, nam
   const E = half - 3, spawns = roads ? [[0, -E], [E, 0], [0, E], [-E, 0]].map(([x, z]) => ({ x, z, r: 2 }))
     : Array.from({ length: 5 }, (_, k) => { const t = +((R() - .5) * (N - 10)).toFixed(1); return [{ x: t, z: -E }, { x: E, z: t }, { x: t, z: E }, { x: -E, z: t }][k % 4]; }).map((p) => ({ ...p, r: 2.5 }));
   const lv = { name: name || `${S.name}·${seed}`, scene, size: N, seed, tiles: Array.from(tiles).join(''), props, spawns, start: [0, 0], squad: [...PICK0],
-    cap: 120, threatMul: 1, stages: STAGES.map((s) => ({ ...structuredClone(s), dur: stageDur })) };
+    cap: 120, threatMul: 1, stages: STAGES.map((s) => ({ ...structuredClone(s), dur: stageDur })),
+    bosses: BOSSES.map((b, i) => ({ b: i, at: b.at * stageDur / 300 })) };   // 基线一局：三只 BOSS 在 src 的默认登场时刻（按阶段时长缩放）
   carve(lv); return lv;
 }
 // 连通：到不了出生点的刷怪点，拆掉它和出生点连线附近的物件，一轮比一轮拆得宽，最多 6 轮
@@ -428,5 +511,11 @@ if (typeof process !== 'undefined' && process.argv[1]?.endsWith('gamedata.js')) 
   const pr = { x: .3, z: .1 }; pushOut(r, pr, .3); console.assert(Math.abs(pr.x) >= .49 && Math.abs(pr.z - .1) < 1e-9, 'pushOut rotated', pr);
   for (const sc of Object.keys(SCENES)) for (const seed of [1, 2, 3]) { const g = generate({ scene: sc, seed }); console.assert(!unreachable(g).length && g.props.length > 20, 'gen', sc, seed, g.props.length); }
   console.assert(JSON.stringify(generate({ seed: 5 })) === JSON.stringify(generate({ seed: 5 })), 'deterministic');
+  console.assert(ORDER_Z.every((id) => SRC_Z[id]) && ORDER_W.every((id) => SRC_W[id]), 'ids in src');
+  console.assert(ZT.tesla.ef === 1 && ZT.regenerator.rg > 0 && W.laser.school === 'electric' && W.flamer.school === 'magic', 'school / resist');
+  console.assert(CLASSES.every((c) => W[weaponFor(c)]) && schoolFor(CLASS_BY_ID['mg-0']) === 'magic' && CLASSES.every((c) => c.slots.every((s) => SKILLS[s.skill])), 'class weapons / skills');
+  const sl = subLevel('city-01'); console.assert(sl && sl.stages.every((st) => st.mix.bomber) && sl.bosses[0].b === 0 && !unreachable(sl).length, 'sub level', sl?.stages[0].mix);
+  console.assert(SUB_LEVELS.every((l) => BOSSES[l.bossStage] && l.spawnTable.every((g) => ZT[g.zombie])), 'all subs playable');
+  console.assert(SCENES.swamp.pools > 0 && SCENES.swamp.mud > 0 && !SCENES.city.pools, 'scene mods', SCENES.swamp);
   console.log('gamedata ok');
 }

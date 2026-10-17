@@ -86,6 +86,84 @@ DEAD = dict(D_GROUND, **{'mixamorig:Spine2': (0.1, 1, 0.05), 'twist': 15,
                          R + 'Arm': (-1, 0.2, -0.05), R + 'ForeArm': (-0.8, -0.5, -0.05), L + 'Arm': (1, 0.5, -0.05), L + 'ForeArm': (0.9, 0.4, -0.05),
                          R + 'UpLeg': (-0.2, -1, -0.03), R + 'Leg': (-0.2, -1, -0.03), L + 'UpLeg': (0.2, -0.8, 0.45), L + 'Leg': (0.1, -0.7, -0.6)})
 
+# ════════ 缺失动作补全（见 proto/m0/anim-gaps.md）════════
+# 审计查出的 7 个不存在但被文案点名的动作：leap / summon / cast / spin / guard / aim / roll。
+# 手上武器保持握姿（只在 ARMS_DOWN 基础上挪手臂），因为运行时这些技能照样握着武器放。
+
+# 起跳：屈膝下蹲蓄力 → 腾空收腿 → 落地缓冲。臀部高度走抛物线，对应运行时 h.leap 的弹道
+LEAP_CROUCH = dict(ARMS_DOWN, **{'mixamorig:Spine2': (0, -0.35, 1), 'lunge': (-0.05, 0),
+                  R + 'Arm': (-0.45, 0.55, -0.7), R + 'ForeArm': (-0.2, 0.3, -1),
+                  L + 'Arm': (0.45, 0.55, -0.7), L + 'ForeArm': (0.2, 0.3, -1),
+                  R + 'UpLeg': (-0.15, 0.05, -1), R + 'Leg': (0, 0.9, -0.45), L + 'UpLeg': (0.15, 0.05, -1), L + 'Leg': (0, 0.9, -0.45)})
+LEAP_OUT = dict(ARMS_DOWN, **{'mixamorig:Spine2': (0, -0.15, 1), 'lunge': (0.1, 0),
+                R + 'Arm': (-0.6, -0.5, 0.5), R + 'ForeArm': (-0.3, -0.6, 0.5),
+                L + 'Arm': (0.6, -0.5, 0.5), L + 'ForeArm': (0.3, -0.6, 0.5),
+                R + 'UpLeg': (-0.05, -0.5, -0.9), R + 'Leg': (0, 0.5, -0.9), L + 'UpLeg': (0.05, -0.45, -0.9), L + 'Leg': (0, 0.55, -0.9)})
+LEAP_AIR = dict(LEAP_OUT, **{'lunge': (0.22, 0),
+               R + 'UpLeg': (-0.1, -0.75, -0.5), R + 'Leg': (0, 0.85, -0.55), L + 'UpLeg': (0.1, -0.8, -0.45), L + 'Leg': (0, 0.8, -0.6)})
+LEAP_LAND = dict(LEAP_CROUCH, **{'mixamorig:Spine2': (0, -0.5, 1), 'lunge': (0.06, 0),
+               R + 'Arm': (-0.5, -0.2, -0.8), R + 'ForeArm': (-0.25, -0.5, -0.8),
+               L + 'Arm': (0.5, -0.2, -0.8), L + 'ForeArm': (0.25, -0.5, -0.8)})
+
+# 召唤 / 吟唱起手：双臂前伸推出（召唤）或上举过头（吟唱），手掌都摊开
+SUM_PUSH = dict(ARMS_DOWN, **{'mixamorig:Spine2': (0, -0.25, 1), 'lunge': (-0.04, 0),
+             R + 'Arm': (-0.35, -0.85, -0.35), R + 'ForeArm': (-0.2, -0.9, -0.3), R + 'Hand': (0, -1, 0.4),
+             L + 'Arm': (0.35, -0.85, -0.35), L + 'ForeArm': (0.2, -0.9, -0.3), L + 'Hand': (0, -1, 0.4)})
+SUM_OPEN = dict(SUM_PUSH, **{'lunge': (0.04, -0.06), 'mixamorig:Spine2': (0, -0.5, 1),
+              R + 'Arm': (-0.7, -0.6, 0.3), R + 'ForeArm': (-0.4, -0.7, 0.4),
+              L + 'Arm': (0.7, -0.6, 0.3), L + 'ForeArm': (0.4, -0.7, 0.4)})
+CAST_UP = dict(ARMS_DOWN, **{'mixamorig:Spine2': (0, 0.15, 1), 'lunge': (-0.03, 0),
+             R + 'Arm': (-0.5, -0.1, 1), R + 'ForeArm': (-0.25, -0.3, 1), R + 'Hand': (0, -0.6, 0.8),
+             L + 'Arm': (0.5, -0.1, 1), L + 'ForeArm': (0.25, -0.3, 1), L + 'Hand': (0, -0.6, 0.8)})
+CAST_HOLD = dict(CAST_UP, **{'mixamorig:Spine2': (0, -0.1, 1), 'twist': 6,
+               R + 'Arm': (-0.35, -0.25, 1), L + 'Arm': (0.35, -0.25, 1)})
+
+# 举盾架挡：左臂横在身前当盾，右臂把武器收到肩侧；身体侧缩。可循环
+GUARD_S = dict(STEP, **{'mixamorig:Spine2': (0, -0.2, 1), 'twist': -12,
+            L + 'Arm': (0.3, -0.6, -0.75), L + 'Hand': (-1, -0.2, 0), 'frame': {L + 'ForeArm': ((-1, -0.15, 0.05), (0, -1, 0))},
+            R + 'Arm': (-0.35, -0.3, -0.9), R + 'ForeArm': (-0.2, -0.9, -0.3), R + 'Hand': (0, -1, -0.3)})
+GUARD_S2 = dict(GUARD_S, **{'mixamorig:Spine2': (0, 0.1, 1), 'lunge': (-0.05, -0.02)})   # 顶上来的那一下
+
+# 翻滚：团身抱膝抱成一团，绕横轴整转一圈。
+# 这个姿势系统压不短骨骼（头到髋恒定 0.79 米，真团身约 0.5 米），所以绕髋转到 180° 时
+# 头必然扫到地下。要贴地滚得先让脊椎能压缩——那是改姿势系统，不是改这一条 clip。
+# 这里的做法是髋高走弧线：转到倒立那两帧把髋抬高，人从地面翻过去。观感是腾空翻滚，不是贴地滚。
+ROLL_TUCK = dict(ARMS_DOWN, **{'mixamorig:Spine': (0, -0.45, 0.9), 'mixamorig:Spine1': (0, -0.8, 0.6),
+              'mixamorig:Spine2': (0, -0.95, 0.3),
+              R + 'Arm': (0.25, -0.45, -0.85), R + 'ForeArm': (0.1, -0.8, -0.55), R + 'Hand': (0, -1, -0.2),
+              L + 'Arm': (-0.25, -0.45, -0.85), L + 'ForeArm': (-0.1, -0.8, -0.55), L + 'Hand': (0, -1, -0.2),
+              R + 'UpLeg': (-0.15, -0.7, 0.7), R + 'Leg': (0, 0.85, -0.5),
+              L + 'UpLeg': (0.15, -0.7, 0.7), L + 'Leg': (0, 0.85, -0.5)})
+ROLL_RISE = dict(ARMS_DOWN, **LEGS_SET, **{'mixamorig:Spine2': (0, -0.2, 1), 'lunge': (0.42, 0.02)})
+
+
+def _tumble(pose, deg):
+    """整姿态绕世界 X 轴转 deg 度（前滚 = 正角度，头顶往 -Y 前扎），同时往前挪。
+
+    整个姿态的骨向都是世界方向，所以"滚"必须把每个方向矢量一起转——只转 Hips 的话
+    子骨会被 aim 拽回站姿，人是被拧断的。髋高不在这里给：第 3 项 hips_h 会在 _pose 里
+    覆盖掉 lunge 的 z，髋高写进 CLIPS 表才作数（踩过这个坑，改了四轮数值没进 GLB）。
+    """
+    t = math.radians(deg); c, s = math.cos(t), math.sin(t)
+    rot = lambda v: (v[0], v[1] * c - v[2] * s, v[1] * s + v[2] * c)
+    p = {'mixamorig:Hips': (0, 0, 1), **pose}
+    out = {}
+    for k, v in p.items():
+        if k == 'frame': out[k] = {b: (rot(d), rot(f)) for b, (d, f) in v.items()}
+        elif isinstance(v, tuple) and len(v) == 3: out[k] = rot(v)
+        else: out[k] = v   # lunge / twist / scale 是标量或二元组，原样带过
+    lx, lz = pose.get('lunge', (0, 0))
+    out['lunge'] = (lx + 0.34 * (deg / 360), lz)
+    return out
+
+
+def _spin_about_z(pose, deg):
+    """绕世界 Z（竖轴）转 deg 度：骨向仍是 +Z（人站着），朝前那面偏过去。旋身类技能用。"""
+    s, c = math.sin(math.radians(deg)), math.cos(math.radians(deg))
+    return dict(pose, **{'frame': {**pose.get('frame', {}),
+      'mixamorig:Hips': ((0, 0, 1), (s, -c, 0))}})
+
+
 CLIPS = {
     # 名字 = 运行时的 clip 名；(秒, 姿态, 臀部离地高度占静止高度的比例或 None)
     'attack_rifle':   [(0, AIM, None), (0.08, RECOIL, None), (0.35, AIM, None), (0.6, AIM, None)],
@@ -102,6 +180,34 @@ CLIPS = {
     'hit':            [(0, ARMS_DOWN, None), (0.1, HIT, None), (0.45, ARMS_DOWN, None)],
     'death':          [(0, ARMS_DOWN, None), (0.07, D_IMPACT, 0.9), (0.28, D_AIR, 0.7, 'LINEAR'), (0.42, D_GROUND, 0.13),
                        (0.52, D_BOUNCE, 0.2), (0.7, DEAD, 0.13), (1.3, DEAD, 0.13)],
+
+    # ── 以下 7 个是被文案点名、此前不存在的动作；卡住 114 条技能，见 proto/m0/anim-gaps.md ──
+    # 起跳：蹲 → 蹬直 → 腾空收腿 → 落地缓冲。臀高走抛物线，和运行时 h.leap 的弹道同一条
+    'leap':           [(0, ARMS_DOWN, None), (0.14, LEAP_CROUCH, 0.72), (0.22, LEAP_CROUCH, 0.7, 'LINEAR'),
+                       (0.3, LEAP_OUT, 0.95, 'LINEAR'), (0.42, LEAP_AIR, 1.24), (0.56, LEAP_AIR, 1.26),
+                       (0.68, LEAP_LAND, 0.84, 'LINEAR'), (0.78, LEAP_LAND, 0.72), (1.0, ARMS_DOWN, None)],
+    # 旋身：拧身起势 → 一圈转过去（一帧 120°，四步凑满 360°）→ 收势
+    'spin':           [(0, ARMS_DOWN, None), (0.18, dict(WIND, **_spin_about_z({}, 0)), None),
+                       (0.3, _spin_about_z(SLASH, 120), None, 'LINEAR'), (0.42, _spin_about_z(SLASH, 240), None, 'LINEAR'),
+                       (0.54, _spin_about_z(SLASH, 360), None, 'LINEAR'), (0.68, _spin_about_z(SLASH_END, 360), None),
+                       (0.95, ARMS_DOWN, None)],
+    # 召唤：双手前推 → 掌心外张撑开 → 收势。对应召唤物出现的时机（第 2 个关键帧）
+    'summon':         [(0, ARMS_DOWN, None), (0.3, SUM_PUSH, None), (0.42, SUM_PUSH, None, 'LINEAR'),
+                       (0.56, SUM_OPEN, None), (1.0, SUM_OPEN, None), (1.3, ARMS_DOWN, None)],
+    # 吟唱：双臂上举过头 → 上举定格（引导态，可循环拿尾帧）→ 放下
+    'cast':           [(0, ARMS_DOWN, None), (0.35, CAST_UP, None), (0.6, CAST_HOLD, None),
+                       (0.9, CAST_UP, None), (1.2, ARMS_DOWN, None)],
+    # 举盾：架起来 → 顶上来的那一下 → 回稳。可循环（首尾同姿态）
+    'guard':          [(0, GUARD_S, None), (0.24, GUARD_S2, None), (0.5, GUARD_S, None), (1.0, GUARD_S, None)],
+    # 瞄准 / 蓄力：端起来对准，静止。rifle = 抵肩，pistol = 单手
+    'aim':            [(0, ARMS_DOWN, None), (0.3, AIM, None), (1.0, AIM, None)],
+    'aim_pistol':     [(0, ARMS_DOWN, None), (0.3, AIM1H, None), (1.0, AIM1H, None)],
+    # 翻滚：团身 → 绕着横轴滚过去 → 起身。_tumble 把整姿态绕横轴转，不是只转髋
+    # 髋高走弧线：侧躺（90°/270°）要 1.25、倒立（180°）要 1.75，头才一直在地面上（实测头离髋 0.79 米）
+    'roll':           [(0, ROLL_TUCK, 0.62), (0.09, _tumble(ROLL_TUCK, 90), 1.25, 'LINEAR'),
+                       (0.2, _tumble(ROLL_TUCK, 180), 1.75), (0.31, _tumble(ROLL_TUCK, 270), 1.25),
+                       (0.42, _tumble(ROLL_TUCK, 360), 0.62), (0.55, ROLL_RISE, 0.8),
+                       (0.9, ARMS_DOWN, None)],
 }
 
 
@@ -370,6 +476,16 @@ S_FLAT = {'mixamorig:Hips': (-1, 0, 0.05), 'mixamorig:Spine2': (-1, -0.1, 0.05),
           R + 'UpLeg': (0.7, -0.7, 0), R + 'Leg': (0.5, 0.85, 0), L + 'UpLeg': (0.9, -0.4, 0.1), L + 'Leg': (0.6, 0.8, 0.1)}
 S_BOUNCE = dict(S_FLAT, **{'mixamorig:Spine2': (-1, -0.1, 0.3), L + 'Arm': (0, -0.8, 0.3)})
 S_DEAD = dict(S_FLAT, **{'mixamorig:Spine2': (-1, -0.2, 0), L + 'UpLeg': (0.95, -0.3, 0.2)})
+# 死亡四 = 瘫坐后仰：捂着肚子弯腰 → 膝盖一软坐到地上 → 往后仰躺，两膝还支着
+K_HIT = dict(LEGS_SET, **{'mixamorig:Spine2': (0, -0.45, 1), R + 'Arm': (-0.2, -0.6, -0.8), R + 'ForeArm': (0.5, -0.6, 0.1),
+             L + 'Arm': (0.2, -0.6, -0.8), L + 'ForeArm': (-0.5, -0.6, 0.1)})
+K_SIT = {'mixamorig:Hips': (0, 0.15, 1), 'mixamorig:Spine2': (0, -0.25, 1), 'lunge': (-0.1, 0),
+         R + 'UpLeg': (-0.15, -1, -0.15), R + 'Leg': (0, -0.2, -1), L + 'UpLeg': (0.15, -1, -0.05), L + 'Leg': (0, -0.3, -1),
+         R + 'Arm': (-0.3, 0.2, -1), R + 'ForeArm': (-0.2, 0, -1), L + 'Arm': (0.3, 0.2, -1), L + 'ForeArm': (0.2, 0, -1)}
+K_FLAT = {'mixamorig:Hips': (0, 1, 0.1), 'mixamorig:Spine2': (0, 1, 0.05), 'lunge': (-0.35, 0), 'twist': -10,
+          R + 'UpLeg': (-0.2, -0.75, 0.65), R + 'Leg': (-0.05, -0.3, -1), L + 'UpLeg': (0.25, -0.9, 0.3), L + 'Leg': (0.1, -0.5, -0.9),
+          R + 'Arm': (-1, 0.3, 0), R + 'ForeArm': (-0.6, -0.8, 0), L + 'Arm': (1, -0.1, 0), L + 'ForeArm': (1, 0.3, 0)}
+K_BOUNCE = dict(K_FLAT, **{'mixamorig:Spine2': (0, 1, 0.3), R + 'Arm': (-1, 0.3, 0.3)})
 
 # ════════ BOSS（体型 2-3 倍：动作放慢、幅度加大）════════
 B_ARMS = lambda sw: {R + 'Arm': (-0.25, sw, -1), R + 'ForeArm': (-0.15, 0.6 * sw - 0.35, -1), R + 'Hand': (0, -0.3, -1),
@@ -425,10 +541,12 @@ ZCLIPS = {
     'hit':    CLIPS['hit'],
     'slam':   [(0, BLOCK, None), (0.3, SLAM_WIND, None), (0.4, SLAM_WIND, None, 'LINEAR'), (0.46, SLAM, None),
                (0.66, SLAM, None), (0.95, BLOCK, None)],
-    # 三种死亡，运行时随机挑一个（death / death2 / death3）：后仰打飞 / 跪倒扑脸 / 打转侧倒
+    # 四种死亡，运行时随机挑一个（death / death2 / death3 / death4）：后仰打飞 / 跪倒扑脸 / 打转侧倒 / 瘫坐后仰
     'death':  CLIPS['death'],
     'death2': [(0, Z_IDLE, None), (0.1, F_HIT, 0.95), (0.35, F_KNEE, 0.5), (0.45, F_KNEE, 0.48, 'LINEAR'), (0.62, F_FLAT, 0.14),
                (0.72, F_BOUNCE, 0.18), (0.88, F_DEAD, 0.14), (1.4, F_DEAD, 0.14)],
     'death3': [(0, Z_IDLE, None), (0.08, S_HIT, 0.95), (0.35, S_SAG, 0.6, 'LINEAR'), (0.55, S_FLAT, 0.4),
                (0.65, S_BOUNCE, 0.46), (0.8, S_DEAD, 0.4), (1.4, S_DEAD, 0.4)],
+    'death4': [(0, Z_IDLE, None), (0.1, K_HIT, 0.93), (0.4, K_HIT, 0.9), (0.6, K_SIT, 0.32, 'LINEAR'), (0.7, K_SIT, 0.35),
+               (0.95, K_FLAT, 0.13), (1.05, K_BOUNCE, 0.17), (1.2, K_FLAT, 0.13), (1.7, K_FLAT, 0.13)],
 }

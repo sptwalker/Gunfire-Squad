@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>12 角色外观规则</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#1-总则">1. 总则</a></li><li class="d2"><a href="#2-配色">2. 配色</a></li><li class="d2"><a href="#3-逐转">3. 逐转规则</a></li><li class="d2"><a href="#4-参数">4. 流派 / 光环 / 号令</a></li><li class="d2"><a href="#5-英雄五星">5. 英雄与五星</a></li><li class="d2"><a href="#6-各树">6. 五棵树</a></li><li class="d2"><a href="#7-武器">7. 武器与动作</a></li><li class="d2"><a href="#8-校验">8. 校验与流程</a></li></ol></nav>
+<main class="doc">
+<h1 id="12-角色外观规则">12 角色外观规则（备忘）</h1>
+<p>955 个职业形象全部由 <code>proto/m0/tools/voxel.py</code> 生成，配色来自 <code>tools/palette.py</code>。本页把散落在代码和 <a href="05-资产清单.html#2.4-职业形象">05 §2.4</a> 里的外观规则集中记一份，以后加职业或改形象时照这里来。代码和本页不一致时以代码为准，并回头改本页。</p>
+
+<h2 id="1-总则">1. 总则</h2>
+<ul>
+<li><strong>一个职业一个模型</strong>：<code>vox_&lt;职业 id&gt;.glb</code>，五星的 <code>+</code> 写成 <code>_star</code>。骨架、动作、手部挂点全树共用。</li>
+<li><strong>俯视读图顺序</strong>：轮廓 → 主色 → 武器 → 细节。每一转至少加一个从俯视能看见的新轮廓件；只换色或只加花纹不算转职。</li>
+<li><strong>不挡腿</strong>：髋部前方、腰带以下的格子一律删掉（<code>recolor</code> 删除 Hips 上 z&lt;9、-4≤y≤0、-4≤x≤3 的格子）。下摆、法袍、披风只放在背后和两侧。</li>
+<li><strong>955 个两两不同</strong>：出模时用「体素 + 左右手武器」做指纹，有重复就断言失败。</li>
+<li><strong>地牌颜色和装备配色分开</strong>：近战深黄、远程浅蓝、辅助浅绿，只用在地牌上（<code>index.html</code> 的 <code>TREE_COL</code>），不跟着职业色谱改。</li>
+</ul>
+
+<h2 id="2-配色">2. 配色（palette.py）</h2>
+<p>坐标是 t（转数，0 = 基础 … 6 = 英雄，7 = 五星）和 u（本转从左到右的位置，0–1，等于路径二进制取中点）。每个格子算出 6 个颜色：主色、辅色、裤色、装饰色、发光色、色相。</p>
+<div class="tbl"><table>
+<thead><tr><th>树</th><th>主 / 辅</th><th>根色相 → 左 / 右</th><th>亮度（0…6 / 五星）</th><th>五星彩度</th><th>特别规则</th></tr></thead>
+<tbody>
+<tr><td>剑士</td><td>蓝 / 银白</td><td>248 → 268 / 225</td><td>.62 … .53 / .86</td><td>.07</td><td>全在蓝区，不用紫：飘带、光效、龙翼里的紫一律换成蓝</td></tr>
+<tr><td>射手</td><td>黑 / 紫</td><td>325 → 310 / 345</td><td>.32 … .24 / .26</td><td>.16（主色 ×.25）</td><td>主色近黑炭灰；紫只上领口、袖口、花纹、发光件；左肩到右腰一条棕皮带；装饰色比通用色阶暗一档（古铜 / 暗银 / 黑金）</td></tr>
+<tr><td>法师</td><td>红 / 橙</td><td>30 → 12 / 62</td><td>.62 … .59 / .70</td><td>.15</td><td>法袍前面开口</td></tr>
+<tr><td>辅助</td><td>绿 / 白</td><td>150 → 180 / 122</td><td>.70 … .71 / .90</td><td>.08</td><td>辅色无彩（亮度 .93 的白）</td></tr>
+<tr><td>技术</td><td>黄 / 青</td><td>100 → 72 / 118</td><td>.66 … .78 / .80</td><td>.15</td><td>辅色比主色暗 .08</td></tr>
+</tbody></table></div>
+<ul>
+<li><strong>饱和度随转数涨</strong>：彩度 0…6 转为 .008 / .03 / .055 / .075 / .095 / .115 / .135，低转是灰、灰调、暗色调。</li>
+<li><strong>色相随转数散开</strong>：散开系数 0 / 0 / .2 / .4 / .6 / .8 / 1 / 1。基础和 1 转不散；靠左的偏向 hl，靠右的偏向 hr，亮度左暗右亮（±.05）。</li>
+<li><strong>装饰色阶</strong>：0–1 转铜，2–3 转银，4–5 转金，英雄亮金，五星每人一个亮彩色相（oklch .84 / .17 / 360u+20）。</li>
+<li><strong>五星主色不能像皮肤</strong>：白金套的「白」会被换成五星主色。亮度太高、彩度太低时会和肤色混在一起。法师（.70 / .15）和技术（.80 / .15）都因此调过。新树要先截图检查五星这一排。</li>
+<li><strong>树间断言</strong>：剑士色相在 222–270 之间；射手在 305–348 之间，并且和剑士同格主色不同；射手 64 个英雄的发光色至少 40 种。</li>
+</ul>
+
+<h2 id="3-逐转">3. 逐转规则</h2>
+<div class="tbl"><table>
+<thead><tr><th>转</th><th>来源</th><th>新轮廓件</th><th>树色件</th><th>主色面花纹</th><th>身形</th></tr></thead>
+<tbody>
+<tr><td>基础</td><td rowspan="3">手写链（每树 7 个：基础、1 转 2 个、2 转 4 个，每方向一套）</td><td>无，朴素布衣 + 制式武器</td><td rowspan="3">大件、显眼（见 §6）</td><td>无</td><td>k 1.00</td></tr>
+<tr><td>1 转</td><td>加一层装备，左右不对称</td><td>无</td><td>k 1.00</td></tr>
+<tr><td>2 转</td><td>背负件；轻 / 重在这一转分开</td><td>下摆线（胸 z=12）</td><td>k 1.03</td></tr>
+<tr><td>3 转</td><td rowspan="3">家族招牌件函数 <code>sig_*(part, t, v, …)</code> 生成</td><td>家族招牌件定型；换发型</td><td rowspan="3">缩成领口一颗扣子（<code>buckle</code>）</td><td>+ 前臂袖口一圈</td><td>k 1.06</td></tr>
+<tr><td>4 转</td><td>招牌件按流派变形，同分线两个流派一眼能分</td><td>+ 一道 V 纹</td><td>k 1.09</td></tr>
+<tr><td>5 转</td><td>招牌件终阶；肩线写光环方向</td><td>+ 第二道 V 纹</td><td>k 1.12</td></tr>
+<tr><td>英雄</td><td>人物行 + 英雄招牌件</td><td>整套重画，不在前面叠加</td><td>上到领口与铠边（<code>hero_coat</code>）</td><td>+ 菱点</td><td>k 1.14 · 腿 +2 · 头 .74</td></tr>
+<tr><td>五星</td><td><code>star_plus</code></td><td>白金整套 + 光轮 / 冠冕</td><td>白金</td><td>同英雄</td><td>k 1.18 · 腿 +4 · 头 .70</td></tr>
+</tbody></table></div>
+<ul>
+<li>招牌件函数里 <code>n = t − 3</code> 是「这一转比 3 转多几阶」，件数、长度、圈数都随 n 增长，英雄时 n = 3。按下标取的位置表要至少有 n 的最大值 + 增量那么长（写辅助 / 技术时这里越界过一次）。</li>
+<li>发光件从 3 转开始出现，颜色用家族发光色；手写链的 0–2 转不发光（树色件本身可以是浅亮色）。</li>
+<li>手写链用占位色 <code>MG_M</code> / <code>MG_S</code> 表示「本格主色 / 辅色」，<code>recolor</code> 统一换成色谱色。所以链上的颜色不用手调，改色谱即可。</li>
+</ul>
+
+<h2 id="4-参数">4. 路径 → 家族 / 流派 / 光环 / 号令</h2>
+<p>职业 id 的路径是一串 0/1：<code>d = p0·2 + p1</code> 是方向（选脸型模板），<code>f = d·2 + p2</code> 是家族（8 个），<code>v, a, o = p3, p4, p5</code>。</p>
+<div class="tbl"><table>
+<thead><tr><th>位</th><th>含义</th><th>外观上的体现</th></tr></thead>
+<tbody>
+<tr><td>v（4 转起）</td><td>流派</td><td>招牌件分成两种形态，例如辅助「战地急救」v0 光盾 / v1 除颤器。招牌件函数用 <code>if t &gt;= 4 and v == …</code> 分支</td></tr>
+<tr><td>a（5 转起）</td><td>光环方向</td><td><code>aura_trim</code>：进取 = 肩线外放、尖、金；守护 = 内收、圆、银（挂在胸骨上，不跟手臂甩）。5 转的辅色在守护时换成银；五星守护的金边换银</td></tr>
+<tr><td>o（英雄起）</td><td>号令</td><td><code>order_mark</code>：授 = 背旗，令 = 头后令羽；<code>h &gt;&gt; 1</code> 换形状（方旗 / 燕尾旗 / 三角长旗 / 双杆旗；冠羽 / V 字双翎 / 扇形羽冠 / 后垂长翎）。颜色是本人专属色 oklch(.80, .16, (45h + 23f) mod 360)</td></tr>
+</tbody></table></div>
+
+<h2 id="5-英雄五星">5. 英雄与五星</h2>
+<ul>
+<li><strong>人物行</strong>（<code>person(f, h, heavy, salt)</code>）：英雄号 h = v·4 + a·2 + o。肤色、发色、发型、瞳色、体型都由公式错开，同家族 8 人瞳色两两不同（瞳色下标 f + 3h mod 8）。「重」家族（每树 <code>heavy</code> 指定）用短发 / 光头 / 头盔、多为壮硕、偶有胡子；其余用长发 / 马尾等、偏修长。各树用不同 <code>salt</code> 错开（剑士 0、射手 3、法师 5、辅助 7、技术 9），五棵树的英雄不会撞脸。</li>
+<li><strong>英雄套</strong>：外套用家族的 coat 色，树色件上到领口和铠边；招牌件用 t = 6 的形态；加光环肩线和号令件。</li>
+<li><strong>五星套</strong>：同一个人（人物行沿用英雄），白金整套 + 本家族招牌件的英雄形态（换成白金）+ 光轮或冠冕。所以五星的头后、背后件始终不比英雄小。家族 0 / 1 / 4 / 5 用光轮，2 / 3 / 6 / 7 用冠冕；守护多一圈内环或一排短齿。号令：授 = 肩侧两颗浮游光球，令 = 短披风。</li>
+<li><strong>编号</strong>：五星在展示页写 7.x，英雄写 6.x。职业圆盘（展示页「职业 955」）的地牌在前面加树字母：S 剑士、M 法师、A 射手、H 辅助、T 技术，例如「S 3.5」；转.序号和形象页一致。圆盘上站的就是这 955 个形象模型。</li>
+</ul>
+
+<h2 id="6-各树">6. 五棵树各自的规则</h2>
+<div class="tbl"><table>
+<thead><tr><th>树</th><th>0–2 转树色件</th><th>不挂盾 / 挂盾</th><th>重家族</th><th>8 个家族招牌件（3 转）</th></tr></thead>
+<tbody>
+<tr><td>剑士</td><td>金围巾</td><td>盾方向（d ≥ 2）挂盾，按家族选盾形</td><td>2, 3, 6, 7</td><td>分身 脚下影子与碎披风 · 武器驾驭 背后飞剑扇 · 变身 巨型护臂与兽角盔 · 狂暴 赤膊战纹与锯齿斧 · 虚化 半透明下摆与残影 · 跃击 长枪与龙翼肩甲 · 阵列分身 背后立盾一列 · 要塞化 城垛肩甲与扎地桩脚</td></tr>
+<tr><td>射手</td><td>左前臂浅蓝护臂</td><td>不挂盾；多一条棕皮带</td><td>2, 5</td><td>宠物 肩上的鹰 · 投索 腰缠钩索卷 · 钉刺 背后弩匣 · 弹射 背后十字回旋镖 · 枪斗 双腿枪套与风衣下摆 · 抛射 胸前弹带与背后榴弹筒 · 超远 背挂超长狙与单眼镜 · 蓄能 胸口发光核心</td></tr>
+<tr><td>法师</td><td>领口浅紫宝石</td><td>不挂盾；法袍前开</td><td>2, 6</td><td>元素 绕身三色元素球 · 天候 头顶小云 · 地脉 浮空岩片肩 · 引力 脚下环绕碎石 · 幻象 面具与拖影 · 变敌 兽骨杖与兽面兜帽 · 恶魔契约 单角与背后恶魔臂 · 亡者 骨冠与浮游骷髅</td></tr>
+<tr><td>辅助</td><td>左臂白臂章 + 薄荷绿十字</td><td>不挂盾</td><td>1, 2</td><td>战地急救 背后医疗箱与药瓶 · 生长 叶片与花冠 · 图腾 背后图腾柱与羽冠 · 调配 护目镜与药瓶斜挎 · 乐曲 贝雷帽与背后琴 · 命运牌 头巾与悬浮牌 · 星图 深蓝星披风与星形胸针 · 符文 纸符与符文石</td></tr>
+<tr><td>技术</td><td>额头钢蓝灰护目镜（阵地兵是安全帽）</td><td>不挂盾</td><td>1, 4</td><td>无人机 天线背包与肩旁无人机 · 载具 液压大肩甲与排气管 · 炮台 工具带与肩上迷你炮塔 · 陷阱 腰挂捕兽夹与绊线卷 · 喷射 背后双罐与防毒面具 · 地道 矿灯头盔与背后短镐 · 屏障 双肩场节点与背后发生器 · 炮击 背后电台、长天线与望远镜</td></tr>
+</tbody></table></div>
+<h3>辅助、技术的流派与终阶（代码注释里有同样的说明）</h3>
+<div class="tbl"><table>
+<thead><tr><th>家族</th><th>v0</th><th>v1</th><th>5 转加</th><th>英雄</th></tr></thead>
+<tbody>
+<tr><td>战地急救</td><td>菱形光盾</td><td>除颤器与电极片</td><td>肩上信标灯</td><td>一对医疗光翼</td></tr>
+<tr><td>生长</td><td>树皮</td><td>藤蔓</td><td>鹿角</td><td>背后一棵树</td></tr>
+<tr><td>图腾</td><td>雷鸟与臂上闪电</td><td>祖灵面具与骨珠</td><td>毛皮披肩</td><td>大图腾柱</td></tr>
+<tr><td>调配</td><td>酸液罐</td><td>浮空药瓶</td><td>围裙与小蒸馏器</td><td>大蒸馏器</td></tr>
+<tr><td>乐曲</td><td>鼓与鼓槌</td><td>披风与音符</td><td>金肩章</td><td>竖琴</td></tr>
+<tr><td>命运牌</td><td>大骰子与筹码</td><td>第三只眼与水晶球</td><td>扇形牌</td><td>命运之轮</td></tr>
+<tr><td>星图</td><td>星座连线</td><td>大星与轨道</td><td>星形肩甲</td><td>浑天仪</td></tr>
+<tr><td>符文</td><td>封印锁链与金锁</td><td>发光符文纹身</td><td>腰间符文环</td><td>石碑</td></tr>
+<tr><td>无人机</td><td>绕身红眼攻击机（越往后越多）</td><td>标定目镜 + 头顶信标机</td><td>背后机巢</td><td>背后蜂巢架 + 一群机</td></tr>
+<tr><td>载具</td><td>背后双推进口（焰越来越长）</td><td>胸前加厚装甲 + 双前臂护甲</td><td>头上天线</td><td>过肩机甲骨架臂</td></tr>
+<tr><td>炮台</td><td>背后折叠架插满小炮台</td><td>右肩大炮（炮管越来越长）</td><td>黄色安全帽</td><td>背后双管炮塔</td></tr>
+<tr><td>陷阱</td><td>胸前 / 背后成捆炸药</td><td>背后张开的大夹口</td><td>前臂黑黄警示纹</td><td>背后巨型捕兽夹</td></tr>
+<tr><td>喷射</td><td>冰蓝罐 + 绕身冰晶</td><td>酸绿罐 + 腰间滴酸</td><td>第三罐 + 软管</td><td>背后一排罐 + 泄压阀</td></tr>
+<tr><td>地道</td><td>左前臂钻头（越来越长）</td><td>背后铲子 + 腰侧矿石袋</td><td>肩上碎石与矿晶</td><td>背后大钻机</td></tr>
+<tr><td>屏障</td><td>绕身镜面板</td><td>身周脉冲环（越来越多圈）</td><td>肩节点长成天线柱</td><td>背后半透明穹顶网格</td></tr>
+<tr><td>炮击</td><td>斜挎炮弹带 + 腰间信号弹</td><td>右肩激光指示器 + 耳机</td><td>小雷达盘</td><td>背后炮弹架</td></tr>
+</tbody></table></div>
+
+<h2 id="7-武器">7. 武器与攻击动作</h2>
+<ul>
+<li>形象专用武器在 <code>LOOK_WPN</code> 里，出模时一起导出为 <code>vox_&lt;武器&gt;.glb</code>；共用武器（剑、枪、喷火器等 11 把）直接复用样板角色的模型。</li>
+<li>武器随转数升级，同一家族用同一类武器：3–4 转普通款，5 转起加大或加左手副武器，五星换白金款（<code>*_star</code>）。</li>
+<li><strong>攻击动作按右手武器名选</strong>（<code>index.html</code> 的 <code>lgrip</code>）：
+  <ul>
+  <li>rifle：bow、amr、sniper、rail、gl、spray</li>
+  <li>onehand（attack_pistol）：revolver、wand、orb、tome、remote、detonator、emitter、injector</li>
+  <li>throw：lasso、hook、boom、flask、card</li>
+  <li>其余走近战挥击（剑、斧、枪、法杖、镰刀、扳手、钻、树枝、图腾、琴……）</li>
+  </ul>
+  新武器起名时要让它落进正确的那一类。</li>
+</ul>
+
+<h2 id="8-校验">8. 校验与出模流程</h2>
+<ol>
+<li>改 <code>palette.py</code> 后跑 <code>python palette.py</code>，重新生成 <code>palette.html</code>；文件里的断言要全过。</li>
+<li>出一棵树：<code>blender -b --factory-startup -P voxel.py -- ../assets/src/Xbot.glb ../assets/build looks &lt;sw|ar|mg|md|te&gt;</code>。每次都对全部 955 个做唯一性指纹，并重新导出全部形象武器。</li>
+<li>用 <code>gltf-transform meshopt</code> 把 <code>build/</code> 下的结果压缩到 <code>assets/</code>。</li>
+<li>在 <code>proto/m0/index.html</code> 的形象页按转数截图检查，快捷键：6 剑士、7 射手、8 法师、9 辅助、0 技术（英雄页里 0 仍是「各拿自己的武器」）。重点看：五星主色和皮肤是否分得开，同分线两个流派能否一眼分开，背后件是否挡住脸。</li>
+<li>文档里的三角面和体积从构建日志（<code>LOOK_OK … tris</code>）和 <code>du</code> 导出，不手填（数字见 05 §2.4）。</li>
+</ol>
+</main>
+</div>
+</body>
+</html>

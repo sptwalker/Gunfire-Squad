@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>技师职业评审表</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700;900&family=JetBrains+Mono:wght@500&display=swap">
@@ -2112,9 +2113,23 @@ document.addEventListener('input', (e) => {
   if (!e.target.id) return;
   saved[e.target.id] = e.target.value;
   try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch {}
+  sink();
   if (e.target.id.endsWith('-fb')) pend(e.target.dataset.k);
   refresh();
 });
+
+// 顺手把填的内容 POST 给 dev server（vite.config.js 的 /__rev 存成 tools/review/live/<KEY>.json），
+// 这样对方不用复制粘贴我就能读到。防抖 500ms；keepalive 让关页前最后一次也发得出去。
+// 没有 dev server 时 fetch 静默失败，localStorage 仍照旧，不影响填写。
+let sinkT;
+function sink() {
+  clearTimeout(sinkT);
+  sinkT = setTimeout(() => {
+    fetch('/__rev/' + KEY, { method: 'POST', body: JSON.stringify(saved), keepalive: true })
+      .then((r) => { if (!r.ok) console.warn('[review-sink]', KEY, r.status); })
+      .catch((e) => console.warn('[review-sink]', KEY, e.message));
+  }, 500);
+}
 
 /**
  * 把卡上还没处理的新留言显示成一条"待处理"。
@@ -2190,4 +2205,7 @@ const io = new IntersectionObserver((es) => {
   }
 }, { rootMargin: '-30% 0px -60% 0px' });
 document.querySelectorAll('.card, tr.t5, tr.t6').forEach((c) => io.observe(c));
+
+// 打开页面就把浏览器里已存的内容发一次：之前填过的意见不用等下一次输入也能被读到
+if (Object.keys(saved).length) sink();
 </script>

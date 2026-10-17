@@ -143,7 +143,8 @@ const nav = `<a class="home side-home" href="index.html">← 返回职业树首�
 
 const css = await (await import('node:fs/promises')).readFile(new URL('./style.css', import.meta.url), 'utf8');
 const js = await (await import('node:fs/promises')).readFile(new URL('./app.js', import.meta.url), 'utf8');
-console.log(`<title>${TN}职业评审表</title>
+console.log(`<meta charset="utf-8">
+<title>${TN}职业评审表</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700;900&family=JetBrains+Mono:wght@500&display=swap">
 <style>${css}</style>

@@ -1,0 +1,1343 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>13 敌对目标评审</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目录"><a class="home" href="index.html">← 策划文档首页</a><ol><li class="d2"><a href="#一-僵尸">一、僵尸</a></li><li class="d3"><a href="#普通僵尸-normal">普通僵尸（<code>normal</code>）</a></li><li class="d3"><a href="#高速僵尸-runner">高速僵尸（<code>runner</code>）</a></li><li class="d3"><a href="#铁甲僵尸-brute">铁甲僵尸（<code>brute</code>）</a></li><li class="d3"><a href="#毒液僵尸-toxic">毒液僵尸（<code>toxic</code>）</a></li><li class="d3"><a href="#爆炸僵尸-bomber">爆炸僵尸（<code>bomber</code>）</a></li><li class="d3"><a href="#分裂僵尸-splitter">分裂僵尸（<code>splitter</code>）</a></li><li class="d3"><a href="#跳跃僵尸-leaper">跳跃僵尸（<code>leaper</code>）</a></li><li class="d3"><a href="#咒盾僵尸-ward">咒盾僵尸（<code>ward</code>）</a></li><li class="d3"><a href="#喷吐僵尸-spitter">喷吐僵尸（<code>spitter</code>）</a></li><li class="d3"><a href="#分裂小僵尸-spawnling">分裂小僵尸（<code>spawnling</code>）</a></li><li class="d3"><a href="#传令僵尸-herald">传令僵尸（<code>herald</code>）</a></li><li class="d3"><a href="#亡者召唤师-summoner">亡者召唤师（<code>summoner</code>）</a></li><li class="d3"><a href="#磁暴僵尸-tesla">磁暴僵尸（<code>tesla</code>）</a></li><li class="d3"><a href="#增生僵尸-regenerator">增生僵尸（<code>regenerator</code>）</a></li><li class="d3"><a href="#潜影僵尸-stalker">潜影僵尸（<code>stalker</code>）</a></li><li class="d3"><a href="#掘地僵尸-burrower">掘地僵尸（<code>burrower</code>）</a></li><li class="d3"><a href="#蝠翼僵尸-flyer">蝠翼僵尸（<code>flyer</code>）</a></li><li class="d3"><a href="#尖啸僵尸-screamer">尖啸僵尸（<code>screamer</code>）</a></li><li class="d2"><a href="#二-精英僵尸">二、精英僵尸</a></li><li class="d3"><a href="#精英-尸潮领头-e_normal-基础-普通僵尸">精英·尸潮领头（<code>e_normal</code>，基础：普通僵尸）</a></li><li class="d3"><a href="#精英-疾影-e_runner-基础-高速僵尸">精英·疾影（<code>e_runner</code>，基础：高速僵尸）</a></li><li class="d3"><a href="#精英-攻城铁甲-e_brute-基础-铁甲僵尸">精英·攻城铁甲（<code>e_brute</code>，基础：铁甲僵尸）</a></li><li class="d3"><a href="#精英-瘟疫之源-e_toxic-基础-毒液僵尸">精英·瘟疫之源（<code>e_toxic</code>，基础：毒液僵尸）</a></li><li class="d3"><a href="#精英-连环炸弹-e_bomber-基础-爆炸僵尸">精英·连环炸弹（<code>e_bomber</code>，基础：爆炸僵尸）</a></li><li class="d3"><a href="#精英-裂殖母体-e_splitter-基础-分裂僵尸">精英·裂殖母体（<code>e_splitter</code>，基础：分裂僵尸）</a></li><li class="d3"><a href="#精英-断首猎手-e_leaper-基础-跳跃僵尸">精英·断首猎手（<code>e_leaper</code>，基础：跳跃僵尸）</a></li><li class="d3"><a href="#精英-咒盾祭司-e_ward-基础-咒盾僵尸">精英·咒盾祭司（<code>e_ward</code>，基础：咒盾僵尸）</a></li><li class="d3"><a href="#精英-腐酸炮台-e_spitter-基础-喷吐僵尸">精英·腐酸炮台（<code>e_spitter</code>，基础：喷吐僵尸）</a></li><li class="d3"><a href="#精英-战嚎统领-e_herald-基础-传令僵尸">精英·战嚎统领（<code>e_herald</code>，基础：传令僵尸）</a></li><li class="d3"><a href="#精英-亡灵主教-e_summoner-基础-亡者召唤师">精英·亡灵主教（<code>e_summoner</code>，基础：亡者召唤师）</a></li><li class="d3"><a href="#精英-雷暴核心-e_tesla-基础-磁暴僵尸">精英·雷暴核心（<code>e_tesla</code>，基础：磁暴僵尸）</a></li><li class="d3"><a href="#精英-不朽血肉-e_regenerator-基础-增生僵尸">精英·不朽血肉（<code>e_regenerator</code>，基础：增生僵尸）</a></li><li class="d3"><a href="#精英-无面刺客-e_stalker-基础-潜影僵尸">精英·无面刺客（<code>e_stalker</code>，基础：潜影僵尸）</a></li><li class="d3"><a href="#精英-地脉巨蠕-e_burrower-基础-掘地僵尸">精英·地脉巨蠕（<code>e_burrower</code>，基础：掘地僵尸）</a></li><li class="d3"><a href="#精英-夜幕蝠王-e_flyer-基础-蝠翼僵尸">精英·夜幕蝠王（<code>e_flyer</code>，基础：蝠翼僵尸）</a></li><li class="d3"><a href="#精英-哀嚎女妖-e_screamer-基础-尖啸僵尸">精英·哀嚎女妖（<code>e_screamer</code>，基础：尖啸僵尸）</a></li><li class="d2"><a href="#三-变异生物">三、变异生物</a></li><li class="d3"><a href="#变异犬-dog">变异犬（<code>dog</code>）</a></li><li class="d3"><a href="#变异熊-bear">变异熊（<code>bear</code>）</a></li><li class="d3"><a href="#变异双头狼-wolf">变异双头狼（<code>wolf</code>）</a></li><li class="d3"><a href="#变异秃鹫-vulture">变异秃鹫（<code>vulture</code>）</a></li><li class="d3"><a href="#变异巨猿-ape">变异巨猿（<code>ape</code>）</a></li><li class="d2"><a href="#四-boss">四、BOSS</a></li><li class="d3"><a href="#第-1-段-腐化重装兵">第 1 段：腐化重装兵</a></li><li class="d3"><a href="#第-2-段-毒母-薇丝">第 2 段：毒母·薇丝</a></li><li class="d3"><a href="#第-3-段-尸潮之主-卡俄斯">第 3 段：尸潮之主·卡俄斯</a></li></ol></nav>
+<main class="doc">
+<h1 id="13-敌对目标评审"><a class="anchor" href="#13-敌对目标评审">#</a>13 敌对目标评审</h1>
+<blockquote>
+<p>本页由 <code>node src/sim/enemy-doc.ts</code> 生成，不要手改。改数值去 <code>src/data/zombies.ts</code> / <code>src/data/enemies.ts</code> / <code>src/data/run.ts</code>，改原型技能参数去 <code>proto/m0/gamedata.js</code> 的 <code>T.ZB</code> / <code>T.BB</code>，然后重新生成。</p>
+</blockquote>
+<p>共 18 种僵尸、17 种精英、5 种变异生物、3 个 BOSS。模型在 <code>proto/m0/assets/</code>：僵尸 <code>vox_z_*</code>、精英 <code>vox_e_*</code>、变异生物 <code>vox_m_*</code>、BOSS <code>vox_b_*</code>；展示页 <code>proto/m0/zombies.html</code>。</p>
+<p>EHP = 生命 × 阶段血量倍率（1 / 1.7 / 2.8）；DPS = 攻击 × 阶段伤害倍率（1 / 1.5 / 2.2）÷ 攻击间隔。控抗 = （霸体 + 稳固归一 + 抗冻 + 狡诈）÷ 4，见 <code>combat.ts controlResistance</code>。</p>
+<h2 id="一-僵尸"><a class="anchor" href="#一-僵尸">#</a>一、僵尸</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>生命</th>
+<th>移速</th>
+<th>护甲</th>
+<th>抗性</th>
+<th>攻击 / 间隔</th>
+<th>DPS(1段)</th>
+<th>EHP 1/2/3 段</th>
+<th>稳固</th>
+<th>霸体</th>
+<th>抗冻</th>
+<th>狡诈</th>
+<th>控抗</th>
+<th>威胁</th>
+<th>金钱</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通僵尸</td>
+<td>200</td>
+<td>2.2</td>
+<td>30（none）</td>
+<td>—</td>
+<td>90 / 1.2s</td>
+<td>75</td>
+<td>200 / 340 / 560</td>
+<td>36</td>
+<td>—</td>
+<td>0%</td>
+<td>0%</td>
+<td>0.09</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr>
+<td>高速僵尸</td>
+<td>120</td>
+<td>5</td>
+<td>15（none）</td>
+<td>—</td>
+<td>70 / 0.8s</td>
+<td>87.5</td>
+<td>120 / 204 / 336</td>
+<td>32</td>
+<td>—</td>
+<td>0%</td>
+<td>0%</td>
+<td>0.09</td>
+<td>1.2</td>
+<td>4</td>
+</tr>
+<tr>
+<td>铁甲僵尸</td>
+<td>1,400</td>
+<td>1.2</td>
+<td>220（heavy）</td>
+<td>物 60%</td>
+<td>260 / 2s</td>
+<td>130</td>
+<td>1,400 / 2,380 / 3,920</td>
+<td>90</td>
+<td>是</td>
+<td>20%</td>
+<td>0%</td>
+<td>0.45</td>
+<td>3</td>
+<td>12</td>
+</tr>
+<tr>
+<td>毒液僵尸</td>
+<td>350</td>
+<td>2</td>
+<td>60（light）</td>
+<td>—</td>
+<td>110 / 1.5s</td>
+<td>73.3</td>
+<td>350 / 595 / 980</td>
+<td>52</td>
+<td>—</td>
+<td>60%</td>
+<td>0%</td>
+<td>0.27</td>
+<td>1.8</td>
+<td>6</td>
+</tr>
+<tr>
+<td>爆炸僵尸</td>
+<td>400</td>
+<td>2.6</td>
+<td>100（medium）</td>
+<td>—</td>
+<td>550 / 99s</td>
+<td>5.6</td>
+<td>400 / 680 / 1,120</td>
+<td>40</td>
+<td>—</td>
+<td>15%</td>
+<td>0%</td>
+<td>0.14</td>
+<td>2</td>
+<td>8</td>
+</tr>
+<tr>
+<td>分裂僵尸</td>
+<td>300</td>
+<td>2.2</td>
+<td>40（none）</td>
+<td>—</td>
+<td>100 / 1.2s</td>
+<td>83.3</td>
+<td>300 / 510 / 840</td>
+<td>34</td>
+<td>—</td>
+<td>10%</td>
+<td>15%</td>
+<td>0.15</td>
+<td>2</td>
+<td>7</td>
+</tr>
+<tr>
+<td>跳跃僵尸</td>
+<td>250</td>
+<td>3</td>
+<td>45（none）</td>
+<td>—</td>
+<td>140 / 1.4s</td>
+<td>100</td>
+<td>250 / 425 / 700</td>
+<td>36</td>
+<td>—</td>
+<td>10%</td>
+<td>60%</td>
+<td>0.27</td>
+<td>2</td>
+<td>9</td>
+</tr>
+<tr>
+<td>咒盾僵尸</td>
+<td>900</td>
+<td>1.8</td>
+<td>160（medium）</td>
+<td>法 60%</td>
+<td>180 / 1.8s</td>
+<td>100</td>
+<td>900 / 1,530 / 2,520</td>
+<td>120</td>
+<td>是</td>
+<td>35%</td>
+<td>30%</td>
+<td>0.58</td>
+<td>3.5</td>
+<td>14</td>
+</tr>
+<tr>
+<td>喷吐僵尸</td>
+<td>600</td>
+<td>1.6</td>
+<td>90（light）</td>
+<td>—</td>
+<td>200 / 2.4s</td>
+<td>83.3</td>
+<td>600 / 1,020 / 1,680</td>
+<td>48</td>
+<td>—</td>
+<td>20%</td>
+<td>25%</td>
+<td>0.22</td>
+<td>3</td>
+<td>15</td>
+</tr>
+<tr>
+<td>分裂小僵尸</td>
+<td>80</td>
+<td>3.2</td>
+<td>10（none）</td>
+<td>—</td>
+<td>55 / 1s</td>
+<td>55</td>
+<td>80 / 136 / 224</td>
+<td>20</td>
+<td>—</td>
+<td>0%</td>
+<td>0%</td>
+<td>0.06</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>传令僵尸</td>
+<td>320</td>
+<td>1.8</td>
+<td>60（light）</td>
+<td>—</td>
+<td>100 / 2s</td>
+<td>50</td>
+<td>320 / 544 / 896</td>
+<td>40</td>
+<td>—</td>
+<td>20%</td>
+<td>30%</td>
+<td>0.23</td>
+<td>3</td>
+<td>13</td>
+</tr>
+<tr>
+<td>亡者召唤师</td>
+<td>900</td>
+<td>1.4</td>
+<td>130（medium）</td>
+<td>—</td>
+<td>150 / 2.2s</td>
+<td>68.2</td>
+<td>900 / 1,530 / 2,520</td>
+<td>70</td>
+<td>是</td>
+<td>40%</td>
+<td>40%</td>
+<td>0.58</td>
+<td>4</td>
+<td>18</td>
+</tr>
+<tr>
+<td>磁暴僵尸</td>
+<td>800</td>
+<td>1.6</td>
+<td>120（medium）</td>
+<td>电磁 100%</td>
+<td>200 / 1.8s</td>
+<td>111.1</td>
+<td>800 / 1,360 / 2,240</td>
+<td>80</td>
+<td>是</td>
+<td>30%</td>
+<td>20%</td>
+<td>0.52</td>
+<td>3.5</td>
+<td>14</td>
+</tr>
+<tr>
+<td>增生僵尸</td>
+<td>700</td>
+<td>1.8</td>
+<td>100（light）</td>
+<td>—</td>
+<td>160 / 1.6s</td>
+<td>100</td>
+<td>700 / 1,190 / 1,960</td>
+<td>60</td>
+<td>—</td>
+<td>20%</td>
+<td>0%</td>
+<td>0.18</td>
+<td>3</td>
+<td>11</td>
+</tr>
+<tr>
+<td>潜影僵尸</td>
+<td>400</td>
+<td>2.8</td>
+<td>50（none）</td>
+<td>—</td>
+<td>320 / 1.5s</td>
+<td>213.3</td>
+<td>400 / 680 / 1,120</td>
+<td>30</td>
+<td>—</td>
+<td>0%</td>
+<td>40%</td>
+<td>0.18</td>
+<td>2.5</td>
+<td>10</td>
+</tr>
+<tr>
+<td>掘地僵尸</td>
+<td>600</td>
+<td>2.4</td>
+<td>90（none）</td>
+<td>—</td>
+<td>240 / 1.8s</td>
+<td>133.3</td>
+<td>600 / 1,020 / 1,680</td>
+<td>45</td>
+<td>—</td>
+<td>10%</td>
+<td>0%</td>
+<td>0.13</td>
+<td>3</td>
+<td>11</td>
+</tr>
+<tr>
+<td>蝠翼僵尸</td>
+<td>350</td>
+<td>3.4</td>
+<td>40（none）</td>
+<td>—</td>
+<td>180 / 1.3s</td>
+<td>138.5</td>
+<td>350 / 595 / 980</td>
+<td>28</td>
+<td>—</td>
+<td>10%</td>
+<td>20%</td>
+<td>0.15</td>
+<td>2.5</td>
+<td>10</td>
+</tr>
+<tr>
+<td>尖啸僵尸</td>
+<td>500</td>
+<td>1.5</td>
+<td>70（light）</td>
+<td>—</td>
+<td>120 / 2.5s</td>
+<td>48</td>
+<td>500 / 850 / 1,400</td>
+<td>50</td>
+<td>—</td>
+<td>30%</td>
+<td>50%</td>
+<td>0.31</td>
+<td>3</td>
+<td>12</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="普通僵尸-normal"><a class="anchor" href="#普通僵尸-normal">#</a>普通僵尸（<code>normal</code>）</h3>
+<ul>
+<li><strong>定位</strong>：基础单位，构成战场底噪</li>
+<li><strong>挑战维度</strong>：潮涌；行为标签 <code>none</code>；击退 25（knockback）</li>
+<li><strong>机制</strong>：无</li>
+<li><strong>模型</strong>：<code>vox_z_normal</code></li>
+</ul>
+<h3 id="高速僵尸-runner"><a class="anchor" href="#高速僵尸-runner">#</a>高速僵尸（<code>runner</code>）</h3>
+<ul>
+<li><strong>定位</strong>：惩罚站桩与长换弹武器</li>
+<li><strong>挑战维度</strong>：突进；行为标签 <code>charge</code>；击退 18（knockback）</li>
+<li><strong>机制</strong>：冲刺突进，命中打断换弹</li>
+<li><strong>模型</strong>：<code>vox_z_runner</code></li>
+</ul>
+<h3 id="铁甲僵尸-brute"><a class="anchor" href="#铁甲僵尸-brute">#</a>铁甲僵尸（<code>brute</code>）</h3>
+<ul>
+<li><strong>定位</strong>：钥匙是换系别（法术 / 电磁）或破抗，不是堆穿透</li>
+<li><strong>挑战维度</strong>：物抗；行为标签 <code>block</code>；击退 60（knockdown）</li>
+<li><strong>机制</strong>：物理减伤 60%，缓慢推挤玩家。对法术与电磁伤害没有任何减免</li>
+<li><strong>模型</strong>：<code>vox_z_brute</code></li>
+</ul>
+<h3 id="毒液僵尸-toxic"><a class="anchor" href="#毒液僵尸-toxic">#</a>毒液僵尸（<code>toxic</code>）</h3>
+<ul>
+<li><strong>定位</strong>：区域封锁，逼玩家放弃阵地</li>
+<li><strong>挑战维度</strong>：毒区；行为标签 <code>poisonTrail</code>；击退 20（knockback）</li>
+<li><strong>机制</strong>：死亡留下毒池，5 格 / 8 秒持续伤害</li>
+<li><strong>原型参数</strong>：死亡留下毒池，队员站在里面每秒掉血（<code>r</code> 1.25，<code>dps</code> 30，<code>dur</code> 8）</li>
+<li><strong>模型</strong>：<code>vox_z_toxic</code></li>
+</ul>
+<h3 id="爆炸僵尸-bomber"><a class="anchor" href="#爆炸僵尸-bomber">#</a>爆炸僵尸（<code>bomber</code>）</h3>
+<ul>
+<li><strong>定位</strong>：迫使玩家主动拉开距离</li>
+<li><strong>挑战维度</strong>：自爆；行为标签 <code>suicide</code>；击退 30（knockback）</li>
+<li><strong>机制</strong>：靠近后自爆，范围 2.5 格</li>
+<li><strong>原型参数</strong>：贴近 0.6 m 开始膨胀，动画放完自爆；半径内队员按距离衰减吃攻击力伤害并必定被推开，顺带炸伤身边僵尸（<code>r</code> 2.2，<code>knock</code> 140，<code>splash</code> 150，<code>splashR</code> 1.6）</li>
+<li><strong>模型</strong>：<code>vox_z_bomber</code></li>
+</ul>
+<h3 id="分裂僵尸-splitter"><a class="anchor" href="#分裂僵尸-splitter">#</a>分裂僵尸（<code>splitter</code>）</h3>
+<ul>
+<li><strong>定位</strong>：第三轮并入潮涌：它是&quot;死了会变多&quot;的又一种表达，不再单独占一个维度</li>
+<li><strong>挑战维度</strong>：潮涌；行为标签 <code>split</code>；击退 15（knockback）</li>
+<li><strong>机制</strong>：死亡分裂为 3 只分裂小僵尸</li>
+<li><strong>原型参数</strong>：死亡时裂成 n 只小分裂（<code>n</code> 3）</li>
+<li><strong>模型</strong>：<code>vox_z_splitter</code></li>
+</ul>
+<h3 id="跳跃僵尸-leaper"><a class="anchor" href="#跳跃僵尸-leaper">#</a>跳跃僵尸（<code>leaper</code>）</h3>
+<ul>
+<li><strong>定位</strong>：第三轮并入突进：它和高速僵尸是同一种压力（反应时间不够），只是路径不同</li>
+<li><strong>挑战维度</strong>：突进；行为标签 <code>leap</code>；击退 22（knockback）</li>
+<li><strong>机制</strong>：跳跃越过障碍，落地 AOE</li>
+<li><strong>原型参数</strong>：距离 2–6 m 时扑向目标，落地范围伤害 = 攻击 × 倍率（<code>cd</code> 5，<code>min</code> 2，<code>max</code> 6，<code>mul</code> 0.4，<code>r</code> 1.3，<code>knock</code> 60）</li>
+<li><strong>模型</strong>：<code>vox_z_leaper</code></li>
+</ul>
+<h3 id="咒盾僵尸-ward"><a class="anchor" href="#咒盾僵尸-ward">#</a>咒盾僵尸（<code>ward</code>）</h3>
+<ul>
+<li><strong>定位</strong>：物抗的镜像：法术阵容打不动，物理一碰就碎</li>
+<li><strong>挑战维度</strong>：魔抗；行为标签 <code>shielded</code>；击退 45（knockdown）</li>
+<li><strong>机制</strong>：浮在身前的符文盾吸收 60% 法术伤害，对物理与电磁完全无效</li>
+<li><strong>原型参数</strong>：正面 ±60° 伤害先扣护盾；盾破后易伤若干秒（<code>shield</code> 500，<code>vuln</code> 3）</li>
+<li><strong>模型</strong>：<code>vox_z_ward</code></li>
+</ul>
+<h3 id="喷吐僵尸-spitter"><a class="anchor" href="#喷吐僵尸-spitter">#</a>喷吐僵尸（<code>spitter</code>）</h3>
+<ul>
+<li><strong>定位</strong>：站在原地就有输出，逼玩家主动前压而不是龟缩</li>
+<li><strong>挑战维度</strong>：远程压制；行为标签 <code>ranged</code>；击退 35（knockback）</li>
+<li><strong>机制</strong>：在 12 格外远程喷吐，不进入接触距离</li>
+<li><strong>原型参数</strong>：站在射程外吐酸液弹，落点 1 m 内伤害 = 攻击 × 倍率（<code>range</code> 6，<code>mul</code> 0.3）</li>
+<li><strong>模型</strong>：<code>vox_z_spitter</code></li>
+</ul>
+<h3 id="分裂小僵尸-spawnling"><a class="anchor" href="#分裂小僵尸-spawnling">#</a>分裂小僵尸（<code>spawnling</code>）</h3>
+<ul>
+<li><strong>定位</strong>：不接受预算刷怪，只由分裂产生</li>
+<li><strong>挑战维度</strong>：潮涌；行为标签 <code>none</code>；击退 8（knockback）</li>
+<li><strong>机制</strong>：由分裂僵尸产生</li>
+<li><strong>模型</strong>：<code>vox_z_splitter（× 0.4）</code></li>
+</ul>
+<h3 id="传令僵尸-herald"><a class="anchor" href="#传令僵尸-herald">#</a>传令僵尸（<code>herald</code>）</h3>
+<ul>
+<li><strong>定位</strong>：钥匙是驱散（K07）：不管它站在哪，把光环清掉就行。点杀是替代答案，但要 AI 认出&quot;该打谁&quot;——见军衔索敌特性</li>
+<li><strong>挑战维度</strong>：号令；行为标签 <code>herald</code>；击退 24（knockback）</li>
+<li><strong>机制</strong>：持续光环：半径 8 格内的僵尸移速 +25%、物理与法术抗性 +0.15。本体很脆，永远躲在怪群后方</li>
+<li><strong>原型参数</strong>：光环：半径内僵尸移速 +spd、物理 / 法术抗性 +res；自己躲在怪群后方（<code>r</code> 4，<code>spd</code> 0.25，<code>res</code> 0.15）</li>
+<li><strong>模型</strong>：<code>vox_z_herald</code></li>
+</ul>
+<h3 id="亡者召唤师-summoner"><a class="anchor" href="#亡者召唤师-summoner">#</a>亡者召唤师（<code>summoner</code>）</h3>
+<ul>
+<li><strong>定位</strong>：复活的僵尸血量只有本体的一部分，且召唤师每复活一次都会停顿——这就是它的地板</li>
+<li><strong>挑战维度</strong>：招魂；行为标签 <code>summon</code>；击退 38（knockdown）</li>
+<li><strong>机制</strong>：每 4 秒把场上最近的尸体复活成一只满血 40% 的僵尸，同时自己停顿 1.5 秒（霸体，免疫位移）</li>
+<li><strong>原型参数</strong>：每 cd 秒把半径内最近一具尸体按 hp 比例复活，自己停 pause 秒（<code>cd</code> 4，<code>hp</code> 0.4，<code>pause</code> 1.5，<code>r</code> 6）</li>
+<li><strong>模型</strong>：<code>vox_z_summoner</code></li>
+</ul>
+<h3 id="磁暴僵尸-tesla"><a class="anchor" href="#磁暴僵尸-tesla">#</a>磁暴僵尸（<code>tesla</code>）</h3>
+<ul>
+<li><strong>定位</strong>：电磁是万能解（无视物抗魔抗），所以必须有专门挡它的壳——代价是这层壳对物理法术完全无效</li>
+<li><strong>挑战维度</strong>：电磁场；行为标签 <code>shielded</code>；击退 40（knockdown）</li>
+<li><strong>机制</strong>：周身跳动的蓝色电弧完全吸收电磁伤害。对物理与法术伤害没有任何减免，破抗也撬不开它</li>
+<li><strong>模型</strong>：<code>vox_z_tesla</code></li>
+</ul>
+<h3 id="增生僵尸-regenerator"><a class="anchor" href="#增生僵尸-regenerator">#</a>增生僵尸（<code>regenerator</code>）</h3>
+<ul>
+<li><strong>定位</strong>：钥匙只有重创一把——回血速度超过你的持续输出，堆伤害就永远打不死</li>
+<li><strong>挑战维度</strong>：再生；行为标签 <code>regen</code>；击退 28（knockback）</li>
+<li><strong>机制</strong>：每秒回血 90（约等于一只普通僵尸的血量在 2.2 秒内回满）。被重创（K12）期间回血降到 20%</li>
+<li><strong>原型参数</strong>：每秒回血 = 回血值；被破甲（shred）命中后 dur 秒内回血 × anti（<code>anti</code> 0.2，<code>dur</code> 3）</li>
+<li><strong>模型</strong>：<code>vox_z_regenerator</code></li>
+</ul>
+<h3 id="潜影僵尸-stalker"><a class="anchor" href="#潜影僵尸-stalker">#</a>潜影僵尸（<code>stalker</code>）</h3>
+<ul>
+<li><strong>定位</strong>：钥匙只有侦测（K13）一把。范围清场是替代答案——不需要选中目标就能打到</li>
+<li><strong>挑战维度</strong>：隐形；行为标签 <code>stealth</code>；击退 20（knockback）</li>
+<li><strong>机制</strong>：隐形：不能被选中，AI 自动索敌直接无视它。出手的瞬间与贴到 1.5 格内会短暂现形。背刺伤害翻倍</li>
+<li><strong>原型参数</strong>：隐形不可选中；出手或离队员 reveal m 内现形 show 秒；背刺伤害 × back（<code>reveal</code> 0.75，<code>back</code> 2，<code>show</code> 2）</li>
+<li><strong>模型</strong>：<code>vox_z_stalker</code></li>
+</ul>
+<h3 id="掘地僵尸-burrower"><a class="anchor" href="#掘地僵尸-burrower">#</a>掘地僵尸（<code>burrower</code>）</h3>
+<ul>
+<li><strong>定位</strong>：钥匙是震地（K14）。地面有隆起痕迹，嘲讽可以把出土点拉到前排</li>
+<li><strong>挑战维度</strong>：遁地；行为标签 <code>burrow</code>；击退 35（knockdown）</li>
+<li><strong>机制</strong>：在地下移动时任何普通攻击都打不到它，会一直钻到队伍后排才出土，出土时把周围 2 格掀飞</li>
+<li><strong>原型参数</strong>：地下移动免疫一切伤害；钻到队伍后排冒出，r m 内队员被掀开（<code>r</code> 1，<code>knock</code> 120）</li>
+<li><strong>模型</strong>：<code>vox_z_burrower</code></li>
+</ul>
+<h3 id="蝠翼僵尸-flyer"><a class="anchor" href="#蝠翼僵尸-flyer">#</a>蝠翼僵尸（<code>flyer</code>）</h3>
+<ul>
+<li><strong>定位</strong>：远程投射物自动带对空，所以钥匙（K15）只对近战阵容是硬需求</li>
+<li><strong>挑战维度</strong>：空中；行为标签 <code>flying</code>；击退 22（knockback）</li>
+<li><strong>机制</strong>：持续在空中盘旋，近战武器与地面范围伤害打不到它。俯冲攻击的瞬间贴地，近战可以打到</li>
+<li><strong>原型参数</strong>：空中：近战与地面范围打不到；出手前 dive 秒俯冲落地，这段可以被打（<code>dive</code> 0.8）</li>
+<li><strong>模型</strong>：<code>vox_z_flyer</code></li>
+</ul>
+<h3 id="尖啸僵尸-screamer"><a class="anchor" href="#尖啸僵尸-screamer">#</a>尖啸僵尸（<code>screamer</code>）</h3>
+<ul>
+<li><strong>定位</strong>：钥匙是宁神（K17）。意志（魔抗）降低中招概率与时长，但有 50% 上限，不能完全免疫</li>
+<li><strong>挑战维度</strong>：精神；行为标签 <code>scream</code>；击退 26（knockback）</li>
+<li><strong>机制</strong>：吟唱 2 秒后尖啸：半径 7 格内的英雄有 60% 概率恐惧（往回跑）或混乱（攻击随机目标），持续 3 秒。可被打断</li>
+<li><strong>原型参数</strong>：吟唱 cast 秒（受击被打断），半径 r m 内队员有 p 概率恐惧 / 混乱 dur 秒（<code>cast</code> 2，<code>r</code> 3.5，<code>p</code> 0.6，<code>dur</code> 3，<code>cd</code> 8）</li>
+<li><strong>模型</strong>：<code>vox_z_screamer</code></li>
+</ul>
+<h2 id="二-精英僵尸"><a class="anchor" href="#二-精英僵尸">#</a>二、精英僵尸</h2>
+<p>精英 = 基础种 × 统一倍率 + 一条放大基础种行为的专属能力；AI 统一多一层&quot;优先后排 / 残血&quot;。分裂小僵尸不单独出精英。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>倍率</th>
+<th>生命</th>
+<th>攻击</th>
+<th>护甲</th>
+<th>移速</th>
+<th>稳固</th>
+<th>抗冻</th>
+<th>狡诈</th>
+<th>威胁</th>
+<th>奖励</th>
+<th>体型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>值</td>
+<td>×3.5</td>
+<td>×1.4</td>
+<td>×1.3</td>
+<td>×1.1</td>
+<td>+25</td>
+<td>+0.15</td>
+<td>+0.2</td>
+<td>×4</td>
+<td>×5</td>
+<td>×1.18</td>
+</tr>
+</tbody></table>
+</div>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>生命</th>
+<th>移速</th>
+<th>护甲</th>
+<th>抗性</th>
+<th>攻击 / 间隔</th>
+<th>DPS(1段)</th>
+<th>EHP 1/2/3 段</th>
+<th>稳固</th>
+<th>霸体</th>
+<th>抗冻</th>
+<th>狡诈</th>
+<th>控抗</th>
+<th>威胁</th>
+<th>金钱</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>精英·尸潮领头</td>
+<td>700</td>
+<td>2.42</td>
+<td>39（none）</td>
+<td>—</td>
+<td>126 / 1.2s</td>
+<td>105</td>
+<td>700 / 1,190 / 1,960</td>
+<td>61</td>
+<td>—</td>
+<td>15%</td>
+<td>20%</td>
+<td>0.21</td>
+<td>4</td>
+<td>15</td>
+</tr>
+<tr>
+<td>精英·疾影</td>
+<td>420</td>
+<td>5.5</td>
+<td>20（none）</td>
+<td>—</td>
+<td>98 / 0.8s</td>
+<td>122.5</td>
+<td>420 / 714 / 1,176</td>
+<td>57</td>
+<td>—</td>
+<td>15%</td>
+<td>20%</td>
+<td>0.21</td>
+<td>4.8</td>
+<td>20</td>
+</tr>
+<tr>
+<td>精英·攻城铁甲</td>
+<td>4,900</td>
+<td>1.32</td>
+<td>286（heavy）</td>
+<td>物 60%</td>
+<td>364 / 2s</td>
+<td>182</td>
+<td>4,900 / 8,330 / 13,720</td>
+<td>115</td>
+<td>是</td>
+<td>35%</td>
+<td>20%</td>
+<td>0.55</td>
+<td>12</td>
+<td>60</td>
+</tr>
+<tr>
+<td>精英·瘟疫之源</td>
+<td>1,225</td>
+<td>2.2</td>
+<td>78（light）</td>
+<td>—</td>
+<td>154 / 1.5s</td>
+<td>102.7</td>
+<td>1,225 / 2,083 / 3,430</td>
+<td>77</td>
+<td>—</td>
+<td>75%</td>
+<td>20%</td>
+<td>0.38</td>
+<td>7.2</td>
+<td>30</td>
+</tr>
+<tr>
+<td>精英·连环炸弹</td>
+<td>1,400</td>
+<td>2.86</td>
+<td>130（medium）</td>
+<td>—</td>
+<td>770 / 99s</td>
+<td>7.8</td>
+<td>1,400 / 2,380 / 3,920</td>
+<td>65</td>
+<td>—</td>
+<td>30%</td>
+<td>20%</td>
+<td>0.26</td>
+<td>8</td>
+<td>40</td>
+</tr>
+<tr>
+<td>精英·裂殖母体</td>
+<td>1,050</td>
+<td>2.42</td>
+<td>52（none）</td>
+<td>—</td>
+<td>140 / 1.2s</td>
+<td>116.7</td>
+<td>1,050 / 1,785 / 2,940</td>
+<td>59</td>
+<td>—</td>
+<td>25%</td>
+<td>35%</td>
+<td>0.27</td>
+<td>8</td>
+<td>35</td>
+</tr>
+<tr>
+<td>精英·断首猎手</td>
+<td>875</td>
+<td>3.3</td>
+<td>59（none）</td>
+<td>—</td>
+<td>196 / 1.4s</td>
+<td>140</td>
+<td>875 / 1,488 / 2,450</td>
+<td>61</td>
+<td>—</td>
+<td>25%</td>
+<td>80%</td>
+<td>0.39</td>
+<td>8</td>
+<td>45</td>
+</tr>
+<tr>
+<td>精英·咒盾祭司</td>
+<td>3,150</td>
+<td>1.98</td>
+<td>208（medium）</td>
+<td>法 60%</td>
+<td>252 / 1.8s</td>
+<td>140</td>
+<td>3,150 / 5,355 / 8,820</td>
+<td>145</td>
+<td>是</td>
+<td>50%</td>
+<td>50%</td>
+<td>0.68</td>
+<td>14</td>
+<td>70</td>
+</tr>
+<tr>
+<td>精英·腐酸炮台</td>
+<td>2,100</td>
+<td>1.76</td>
+<td>117（light）</td>
+<td>—</td>
+<td>280 / 2.4s</td>
+<td>116.7</td>
+<td>2,100 / 3,570 / 5,880</td>
+<td>73</td>
+<td>—</td>
+<td>35%</td>
+<td>45%</td>
+<td>0.34</td>
+<td>12</td>
+<td>75</td>
+</tr>
+<tr>
+<td>精英·战嚎统领</td>
+<td>1,120</td>
+<td>1.98</td>
+<td>78（light）</td>
+<td>—</td>
+<td>140 / 2s</td>
+<td>70</td>
+<td>1,120 / 1,904 / 3,136</td>
+<td>65</td>
+<td>—</td>
+<td>35%</td>
+<td>50%</td>
+<td>0.34</td>
+<td>12</td>
+<td>65</td>
+</tr>
+<tr>
+<td>精英·亡灵主教</td>
+<td>3,150</td>
+<td>1.54</td>
+<td>169（medium）</td>
+<td>—</td>
+<td>210 / 2.2s</td>
+<td>95.5</td>
+<td>3,150 / 5,355 / 8,820</td>
+<td>95</td>
+<td>是</td>
+<td>55%</td>
+<td>60%</td>
+<td>0.69</td>
+<td>16</td>
+<td>90</td>
+</tr>
+<tr>
+<td>精英·雷暴核心</td>
+<td>2,800</td>
+<td>1.76</td>
+<td>156（medium）</td>
+<td>电磁 100%</td>
+<td>280 / 1.8s</td>
+<td>155.6</td>
+<td>2,800 / 4,760 / 7,840</td>
+<td>105</td>
+<td>是</td>
+<td>45%</td>
+<td>40%</td>
+<td>0.62</td>
+<td>14</td>
+<td>70</td>
+</tr>
+<tr>
+<td>精英·不朽血肉</td>
+<td>2,450</td>
+<td>1.98</td>
+<td>130（light）</td>
+<td>—</td>
+<td>224 / 1.6s</td>
+<td>140</td>
+<td>2,450 / 4,165 / 6,860</td>
+<td>85</td>
+<td>—</td>
+<td>35%</td>
+<td>20%</td>
+<td>0.28</td>
+<td>12</td>
+<td>55</td>
+</tr>
+<tr>
+<td>精英·无面刺客</td>
+<td>1,400</td>
+<td>3.08</td>
+<td>65（none）</td>
+<td>—</td>
+<td>448 / 1.5s</td>
+<td>298.7</td>
+<td>1,400 / 2,380 / 3,920</td>
+<td>55</td>
+<td>—</td>
+<td>15%</td>
+<td>60%</td>
+<td>0.31</td>
+<td>10</td>
+<td>50</td>
+</tr>
+<tr>
+<td>精英·地脉巨蠕</td>
+<td>2,100</td>
+<td>2.64</td>
+<td>117（none）</td>
+<td>—</td>
+<td>336 / 1.8s</td>
+<td>186.7</td>
+<td>2,100 / 3,570 / 5,880</td>
+<td>70</td>
+<td>—</td>
+<td>25%</td>
+<td>20%</td>
+<td>0.25</td>
+<td>12</td>
+<td>55</td>
+</tr>
+<tr>
+<td>精英·夜幕蝠王</td>
+<td>1,225</td>
+<td>3.74</td>
+<td>52（none）</td>
+<td>—</td>
+<td>252 / 1.3s</td>
+<td>193.8</td>
+<td>1,225 / 2,083 / 3,430</td>
+<td>53</td>
+<td>—</td>
+<td>25%</td>
+<td>40%</td>
+<td>0.28</td>
+<td>10</td>
+<td>50</td>
+</tr>
+<tr>
+<td>精英·哀嚎女妖</td>
+<td>1,750</td>
+<td>1.65</td>
+<td>91（light）</td>
+<td>—</td>
+<td>168 / 2.5s</td>
+<td>67.2</td>
+<td>1,750 / 2,975 / 4,900</td>
+<td>75</td>
+<td>—</td>
+<td>45%</td>
+<td>70%</td>
+<td>0.43</td>
+<td>12</td>
+<td>60</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="精英-尸潮领头-e_normal-基础-普通僵尸"><a class="anchor" href="#精英-尸潮领头-e_normal-基础-普通僵尸">#</a>精英·尸潮领头（<code>e_normal</code>，基础：普通僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 200 → 700，攻击 90 → 126，护甲 30 → 39，移速 2.2 → 2.42，控抗 0.09 → 0.21</li>
+<li><strong>设计思路</strong>：普通僵尸的强化版：基础单位，构成战场底噪。精英把它的行为放大成「群聚」</li>
+<li><strong>外形描述</strong>：更高大的工装汉子，额头一道发光的绿色裂痕，背上插着锈钢筋</li>
+<li><strong>AI 行为</strong>：不急着冲，等身边聚满再一起压上</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>群聚</strong> — 半径 r 内每有一只普通僵尸，自己攻击 +step（上限 cap 层）</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>r</code> 3，<code>step</code> 0.08，<code>cap</code> 6</li>
+<li><strong>模型</strong>：<code>vox_e_normal</code></li>
+</ul>
+<h3 id="精英-疾影-e_runner-基础-高速僵尸"><a class="anchor" href="#精英-疾影-e_runner-基础-高速僵尸">#</a>精英·疾影（<code>e_runner</code>，基础：高速僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 120 → 420，攻击 70 → 98，护甲 15 → 20，移速 5 → 5.5，控抗 0.09 → 0.21</li>
+<li><strong>设计思路</strong>：高速僵尸的强化版：惩罚站桩与长换弹武器。精英把它的行为放大成「二连冲」</li>
+<li><strong>外形描述</strong>：赤脚短裤，全身绷带，双眼拖出黄色光尾</li>
+<li><strong>AI 行为</strong>：第一冲撞开前排，第二冲直奔后排射手 / 法师</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>二连冲</strong> — 冲刺命中后 gap 秒内再冲一次，第二次冲向最近的后排</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>gap</code> 1.2，<code>dash</code> 6</li>
+<li><strong>模型</strong>：<code>vox_e_runner</code></li>
+</ul>
+<h3 id="精英-攻城铁甲-e_brute-基础-铁甲僵尸"><a class="anchor" href="#精英-攻城铁甲-e_brute-基础-铁甲僵尸">#</a>精英·攻城铁甲（<code>e_brute</code>，基础：铁甲僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 1,400 → 4,900，攻击 260 → 364，护甲 220 → 286，移速 1.2 → 1.32，控抗 0.45 → 0.55</li>
+<li><strong>设计思路</strong>：铁甲僵尸的强化版：钥匙是换系别（法术 / 电磁）或破抗，不是堆穿透。精英把它的行为放大成「撼地冲锋」</li>
+<li><strong>外形描述</strong>：加厚铁板拼成的盔甲，肩上铆着撞角，护甲缝里透出橙色余火</li>
+<li><strong>AI 行为</strong>：锁定前排盾位，用冲锋把阵线撞开缺口</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>撼地冲锋</strong> — 每 cd 秒向前冲撞 dash m，路径上队员击倒；冲锋中霸体</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>cd</code> 8，<code>dash</code> 5，<code>knock</code> 140</li>
+<li><strong>模型</strong>：<code>vox_e_brute</code></li>
+</ul>
+<h3 id="精英-瘟疫之源-e_toxic-基础-毒液僵尸"><a class="anchor" href="#精英-瘟疫之源-e_toxic-基础-毒液僵尸">#</a>精英·瘟疫之源（<code>e_toxic</code>，基础：毒液僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 350 → 1,225，攻击 110 → 154，护甲 60 → 78，移速 2 → 2.2，控抗 0.27 → 0.38</li>
+<li><strong>设计思路</strong>：毒液僵尸的强化版：区域封锁，逼玩家放弃阵地。精英把它的行为放大成「毒径」</li>
+<li><strong>外形描述</strong>：皮肤上长满发光毒囊，脚下一直滴绿色黏液</li>
+<li><strong>AI 行为</strong>：绕着队伍转圈，用毒径把站位切碎</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>毒径</strong> — 移动时每 every 秒在脚下留一小块毒地（dps / dur）；死亡毒池半径 × 1.5</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>every</code> 1，<code>dps</code> 30，<code>dur</code> 4，<code>poolMul</code> 1.5</li>
+<li><strong>模型</strong>：<code>vox_e_toxic</code></li>
+</ul>
+<h3 id="精英-连环炸弹-e_bomber-基础-爆炸僵尸"><a class="anchor" href="#精英-连环炸弹-e_bomber-基础-爆炸僵尸">#</a>精英·连环炸弹（<code>e_bomber</code>，基础：爆炸僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 400 → 1,400，攻击 550 → 770，护甲 100 → 130，移速 2.6 → 2.86，控抗 0.14 → 0.26</li>
+<li><strong>设计思路</strong>：爆炸僵尸的强化版：迫使玩家主动拉开距离。精英把它的行为放大成「延迟三连爆」</li>
+<li><strong>外形描述</strong>：胸口绑满三排发光雷管，背着一只滴答作响的钟</li>
+<li><strong>AI 行为</strong>：专找人群最密的地方钻；被打残了会提前引爆</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>延迟三连爆</strong> — 死亡或接触后连续爆 n 次，每次间隔 gap 秒、半径递增</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>n</code> 3，<code>gap</code> 0.5，<code>r</code> 2.5</li>
+<li><strong>模型</strong>：<code>vox_e_bomber</code></li>
+</ul>
+<h3 id="精英-裂殖母体-e_splitter-基础-分裂僵尸"><a class="anchor" href="#精英-裂殖母体-e_splitter-基础-分裂僵尸">#</a>精英·裂殖母体（<code>e_splitter</code>，基础：分裂僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 300 → 1,050，攻击 100 → 140，护甲 40 → 52，移速 2.2 → 2.42，控抗 0.15 → 0.27</li>
+<li><strong>设计思路</strong>：分裂僵尸的强化版：第三轮并入潮涌：它是&quot;死了会变多&quot;的又一种表达，不再单独占一个维度。精英把它的行为放大成「四裂」</li>
+<li><strong>外形描述</strong>：背上鼓着三个肉瘤，每个肉瘤里都能看到蜷缩的小僵尸轮廓</li>
+<li><strong>AI 行为</strong>：往队伍中心挤，边挨打边下崽</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>四裂</strong> — 死亡裂成 n 只小僵尸，并且每掉 1/3 血就裂出一只</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>n</code> 4，<code>chunk</code> 3</li>
+<li><strong>模型</strong>：<code>vox_e_splitter</code></li>
+</ul>
+<h3 id="精英-断首猎手-e_leaper-基础-跳跃僵尸"><a class="anchor" href="#精英-断首猎手-e_leaper-基础-跳跃僵尸">#</a>精英·断首猎手（<code>e_leaper</code>，基础：跳跃僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 250 → 875，攻击 140 → 196，护甲 45 → 59，移速 3 → 3.3，控抗 0.27 → 0.39</li>
+<li><strong>设计思路</strong>：跳跃僵尸的强化版：第三轮并入突进：它和高速僵尸是同一种压力（反应时间不够），只是路径不同。精英把它的行为放大成「越顶扑杀」</li>
+<li><strong>外形描述</strong>：四肢更长，背脊一排骨刺，爪子发出黄光</li>
+<li><strong>AI 行为</strong>：跳过前排直接落在后排中间</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>越顶扑杀</strong> — 跳跃距离 × jump，落地对 r m 内造成攻击 × mul 的范围伤害</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>jump</code> 1.6，<code>r</code> 1.5，<code>mul</code> 1.3</li>
+<li><strong>模型</strong>：<code>vox_e_leaper</code></li>
+</ul>
+<h3 id="精英-咒盾祭司-e_ward-基础-咒盾僵尸"><a class="anchor" href="#精英-咒盾祭司-e_ward-基础-咒盾僵尸">#</a>精英·咒盾祭司（<code>e_ward</code>，基础：咒盾僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 900 → 3,150，攻击 180 → 252，护甲 160 → 208，移速 1.8 → 1.98，控抗 0.58 → 0.68</li>
+<li><strong>设计思路</strong>：咒盾僵尸的强化版：物抗的镜像：法术阵容打不动，物理一碰就碎。精英把它的行为放大成「共盾」</li>
+<li><strong>外形描述</strong>：披着破碎法袍，盾牌上刻着发光符文，头顶悬一圈紫色光环</li>
+<li><strong>AI 行为</strong>：躲在铁甲后面给前排套盾，自己不顶前</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>共盾</strong> — 每 cd 秒给半径 r 内 n 只同伴套一层 shield 点的正面咒盾</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>cd</code> 10，<code>r</code> 5，<code>n</code> 3，<code>shield</code> 400</li>
+<li><strong>模型</strong>：<code>vox_e_ward</code></li>
+</ul>
+<h3 id="精英-腐酸炮台-e_spitter-基础-喷吐僵尸"><a class="anchor" href="#精英-腐酸炮台-e_spitter-基础-喷吐僵尸">#</a>精英·腐酸炮台（<code>e_spitter</code>，基础：喷吐僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 600 → 2,100，攻击 200 → 280，护甲 90 → 117，移速 1.6 → 1.76，控抗 0.22 → 0.34</li>
+<li><strong>设计思路</strong>：喷吐僵尸的强化版：站在原地就有输出，逼玩家主动前压而不是龟缩。精英把它的行为放大成「散射」</li>
+<li><strong>外形描述</strong>：喉囊鼓成一个巨大的发光酸袋，下颌裂到胸口</li>
+<li><strong>AI 行为</strong>：站在最远的射程边缘，专挑扎堆的队员</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>散射</strong> — 每次喷吐变成 n 发扇形散射，单发攻击 × mul</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>n</code> 3，<code>mul</code> 0.6，<code>spread</code> 25</li>
+<li><strong>模型</strong>：<code>vox_e_spitter</code></li>
+</ul>
+<h3 id="精英-战嚎统领-e_herald-基础-传令僵尸"><a class="anchor" href="#精英-战嚎统领-e_herald-基础-传令僵尸">#</a>精英·战嚎统领（<code>e_herald</code>，基础：传令僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 320 → 1,120，攻击 100 → 140，护甲 60 → 78，移速 1.8 → 1.98，控抗 0.23 → 0.34</li>
+<li><strong>设计思路</strong>：传令僵尸的强化版：钥匙是驱散（K07）：不管它站在哪，把光环清掉就行。点杀是替代答案，但要 AI 认出&quot;该打谁&quot;——见军衔索敌特性。精英把它的行为放大成「冲锋号」</li>
+<li><strong>外形描述</strong>：残破的军官大衣，挂着一只锈号角，肩章发出黄光</li>
+<li><strong>AI 行为</strong>：永远站在怪群最后方，被近身就后撤</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>冲锋号</strong> — 每 cd 秒吹一次号：半径 r 内僵尸 dur 秒移速 +spd、攻击 +atk</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>cd</code> 12，<code>r</code> 6，<code>dur</code> 5，<code>spd</code> 0.4，<code>atk</code> 0.25</li>
+<li><strong>模型</strong>：<code>vox_e_herald</code></li>
+</ul>
+<h3 id="精英-亡灵主教-e_summoner-基础-亡者召唤师"><a class="anchor" href="#精英-亡灵主教-e_summoner-基础-亡者召唤师">#</a>精英·亡灵主教（<code>e_summoner</code>，基础：亡者召唤师）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 900 → 3,150，攻击 150 → 210，护甲 130 → 169，移速 1.4 → 1.54，控抗 0.58 → 0.69</li>
+<li><strong>设计思路</strong>：亡者召唤师的强化版：复活的僵尸血量只有本体的一部分，且召唤师每复活一次都会停顿——这就是它的地板。精英把它的行为放大成「群体招魂」</li>
+<li><strong>外形描述</strong>：高帽长袍，手持一根挂着头骨的权杖，胸口一盏青绿色魂灯</li>
+<li><strong>AI 行为</strong>：跟在尸潮后面收尸，从不主动接战</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>群体招魂</strong> — 每 cd 秒复活半径 r 内 n 具尸体，复活体带精英标记（血 × hp）</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>cd</code> 6，<code>r</code> 8，<code>n</code> 3，<code>hp</code> 0.6</li>
+<li><strong>模型</strong>：<code>vox_e_summoner</code></li>
+</ul>
+<h3 id="精英-雷暴核心-e_tesla-基础-磁暴僵尸"><a class="anchor" href="#精英-雷暴核心-e_tesla-基础-磁暴僵尸">#</a>精英·雷暴核心（<code>e_tesla</code>，基础：磁暴僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 800 → 2,800，攻击 200 → 280，护甲 120 → 156，移速 1.6 → 1.76，控抗 0.52 → 0.62</li>
+<li><strong>设计思路</strong>：磁暴僵尸的强化版：电磁是万能解（无视物抗魔抗），所以必须有专门挡它的壳——代价是这层壳对物理法术完全无效。精英把它的行为放大成「电磁链」</li>
+<li><strong>外形描述</strong>：背上焊着一台变压器，线圈在头顶持续放出青色电弧</li>
+<li><strong>AI 行为</strong>：贴着法师 / 射手走，用电链打断施法</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>电磁链</strong> — 每 cd 秒放一道电链，在 n 名队员之间跳跃；场内电磁伤害仍全吸收</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>cd</code> 5，<code>n</code> 3，<code>mul</code> 0.8</li>
+<li><strong>模型</strong>：<code>vox_e_tesla</code></li>
+</ul>
+<h3 id="精英-不朽血肉-e_regenerator-基础-增生僵尸"><a class="anchor" href="#精英-不朽血肉-e_regenerator-基础-增生僵尸">#</a>精英·不朽血肉（<code>e_regenerator</code>，基础：增生僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 700 → 2,450，攻击 160 → 224，护甲 100 → 130，移速 1.8 → 1.98，控抗 0.18 → 0.28</li>
+<li><strong>设计思路</strong>：增生僵尸的强化版：钥匙只有重创一把——回血速度超过你的持续输出，堆伤害就永远打不死。精英把它的行为放大成「断肢重生」</li>
+<li><strong>外形描述</strong>：外露的肌肉不断蠕动，胸前一颗跳动的发光心脏</li>
+<li><strong>AI 行为</strong>：硬顶前排吃伤害，逼队伍留着重创技能打第二管血</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>断肢重生</strong> — 血量首次降到 at 以下时回满 heal 比例的血（每只一次）</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>at</code> 0.3，<code>heal</code> 0.5</li>
+<li><strong>模型</strong>：<code>vox_e_regenerator</code></li>
+</ul>
+<h3 id="精英-无面刺客-e_stalker-基础-潜影僵尸"><a class="anchor" href="#精英-无面刺客-e_stalker-基础-潜影僵尸">#</a>精英·无面刺客（<code>e_stalker</code>，基础：潜影僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 400 → 1,400，攻击 320 → 448，护甲 50 → 65，移速 2.8 → 3.08，控抗 0.18 → 0.31</li>
+<li><strong>设计思路</strong>：潜影僵尸的强化版：钥匙只有侦测（K13）一把。范围清场是替代答案——不需要选中目标就能打到。精英把它的行为放大成「影袭」</li>
+<li><strong>外形描述</strong>：全身裹在黑布里，没有五官，只有两道青色眼缝</li>
+<li><strong>AI 行为</strong>：只打残血或落单的队员，打一下就走</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>影袭</strong> — 背刺后立刻重新隐形，hide 秒后可以再背刺一次</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>hide</code> 3，<code>back</code> 2.5</li>
+<li><strong>模型</strong>：<code>vox_e_stalker</code></li>
+</ul>
+<h3 id="精英-地脉巨蠕-e_burrower-基础-掘地僵尸"><a class="anchor" href="#精英-地脉巨蠕-e_burrower-基础-掘地僵尸">#</a>精英·地脉巨蠕（<code>e_burrower</code>，基础：掘地僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 600 → 2,100，攻击 240 → 336，护甲 90 → 117，移速 2.4 → 2.64，控抗 0.13 → 0.25</li>
+<li><strong>设计思路</strong>：掘地僵尸的强化版：钥匙是震地（K14）。地面有隆起痕迹，嘲讽可以把出土点拉到前排。精英把它的行为放大成「三连钻」</li>
+<li><strong>外形描述</strong>：头部变成一只钻头般的骨甲，背上拖着碎石与泥土</li>
+<li><strong>AI 行为</strong>：在后排之间来回钻，专门拆射手站位</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>三连钻</strong> — 出土后 gap 秒再次钻地，连续冲出 n 次，每次都掀飞</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>n</code> 3，<code>gap</code> 2，<code>r</code> 1.5</li>
+<li><strong>模型</strong>：<code>vox_e_burrower</code></li>
+</ul>
+<h3 id="精英-夜幕蝠王-e_flyer-基础-蝠翼僵尸"><a class="anchor" href="#精英-夜幕蝠王-e_flyer-基础-蝠翼僵尸">#</a>精英·夜幕蝠王（<code>e_flyer</code>，基础：蝠翼僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 350 → 1,225，攻击 180 → 252，护甲 40 → 52，移速 3.4 → 3.74，控抗 0.15 → 0.28</li>
+<li><strong>设计思路</strong>：蝠翼僵尸的强化版：远程投射物自动带对空，所以钥匙（K15）只对近战阵容是硬需求。精英把它的行为放大成「俯冲连击」</li>
+<li><strong>外形描述</strong>：翼展更大，翼膜上布满发光血管，头顶一对弯角</li>
+<li><strong>AI 行为</strong>：在头顶盘旋找残血目标，一俯冲就是连环扑</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>俯冲连击</strong> — 一次俯冲连续扑击 n 名队员再升空，俯冲期间可以被近战打到</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>n</code> 2，<code>dive</code> 1.2</li>
+<li><strong>模型</strong>：<code>vox_e_flyer</code></li>
+</ul>
+<h3 id="精英-哀嚎女妖-e_screamer-基础-尖啸僵尸"><a class="anchor" href="#精英-哀嚎女妖-e_screamer-基础-尖啸僵尸">#</a>精英·哀嚎女妖（<code>e_screamer</code>，基础：尖啸僵尸）</h3>
+<ul>
+<li><strong>数值对比</strong>：生命 500 → 1,750，攻击 120 → 168，护甲 70 → 91，移速 1.5 → 1.65，控抗 0.31 → 0.43</li>
+<li><strong>设计思路</strong>：尖啸僵尸的强化版：钥匙是宁神（K17）。意志（魔抗）降低中招概率与时长，但有 50% 上限，不能完全免疫。精英把它的行为放大成「二重尖啸」</li>
+<li><strong>外形描述</strong>：长发遮脸，下颌撕裂到胸口，喉咙里发出粉色光</li>
+<li><strong>AI 行为</strong>：躲在掩体后面吟唱，被打断就换个位置再来</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>二重尖啸</strong> — 吟唱缩短到 cast 秒，半径 r m，打断后 cd 秒内还会再起一次</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>cast</code> 1.4，<code>r</code> 4.5，<code>cd</code> 4</li>
+<li><strong>模型</strong>：<code>vox_e_screamer</code></li>
+</ul>
+<h2 id="三-变异生物"><a class="anchor" href="#三-变异生物">#</a>三、变异生物</h2>
+<p>病毒感染的野兽。和僵尸的区别是快、成群、会配合——僵尸是一个个单独的问题，变异生物是一组协同的问题。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>生命</th>
+<th>移速</th>
+<th>护甲</th>
+<th>抗性</th>
+<th>攻击 / 间隔</th>
+<th>DPS(1段)</th>
+<th>EHP 1/2/3 段</th>
+<th>稳固</th>
+<th>霸体</th>
+<th>抗冻</th>
+<th>狡诈</th>
+<th>控抗</th>
+<th>威胁</th>
+<th>金钱</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>变异犬</td>
+<td>180</td>
+<td>5.5</td>
+<td>20（none）</td>
+<td>—</td>
+<td>80 / 0.9s</td>
+<td>88.9</td>
+<td>180 / 306 / 504</td>
+<td>26</td>
+<td>—</td>
+<td>0%</td>
+<td>30%</td>
+<td>0.15</td>
+<td>1.2</td>
+<td>5</td>
+</tr>
+<tr>
+<td>变异熊</td>
+<td>2,200</td>
+<td>1.8</td>
+<td>260（heavy）</td>
+<td>物 30%</td>
+<td>340 / 2s</td>
+<td>170</td>
+<td>2,200 / 3,740 / 6,160</td>
+<td>90</td>
+<td>是</td>
+<td>30%</td>
+<td>0%</td>
+<td>0.48</td>
+<td>6</td>
+<td>26</td>
+</tr>
+<tr>
+<td>变异双头狼</td>
+<td>650</td>
+<td>4.2</td>
+<td>60（light）</td>
+<td>—</td>
+<td>150 / 1.1s</td>
+<td>136.4</td>
+<td>650 / 1,105 / 1,820</td>
+<td>44</td>
+<td>—</td>
+<td>20%</td>
+<td>50%</td>
+<td>0.28</td>
+<td>3</td>
+<td>12</td>
+</tr>
+<tr>
+<td>变异秃鹫</td>
+<td>300</td>
+<td>4.6</td>
+<td>30（none）</td>
+<td>—</td>
+<td>130 / 1.6s</td>
+<td>81.3</td>
+<td>300 / 510 / 840</td>
+<td>22</td>
+<td>—</td>
+<td>0%</td>
+<td>40%</td>
+<td>0.17</td>
+<td>2.2</td>
+<td>9</td>
+</tr>
+<tr>
+<td>变异巨猿</td>
+<td>3,200</td>
+<td>2.2</td>
+<td>180（medium）</td>
+<td>物 15% 法 15%</td>
+<td>300 / 1.8s</td>
+<td>166.7</td>
+<td>3,200 / 5,440 / 8,960</td>
+<td>85</td>
+<td>是</td>
+<td>20%</td>
+<td>30%</td>
+<td>0.52</td>
+<td>7</td>
+<td>32</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="变异犬-dog"><a class="anchor" href="#变异犬-dog">#</a>变异犬（<code>dog</code>）</h3>
+<ul>
+<li><strong>定位</strong>：单只很脆，难在同时从三个方向扑上来</li>
+<li><strong>挑战维度</strong>：突进 / 潮涌；行为标签 <code>pack</code>；击退 18（knockdown）</li>
+<li><strong>机制</strong>：3-5 只一群刷出，围成半圆从侧翼包抄；咬中后撕扯拖拽</li>
+<li><strong>设计思路</strong>：「突进」维度的群体版：高速僵尸是一条直线，变异犬是一个包围圈。逼玩家留范围技能或靠盾位兜侧翼</li>
+<li><strong>外形描述</strong>：皮毛脱落的大型猎犬，脊背裂开露出骨刺，嘴角咧到耳根，眼睛发黄光</li>
+<li><strong>AI 行为</strong>：成群行动：首领犬（第一只）选目标，其余犬绕到目标两侧再同时扑；同伴死亡过半时整群后撤再冲</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>包抄</strong> — 冲锋前先绕行 flank m 到目标侧面</li>
+<li><strong>撕咬拖拽</strong> — 咬中后把目标往外拖 drag m</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>pack</code> 4，<code>flank</code> 3，<code>drag</code> 1</li>
+<li><strong>模型</strong>：<code>vox_m_dog</code></li>
+</ul>
+<h3 id="变异熊-bear"><a class="anchor" href="#变异熊-bear">#</a>变异熊（<code>bear</code>）</h3>
+<ul>
+<li><strong>定位</strong>：物抗 30% + 霸体，法术输出是它的钥匙</li>
+<li><strong>挑战维度</strong>：物抗；行为标签 <code>charge</code>；击退 70（knockdown）</li>
+<li><strong>机制</strong>：血量降到一半进入狂暴：移速 ×1.5、攻击间隔 ×0.7；人立而起的拍击击倒一片</li>
+<li><strong>设计思路</strong>：比铁甲僵尸更&quot;活&quot;的重装：铁甲是一堵墙，熊会冲过来拆墙。半血狂暴给&quot;何时集火&quot;一个明确时机</li>
+<li><strong>外形描述</strong>：肩高接近两米的棕熊，背上嵌着锈铁片和断箭，一侧前掌异化成骨刃，口鼻冒绿色腐气</li>
+<li><strong>AI 行为</strong>：锁定最近的前排硬顶；半血后狂暴，改为冲向输出最高的队员</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>人立拍击</strong> — 抬身拍地，半径 r m 击倒，攻击 × mul</li>
+<li><strong>狂暴</strong> — 血量 &lt; rage 时移速 × spd、攻速 × 1/ai</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>r</code> 2，<code>mul</code> 1.2，<code>rage</code> 0.5，<code>spd</code> 1.5，<code>ai</code> 0.7</li>
+<li><strong>模型</strong>：<code>vox_m_bear</code></li>
+</ul>
+<h3 id="变异双头狼-wolf"><a class="anchor" href="#变异双头狼-wolf">#</a>变异双头狼（<code>wolf</code>）</h3>
+<ul>
+<li><strong>定位</strong>：狼群核心，先杀它犬群就散</li>
+<li><strong>挑战维度</strong>：突进 / 号令；行为标签 <code>herald</code>；击退 30（knockback）</li>
+<li><strong>机制</strong>：两个头各自索敌：一次攻击咬两名相邻队员；嚎叫让附近变异犬进入狂奔</li>
+<li><strong>设计思路</strong>：变异犬的「传令」：自己能打，同时给犬群加速。给玩家一个&quot;先杀谁&quot;的优先级问题</li>
+<li><strong>外形描述</strong>：一身灰黑长毛的巨狼，两颗头从肩部分叉，左头眼睛黄光、右头眼睛青光，颈上挂着断链</li>
+<li><strong>AI 行为</strong>：在犬群后方游走；犬群接敌后从正面切入，双头同时咬前排与身后的一名队员</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>双咬</strong> — 一次攻击同时命中 n 名相邻目标</li>
+<li><strong>狼嚎</strong> — 每 cd 秒半径 r 内变异犬 dur 秒移速 +spd</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>n</code> 2，<code>cd</code> 10，<code>r</code> 6，<code>dur</code> 4，<code>spd</code> 0.35</li>
+<li><strong>模型</strong>：<code>vox_m_wolf</code></li>
+</ul>
+<h3 id="变异秃鹫-vulture"><a class="anchor" href="#变异秃鹫-vulture">#</a>变异秃鹫（<code>vulture</code>）</h3>
+<ul>
+<li><strong>定位</strong>：和蝠翼僵尸同属空中维度，但它专抢残血目标和尸体</li>
+<li><strong>挑战维度</strong>：空中；行为标签 <code>dive</code>；击退 16（knockback）</li>
+<li><strong>机制</strong>：空中盘旋，俯冲啄击后立刻升空；落到尸体上啄食回血</li>
+<li><strong>设计思路</strong>：空中维度的&quot;清道夫&quot;：蝠翼僵尸是持续骚扰，秃鹫是收割——专挑残血队员，平时吃尸体回血</li>
+<li><strong>外形描述</strong>：翼展两米的秃鹫，秃头上长满肉瘤，翅膀残缺露出骨架，爪子发绿光</li>
+<li><strong>AI 行为</strong>：优先俯冲血量最低的队员；没有残血目标时落到最近的尸体上啄食回血，这时贴地可以被近战打到</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>俯冲啄击</strong> — 从空中俯冲 dive 秒，命中后立刻升空</li>
+<li><strong>食腐</strong> — 落在尸体上每秒回复 heal 点，持续 dur 秒</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>dive</code> 0.7，<code>heal</code> 40，<code>dur</code> 3，<code>low</code> 0.5</li>
+<li><strong>模型</strong>：<code>vox_m_vulture</code></li>
+</ul>
+<h3 id="变异巨猿-ape"><a class="anchor" href="#变异巨猿-ape">#</a>变异巨猿（<code>ape</code>）</h3>
+<ul>
+<li><strong>定位</strong>：远近都能打，逼队伍在&quot;散开躲投掷&quot;和&quot;抱团扛砸地&quot;之间二选一</li>
+<li><strong>挑战维度</strong>：远程压制 / 突进；行为标签 <code>throw</code>；击退 80（knockback）</li>
+<li><strong>机制</strong>：远处抛掷瓦砾（落点范围伤害），近处跃起砸地；捶胸怒吼让周围僵尸攻击提升</li>
+<li><strong>设计思路</strong>：野外小 BOSS 级精英怪：一只就能把阵型拆开。远程投掷管散开的队伍，跃击管抱团的队伍</li>
+<li><strong>外形描述</strong>：三米高的银背巨猿，左臂异常粗大、拖在地上，背上长出一排结晶骨刺，胸口有发光的肿块</li>
+<li><strong>AI 行为</strong>：距离 &gt; far m 时投掷瓦砾；进入 far m 后跃起砸进人群；血量每掉 1/3 捶胸一次</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>投掷瓦砾</strong> — 每 cd 秒向 far m 外的队员抛一块瓦砾，落点半径 r m</li>
+<li><strong>跃击</strong> — 跃起砸地 jump m，落点击退</li>
+<li><strong>捶胸怒吼</strong> — 半径 roar m 内僵尸攻击 +atk，持续 dur 秒</li>
+</ul>
+</li>
+<li><strong>技能参数</strong>：<code>far</code> 6，<code>cd</code> 4，<code>r</code> 1.5，<code>jump</code> 5，<code>roar</code> 6，<code>atk</code> 0.3，<code>dur</code> 6</li>
+<li><strong>模型</strong>：<code>vox_m_ape</code></li>
+</ul>
+<h2 id="四-boss"><a class="anchor" href="#四-boss">#</a>四、BOSS</h2>
+<p>每个阶段末一个 BOSS；超时 90 秒判负。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>名称</th>
+<th>出场（秒）</th>
+<th>生命</th>
+<th>护甲</th>
+<th>移速</th>
+<th>攻击</th>
+<th>半径</th>
+<th>目标击杀时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>腐化重装兵</td>
+<td>300</td>
+<td>48,500</td>
+<td>200</td>
+<td>2</td>
+<td>260</td>
+<td>1.6</td>
+<td>30s</td>
+</tr>
+<tr>
+<td>2</td>
+<td>毒母·薇丝</td>
+<td>600</td>
+<td>70,000</td>
+<td>320</td>
+<td>2.2</td>
+<td>380</td>
+<td>2</td>
+<td>45s</td>
+</tr>
+<tr>
+<td>3</td>
+<td>尸潮之主·卡俄斯</td>
+<td>900</td>
+<td>94,000</td>
+<td>480</td>
+<td>2.4</td>
+<td>520</td>
+<td>2.6</td>
+<td>60s</td>
+</tr>
+</tbody></table>
+</div>
+<h3 id="第-1-段-腐化重装兵"><a class="anchor" href="#第-1-段-腐化重装兵">#</a>第 1 段：腐化重装兵</h3>
+<ul>
+<li><strong>数值</strong>：生命 48,500，护甲 200，移速 2，攻击 260，半径 1.6；第 300 秒出场，目标 30 秒内击杀</li>
+<li><strong>设计备注</strong>：纯数值检查。不要求走位，只要求小队 30 秒内打掉 2.2 万血</li>
+<li><strong>设计思路</strong>：第一道数值门槛：不考机制，只考小队输出是否达标。站桩打得动就过，打不动说明配装或成长出了问题</li>
+<li><strong>外形描述</strong>：两倍身高的重装兵尸体，全身焊满铁板，左臂整块是攻城锤，头盔裂缝里透出橙色余火</li>
+<li><strong>AI 行为</strong>：缓慢直线走向最近的队员，持续重拳近战；不放技能、不换目标</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>重拳</strong> — 单体近战，攻击力即 BOSS 攻击</li>
+<li><strong>踏步</strong> — 移动时地面震动（纯表现）</li>
+</ul>
+</li>
+<li><strong>原型参数</strong>：纯数值检查：重拳近战，不放技能（—）</li>
+<li><strong>模型</strong>：<code>vox_b_corrupted</code></li>
+</ul>
+<h3 id="第-2-段-毒母-薇丝"><a class="anchor" href="#第-2-段-毒母-薇丝">#</a>第 2 段：毒母·薇丝</h3>
+<ul>
+<li><strong>数值</strong>：生命 70,000，护甲 320，移速 2.2，攻击 380，半径 2；第 600 秒出场，目标 45 秒内击杀</li>
+<li><strong>设计备注</strong>：周期性召唤毒液僵尸 + 地面毒池，迫使队伍不断转移阵地</li>
+<li><strong>设计思路</strong>：转移阵地的考题：召唤毒液僵尸 + 脚下落毒池，站桩会被毒死。考的是队伍机动和清小怪的能力</li>
+<li><strong>外形描述</strong>：肿胀的女性变异体，下半身是一团拖地的毒囊，背上长出一排喷口，长发里缠着发光的毒腺</li>
+<li><strong>AI 行为</strong>：与队伍保持中距离，周期性召唤毒液僵尸，并在队员脚下落毒池；被近身就后退喷吐</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>毒母召唤</strong> — 每 cd 秒召唤 n 只毒液僵尸</li>
+<li><strong>毒雨</strong> — 在队员脚下落 pools 个毒池（半径 r、每秒 dps、持续 dur）</li>
+</ul>
+</li>
+<li><strong>原型参数</strong>：每 cd 秒召唤 n 只毒液僵尸，并在队员脚下落 pools 个毒池（<code>cd</code> 8，<code>n</code> 4，<code>pools</code> 3，<code>r</code> 1.5，<code>dps</code> 60，<code>dur</code> 8）</li>
+<li><strong>模型</strong>：<code>vox_b_vesse</code></li>
+</ul>
+<h3 id="第-3-段-尸潮之主-卡俄斯"><a class="anchor" href="#第-3-段-尸潮之主-卡俄斯">#</a>第 3 段：尸潮之主·卡俄斯</h3>
+<ul>
+<li><strong>数值</strong>：生命 94,000，护甲 480，移速 2.4，攻击 520，半径 2.6；第 900 秒出场，目标 60 秒内击杀</li>
+<li><strong>设计备注</strong>：关底。三阶段全类型僵尸混合刷新，同时本体高伤近战</li>
+<li><strong>设计思路</strong>：关底总考：混刷全种类僵尸 + 本体高伤重砸。前两个 BOSS 分别考的输出和机动，这里一起考</li>
+<li><strong>外形描述</strong>：尸潮堆成的巨人，躯干里能看到挤在一起的僵尸面孔，双臂是缠满铁链的肉柱，头顶一圈紫色光冠</li>
+<li><strong>AI 行为</strong>：直接冲向队伍中心；周期性原地重砸，同时在身边混刷任意种类的僵尸</li>
+<li><strong>技能</strong>：<ul>
+<li><strong>尸潮重砸</strong> — 每 cd 秒原地重砸，半径 r、攻击 × mul、击退</li>
+<li><strong>尸潮召唤</strong> — 每次重砸同时混刷 n 只任意种类僵尸</li>
+</ul>
+</li>
+<li><strong>原型参数</strong>：每 cd 秒原地重砸（半径 r、攻击 × mul、击退），并在身边混刷 n 只任意种类（<code>cd</code> 6，<code>r</code> 2.5，<code>mul</code> 1.5，<code>knock</code> 160，<code>n</code> 6）</li>
+<li><strong>模型</strong>：<code>vox_b_chaos</code></li>
+</ul>
+</main>
+</div>
+</body>
+</html>
+

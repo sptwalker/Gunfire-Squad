@@ -1,4 +1,4 @@
-<!-- M0 僵尸验证台（阶段 1）：9 种 + 分裂小、场景换色（05 §5.1）、300 只同屏压测。从仓库根目录起服务，打开 /proto/m0/zombies.html -->
+<!-- M0 敌对目标验证台：僵尸 18 种 / 精英 17 种 / 变异生物 5 种、场景换色（05 §5.1）、300 只同屏压测。表直接读 src（要走 vite：npm run dev 后打开 /proto/m0/zombies.html） -->
 <meta charset="utf-8">
 <title>M0 僵尸验证台</title>
 <style>
@@ -15,6 +15,7 @@
 </style>
 <div id="hud">
   <div class="row" id="modes"></div>
+  <div class="row" id="groups"></div>
   <div class="row" id="states"></div>
   <div class="row" id="scenes"></div>
   <div id="stat">加载中…</div>
@@ -34,24 +35,33 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { bakeCrowd } from './crowd.js';
 
-// src/data/zombies.ts：名字、移速（格/秒）；skill = 专属动作。移动动作一律叫 walk（高速是冲刺、跳跃是蹲伏潜行，在 voxel.py 里区分）
+import { ZOMBIES as SRC_Z } from '../../src/data/zombies.ts';
+import { ELITES, MUTANTS } from '../../src/data/enemies.ts';
+import { ORDER_Z } from './gamedata.js';
+
+// 名字、移速（格/秒）取 src；file = 模型（assets/vox_<file>.glb：z_ 僵尸、e_ 精英、m_ 变异生物）；ai = 压测里按哪种行为走
+// skill = 专属动作（voxel.py 里同名的 clip）。移动动作一律叫 walk（高速是冲刺、跳跃是蹲伏潜行，在 voxel.py 里区分）
+const SKILL = { bomber: 'swell', splitter: 'split', leaper: 'leap', ward: 'block', spitter: 'spit', herald: 'roar', summoner: 'summon', flyer: 'leap', screamer: 'roar',
+  dog: 'leap', wolf: 'roar', bear: 'smash', vulture: 'eat', ape: 'leap' };
+const ent = (group, z, file, ai, scale = 1) => ({ group, id: z.id, name: z.name.replace(/^精英·/, '').replace(/僵尸$/, ''), speed: z.speed, skill: SKILL[ai], file, ai, scale });
 const ZOMBIES = [
-  ['normal', '普通', 2.2], ['runner', '高速', 5.0], ['brute', '高防胖', 1.2], ['toxic', '毒液', 2.0],
-  ['bomber', '爆炸', 2.6, 'swell'], ['splitter', '分裂', 2.2, 'split'], ['leaper', '跳跃', 3.0, 'leap'],
-  ['ward', '护盾', 1.8, 'block'], ['spitter', '喷吐', 1.6, 'spit'], ['spawnling', '分裂小', 3.2],
-].map(([id, name, speed, skill]) => ({ id, name, speed, skill, file: id === 'spawnling' ? 'splitter' : id, scale: id === 'spawnling' ? 0.4 : 1 }));
+  ...ORDER_Z.map((id) => ent('z', SRC_Z[id], id === 'spawnling' ? 'z_splitter' : 'z_' + id, id, id === 'spawnling' ? 0.4 : 1)),
+  ...Object.values(ELITES).map((e) => ent('e', e, 'e_' + e.base, e.base)),   // 模型已在 voxel.py 里放大 1.18
+  ...Object.values(MUTANTS).map((m) => ent('m', m, 'm_' + m.id, m.id)),
+];
+const GROUPS = { all: `全部 ${ZOMBIES.length}`, z: `僵尸 ${ORDER_Z.length}`, e: `精英 ${Object.keys(ELITES).length}`, m: `变异生物 ${Object.keys(MUTANTS).length}` };
 const ZI = Object.fromEntries(ZOMBIES.map((z) => [z.id, z]));
 // 05 §5.1：只有"数量型"的普通僵尸跟场景换色；行为型保持全局主色（高速只在沼泽压暗 15%）
 const SCENES = {
   city:     { name: '城市', ground: 0x4c4f52, tint: {} },
-  jungle:   { name: '丛林', ground: 0x33502c, tint: { normal: [0.88, 1.06, 1.06] } },
-  snow:     { name: '雪原', ground: 0xdde5ea, tint: { normal: [1.22, 1.25, 1.3] } },
-  desert:   { name: '荒漠', ground: 0xc4a268, tint: { normal: [1.1, 1.05, 0.82] } },
-  swamp:    { name: '沼泽', ground: 0x3b4230, tint: { normal: [0.95, 0.84, 0.7], runner: [0.85, 0.85, 0.85] } },
+  jungle:   { name: '丛林', ground: 0x33502c, tint: { z_normal: [0.88, 1.06, 1.06] } },
+  snow:     { name: '雪原', ground: 0xdde5ea, tint: { z_normal: [1.22, 1.25, 1.3] } },
+  desert:   { name: '荒漠', ground: 0xc4a268, tint: { z_normal: [1.1, 1.05, 0.82] } },
+  swamp:    { name: '沼泽', ground: 0x3b4230, tint: { z_normal: [0.95, 0.84, 0.7], z_runner: [0.85, 0.85, 0.85] } },
   military: { name: '军事禁区', ground: 0x5a5a48, tint: {} },
 };
 // 攻击类状态：普通攻击统一扑抓，skill = 各自专属动作
-const STATES = ['idle', 'move', 'attack', 'skill', 'hit', 'death'];
+const STATES = ['idle', 'move', 'run', 'attack', 'skill', 'hit', 'death'];
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -71,13 +81,13 @@ const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.mouseButtons = { LEFT: null, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE };
 renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
 // front = 正视排队；game = 游戏相机（04 §7.4 俯仰 55°），距离调到僵尸在 720p 下约 60 像素高
-const VIEWS = { front: [[0, 2.4, 11], [0, 0.7, 0]], game: [[0, 17.5, 12.3], [0, 0, 0]], top: [[0, 13, 5], [0, 0, 0]] };
+const VIEWS = { front: [[0, 16, 10.5], [0, 0, -6]], game: [[0, 17.5, 12.3], [0, 0, 0]], top: [[0, 13, 5], [0, 0, 0]] };
 function setView(v) { camera.position.set(...VIEWS[v][0]); orbit.target.set(...VIEWS[v][1]); orbit.update(); }
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const load = (f) => new Promise((ok, err) => loader.load(f, ok, undefined, err));
 const files = [...new Set(ZOMBIES.map((z) => z.file))];
-const [gl2, hero] = await Promise.all([Promise.all(files.map((f) => load(`assets/vox_z_${f}.glb`))), load('assets/vox_vera.glb')]);
+const [gl2, hero] = await Promise.all([Promise.all(files.map((f) => load(`assets/vox_${f}.glb`))), load('assets/vox_vera.glb')]);
 const SRC = Object.fromEntries(files.map((f, i) => [f, gl2[i]]));
 
 // 每种僵尸一套共享材质：_glow = 不受光（毒囊 / 裂纹 / 眼睛）、_glass = 半透明壳；场景换色改 base.color（乘在顶点色上）
@@ -108,36 +118,60 @@ function spawn(z) {
   return u;
 }
 function play(u, state, fade = 0.15) {
-  const name = state === 'move' ? 'walk' : state === 'skill' ? (u.z.skill || 'attack') : state === 'death' ? ['death', 'death2', 'death3'][Math.floor(Math.random() * 3)] : state;
-  const a = u.mixer.clipAction(clipOf(u.anims, name));
+  // 死亡四选一（各种的四种在 voxel.py 里）；没有奔跑动作的（多数僵尸）退回走路
+  const name = state === 'move' ? 'walk' : state === 'skill' ? (u.z.skill || 'attack') : state === 'death' ? ['death', 'death2', 'death3', 'death4'][Math.floor(Math.random() * 4)] : state;
+  const a = u.mixer.clipAction(clipOf(u.anims, name) ?? clipOf(u.anims, 'walk'));
   const once = ['hit', 'death', 'skill'].includes(state) && name !== 'block';
   a.reset().setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
   a.clampWhenFinished = once;
-  if (state === 'move') a.timeScale = 0.6 + u.z.speed * 0.18;
+  if (state === 'move' || state === 'run' && !clipOf(u.anims, 'run')) a.timeScale = 0.6 + u.z.speed * 0.18;
   if (u.action && u.action !== a) a.crossFadeFrom(u.action, fade, false);
   a.play(); u.action = a; u.state = state;
 }
 
-// ── 排队模式：10 种 + 一名英雄作比例尺 ──
-let units = [], mode = 'lineup', curState = 'idle';
+// ── 排队模式：默认全部（每组另起一排、一排 9 只），名字写在脚下的地牌上；+ 一名英雄作比例尺 ──
+let units = [], mode = 'lineup', curState = 'idle', group = 'all';
+// 地牌：一只一块贴了字的平面，牌色分组（僵尸灰黄 / 精英金 / 变异生物绿）
+const PFILL = { z: '#c9bfa3', e: '#d9c06a', m: '#9fc28a' }, PSUB = { e: '精英', m: '变异生物' };
+function nameplate(z) {
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 96;
+  const g = cv.getContext('2d'); g.fillStyle = PFILL[z.group]; g.beginPath(); g.roundRect(2, 2, 252, 92, 12); g.fill();
+  g.fillStyle = '#1b1f1d'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '600 40px "Microsoft YaHei", "PingFang SC", sans-serif'; g.fillText(z.name, 128, PSUB[z.group] ? 38 : 50, 236);
+  if (PSUB[z.group]) { g.font = '22px sans-serif'; g.fillText(PSUB[z.group], 128, 74); }
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 0.47), new THREE.MeshBasicMaterial({ map: tex }));
+  m.rotation.x = -Math.PI / 2; return m;
+}
 const tags = document.getElementById('tags');
 function clear() { units.forEach((u) => u.root && scene.remove(u.root)); units = []; tags.innerHTML = ''; for (const c of Object.values(CROWDS)) c.count = 0; }
 function lineup() {
   clear();
-  ZOMBIES.forEach((z, i) => {
-    const u = spawn(z); u.root.position.set((i - 4.5) * 1.35, 0, 0); units.push(u); play(u, curState);
-    const t = document.createElement('div'); t.className = 'tag'; t.textContent = z.name; tags.append(t); u.tag = t;
-  });
-  const h = hero.scene; h.position.set(6.9, 0, 0); scene.add(h);
+  const cols = 9; let z0 = 0, w = 0;
+  for (const gk of ['z', 'e', 'm']) {
+    if (group !== 'all' && group !== gk) continue;
+    const list = ZOMBIES.filter((z) => z.group === gk), sp = gk === 'm' ? 2.6 : 1.35, dz = gk === 'm' ? 3.6 : 3;
+    w = Math.max(w, (Math.min(cols, list.length) - 1) / 2 * sp);
+    list.forEach((z, i) => {
+      const r = Math.floor(i / cols), n = Math.min(cols, list.length - r * cols);
+      const u = spawn(z); u.root.position.set((i % cols - (n - 1) / 2) * sp, 0, z0 - r * dz); units.push(u); play(u, curState);
+      const pl = nameplate(z); pl.position.set(u.root.position.x, 0.012, u.root.position.z + 0.6); u.root.parent.add(pl); units.push({ root: pl, plate: true });
+    });
+    z0 -= Math.ceil(list.length / cols) * dz;
+  }
+  const h = hero.scene; h.position.set(w + 1.35, 0, 0); scene.add(h);
   const hm = new THREE.AnimationMixer(h); hm.clipAction(clipOf(hero.animations, 'idle')).play();
   units.push({ root: h, mixer: hm, hero: true });
 }
-function setState(s) { curState = s; units.forEach((u, i) => !u.hero && setTimeout(() => play(u, s), i * 60)); mark(sBtns, s); }
+function setState(s) { curState = s; units.filter((u) => u.mixer && !u.hero).forEach((u, i) => setTimeout(() => play(u, s), i * 60)); mark(sBtns, s); }
 
 // ── 压测模式：300 只从外圈涌向中心；喷吐停在射程外吐，跳跃隔一阵扑一下，爆炸贴脸就胀 ──
 // 配比按中期关卡的刷怪表估的（普通占多数）。渲染走 crowd.js（烘焙 + 实例化）：
 // 逐只蒙皮实测 GPU 4.8 ms / 638 draw call，超 4 ms 预算——瓶颈是 draw call，不是三角面
-const MIX = { normal: 110, runner: 35, brute: 18, toxic: 22, bomber: 18, splitter: 20, leaper: 22, ward: 20, spitter: 20, spawnling: 15 };
+// ponytail: 精英 / 变异生物还没进刷怪预算（enemies.ts），这里按"中期关卡偶尔混进几只"手估
+const MIX = { normal: 40, runner: 25, brute: 18, toxic: 22, bomber: 18, splitter: 20, leaper: 22, ward: 20, spitter: 20, spawnling: 15,
+  herald: 6, summoner: 5, tesla: 8, regenerator: 8, stalker: 8, burrower: 6, flyer: 10, screamer: 6,
+  e_normal: 4, e_runner: 3, e_brute: 2, dog: 12, wolf: 2, vulture: 6, bear: 1, ape: 1 };
 const R_OUT = 26, R_IN = 1.6;
 const CROWDS = {};
 function crowdOf(file) {
@@ -174,15 +208,15 @@ function steer(u, dt) {
   const done = u.t >= u.dur;
   if (u.state === 'move') {
     if (u.t >= u.dur) u.t %= u.dur;
-    const hold = u.z.id === 'spitter' ? 7 : R_IN;
+    const hold = u.z.ai === 'spitter' ? 7 : R_IN;
     if (d > hold) { const k = Math.min(u.z.speed * 0.5 * dt, d - hold); p.x -= p.x / d * k; p.z -= p.z / d * k; }
-    else hordePlay(u, u.z.id === 'bomber' || u.z.id === 'spitter' ? 'skill' : 'attack');
-    if (u.z.id === 'leaper' && d > 5 && Math.random() < dt * 0.15) hordePlay(u, 'skill');
+    else hordePlay(u, u.z.ai === 'bomber' || u.z.ai === 'spitter' ? 'skill' : 'attack');
+    if (u.z.skill === 'leap' && d > 5 && Math.random() < dt * 0.15) hordePlay(u, 'skill');
   } else if (u.state === 'attack' && u.t > 0.85) { respawn(p); hordePlay(u, 'move'); }   // 近身打一下就绕回外圈，保持持续涌入
   else if (u.state === 'skill' && done) {
-    if (u.z.id === 'bomber') respawn(p);
-    if (u.z.id === 'leaper') { const k = Math.min(1.0, d - R_IN); p.x -= p.x / d * k; p.z -= p.z / d * k; }
-    hordePlay(u, u.z.id === 'spitter' ? 'skill' : 'move');
+    if (u.z.ai === 'bomber') respawn(p);
+    if (u.z.skill === 'leap') { const k = Math.min(1.0, d - R_IN); p.x -= p.x / d * k; p.z -= p.z / d * k; }
+    hordePlay(u, u.z.ai === 'spitter' ? 'skill' : 'move');
   }
   u.crowd.set(u.slot, p, Math.atan2(-p.x, -p.z), u.z.scale, u.clip, u.t);   // 面朝中心
 }
@@ -190,15 +224,17 @@ function steer(u, dt) {
 // ── 界面 ──
 const btn = (parent, label, on) => { const b = document.createElement('button'); b.textContent = label; b.onclick = on; parent.append(b); return b; };
 function mark(map, cur) { for (const [k, b] of Object.entries(map)) b.setAttribute('aria-pressed', k === cur); }
-const mBtns = {}, sBtns = {}, cBtns = {};
+const mBtns = {}, sBtns = {}, cBtns = {}, gBtns = {};
 const MODES = { lineup: '排队 · 正视', lineupGame: '排队 · 游戏相机', horde: '300 只压测' };
 function setMode(m) {
   mode = m;
   if (m === 'horde') { horde(); setView('game'); } else { lineup(); setState(curState); setView(m === 'lineup' ? 'front' : 'game'); }
-  mark(mBtns, m); states.style.display = m === 'horde' ? 'none' : '';
+  mark(mBtns, m); states.style.display = groups.style.display = m === 'horde' ? 'none' : '';
 }
+function setGroup(g) { group = g; mark(gBtns, g); if (mode !== 'horde') setMode(mode); }
+for (const [k, v] of Object.entries(GROUPS)) gBtns[k] = btn(groups, v, () => setGroup(k));
 for (const [k, v] of Object.entries(MODES)) mBtns[k] = btn(modes, v, () => setMode(k));
-const SNAME = { idle: '待机', move: '移动', attack: '扑抓', skill: '专属动作', hit: '受击', death: '死亡' };
+const SNAME = { idle: '待机', move: '移动', run: '奔跑', attack: '扑抓', skill: '专属动作', hit: '受击', death: '死亡' };
 for (const s of STATES) sBtns[s] = btn(states, SNAME[s], () => setState(s));
 function setScene(id) {
   const s = SCENES[id]; groundMat.color.setHex(s.ground);
@@ -225,12 +261,12 @@ const gl = renderer.getContext();
 const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
 const pending = [], gpu = [], cpu = [];
 let frames = 0, t0 = performance.now();
-const stats = (window.__z = { gpuMs: null, cpuMs: null, fps: 0, tris: 0, calls: 0, get units() { return units; }, setMode, setState, setScene, setView, camera, screenH, play, ZOMBIES });
+const stats = (window.__z = { gpuMs: null, cpuMs: null, fps: 0, tris: 0, calls: 0, get units() { return units; }, setMode, setState, setScene, setView, setGroup, camera, screenH, play, ZOMBIES });
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.05);
   const c0 = performance.now();
-  for (const u of units) { if (u.crowdUnit) steer(u, dt); else u.mixer.update(dt); }
+  for (const u of units) { if (u.crowdUnit) steer(u, dt); else u.mixer?.update(dt); }
   for (const c of Object.values(CROWDS)) c.commit();
   cpu.push(performance.now() - c0); if (cpu.length > 120) cpu.shift();
   let q;
@@ -253,9 +289,9 @@ renderer.setAnimationLoop(() => {
     stats.tris = renderer.info.render.triangles; stats.calls = renderer.info.render.calls;
     stats.gpuMs = gpu.length ? gpu.reduce((a, b) => a + b, 0) / gpu.length : null;
     stats.cpuMs = cpu.reduce((a, b) => a + b, 0) / cpu.length;
-    const n = units.filter((u) => !u.hero).length;
+    const n = units.filter((u) => !u.hero && !u.plate).length;
     stat.textContent = `${n} 只 · ${stats.tris} 三角面 · ${stats.calls} draw call · ${stats.fps.toFixed(0)} FPS · GPU ${stats.gpuMs == null ? '不可测' : stats.gpuMs.toFixed(2) + ' ms'} · 动画 CPU ${stats.cpuMs.toFixed(2)} ms`;
   }
 });
-setScene('city'); setMode('lineup');
+setScene('city'); mark(gBtns, group); setMode('lineup');
 </script>

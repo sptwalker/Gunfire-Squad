@@ -22,3 +22,4 @@ npm-debug.log*
 
 # Python 缓存
 __pycache__/
+tools/review/live/

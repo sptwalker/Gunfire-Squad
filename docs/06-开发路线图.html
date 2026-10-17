@@ -278,6 +278,16 @@ Rodin 基本不给 T-pose，这一步不做，手臂权重会投到衣领上</li
 <p>剩下的：手是一块方块，没有握把的&quot;握&quot;——Q 版里这是风格，不是缺陷；程序化动作仍是占位。</p>
 <p><strong>本轮 Rodin 消耗：11 次生成</strong>（角色 8 次：5 次才拿到空手版、1 次改短夹克、v7 抽脸、v8 连体服定稿；武器 2 次；1 次早期测试）。
 v7、v8 两次用的是 Gen-2.5-High 档，比默认档贵；M5 批量跑按默认档预算，只对脸不过关的角色升档。</p>
+<p><strong>补动作</strong>（技能评审发现文案点名的动作仓库里一个都没有，见 <code>proto/m0/anim-gaps.md</code>）：</p>
+<ul>
+<li><code>poses.py</code> 的 <code>CLIPS</code> 从 12 条扩到 20 条，新增 <code>leap</code> / <code>spin</code> / <code>summon</code> / <code>cast</code> / <code>guard</code> / <code>aim</code> / <code>aim_pistol</code> / <code>roll</code>；
+运行时合成为 22 条，<code>vox_sw.glb</code> meshopt 后 642 KB（源 <code>build/</code> 1,234 KB）</li>
+<li><code>battle.html</code> 的 <code>CLIP_SET</code> 同步扩到 22 个——审计判据必须跟着仓库走，否则文案点名的动作会被继续算成缺口</li>
+<li>实测：<code>clip</code> 类缺口 <strong>114 → 0</strong>，有缺口的技能 651 → 633 / 790（干净 139 → 157）。
+余下 96 条仍缺 <code>noact</code> / <code>fx</code>，是特效层，不在本轮范围</li>
+<li>已知取舍：<code>roll</code> 是臀高弧线的<strong>腾空</strong>翻滚。姿势系统 <code>aim()</code> 只旋转骨骼、压不短长度（头到髋恒定 0.79 m），
+绕髋到 180° 时头必然扫到地下；要贴地滚得先让脊椎能压缩</li>
+</ul>
 <hr>
 <h2 id="m1-—-core-逻辑骨架-+-对账测试"><a class="anchor" href="#m1-—-core-逻辑骨架-+-对账测试">#</a>M1 — <code>core/</code> 逻辑骨架 + 对账测试</h2>
 <p><strong>产出：一个没有画面的、能跑完 15 分钟关卡的逻辑核心。</strong></p>
